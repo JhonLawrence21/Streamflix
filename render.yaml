@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: streamflix-server
+    runtime: node
+    plan: free
+    buildCommand: cd server && npm install && cd ../client && npm install && npm run build
+    startCommand: cd server && node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: JWT_SECRET
+        generateValue: true
+      - key: USE_SQLITE
+        value: "true"
+      - key: CLIENT_URL
+        value: https://streamflix-server.onrender.com
+
