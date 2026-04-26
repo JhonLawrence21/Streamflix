@@ -64,6 +64,7 @@ const sampleMovies = [
 const seedDatabase = async () => {
   try {
     const movieCount = await Movie.count();
+    console.log('Movie count:', movieCount);
     if (movieCount === 0) {
       console.log('Seeding sample movies...');
       await Category.bulkCreate(sampleCategories, { ignoreDuplicates: true });
