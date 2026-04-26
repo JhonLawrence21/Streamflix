@@ -13,16 +13,18 @@ const adminRoutes = require('./routes/admin');
 const app = express();
 
 const createDefaultAdmin = async () => {
+  if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD) return;
+  
   try {
-    const adminExists = await User.findOne({ where: { email: 'admin@streamflix.com' } });
+    const adminExists = await User.findOne({ where: { email: process.env.ADMIN_EMAIL } });
     if (!adminExists) {
       await User.create({
         name: 'Admin',
-        email: 'admin@streamflix.com',
-        password: 'admin123',
+        email: process.env.ADMIN_EMAIL,
+        password: process.env.ADMIN_PASSWORD,
         role: 'admin'
       });
-      console.log('Default admin created: admin@streamflix.com / admin123');
+      console.log(`Admin created: ${process.env.ADMIN_EMAIL}`);
     }
   } catch (error) {
     console.error('Error creating admin:', error);
