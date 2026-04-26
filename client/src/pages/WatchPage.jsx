@@ -12,20 +12,11 @@ const WatchPage = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const viewedKey = `viewed_${id}`;
-    const hasViewed = localStorage.getItem(viewedKey);
-    
     const fetchMovie = async () => {
       try {
         setLoading(true);
-        if (!hasViewed) {
-          const data = await movieService.watchMovie(id);
-          localStorage.setItem(viewedKey, 'true');
-          setMovie(data);
-        } else {
-          const data = await movieService.getById(id);
-          setMovie(data);
-        }
+        const data = await movieService.watchMovie(id);
+        setMovie(data);
       } catch (err) {
         setError('Movie not found');
       } finally {

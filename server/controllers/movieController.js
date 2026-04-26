@@ -56,6 +56,18 @@ exports.getMovie = async (req, res) => {
   }
 };
 
+const viewedCache = new Map();
+
+const clearOldEntries = () => {
+  const now = Date.now();
+  for (const [key, timestamp] of viewedCache.entries()) {
+    if (now - timestamp > 24 * 60 * 60 * 1000) {
+      viewedCache.delete(key);
+    }
+  }
+};
+setInterval(clearOldEntries, 60 * 60 * 1000);
+
 exports.watchMovie = async (req, res) => {
   try {
     const movieId = parseInt(req.params.id);
@@ -65,7 +77,13 @@ exports.watchMovie = async (req, res) => {
       return res.status(404).json({ message: 'Movie not found' });
     }
 
-    await Movie.increment('views', { where: { id: movie.id } });
+    const clientIp = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress || 'unknown';
+    const viewedKey = `${movieId}_${clientIp}`;
+
+    if (!viewedCache.has(viewedKey)) {
+      await Movie.increment('views', { where: { id: movie.id } });
+      viewedCache.set(viewedKey, Date.now());
+    }
 
     const updatedMovie = await Movie.findByPk(movie.id);
     res.json(updatedMovie.get({ plain: true }));
