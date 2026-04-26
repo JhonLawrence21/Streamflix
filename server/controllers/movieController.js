@@ -40,10 +40,12 @@ exports.getMovies = async (req, res) => {
 exports.getMovie = async (req, res) => {
   try {
     const movieId = parseInt(req.params.id);
+    console.log('Looking for movie id:', movieId);
+    
     const movie = await Movie.findByPk(movieId, { raw: true });
+    console.log('Movie found:', movie ? movie.title : 'NOT FOUND');
 
     if (!movie) {
-      console.log('Movie not found, id:', movieId);
       return res.status(404).json({ message: 'Movie not found' });
     }
 
