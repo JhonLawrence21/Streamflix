@@ -1,11 +1,27 @@
 require('dotenv').config();
 const { Sequelize } = require('sequelize');
-require('pg');
-require('pg-hstore');
 
 let sequelize;
 
-if (process.env.DATABASE_URL) {
+if (process.env.MYSQL_HOST) {
+  sequelize = new Sequelize(
+    process.env.MYSQL_DATABASE || 'railway',
+    process.env.MYSQL_USER || 'root',
+    process.env.MYSQL_PASSWORD || '',
+    {
+      host: process.env.MYSQL_HOST,
+      port: process.env.MYSQL_PORT || 3306,
+      dialect: 'mysql',
+      logging: false,
+      pool: {
+        max: 5,
+        min: 0,
+        acquire: 30000,
+        idle: 10000
+      }
+    }
+  );
+} else if (process.env.DATABASE_URL) {
   sequelize = new Sequelize(process.env.DATABASE_URL, {
     dialect: 'postgres',
     protocol: 'postgres',
@@ -34,26 +50,11 @@ if (process.env.DATABASE_URL) {
     }
   });
 } else {
-  const host = process.env.MYSQL_HOST || 'localhost';
-  const port = process.env.MYSQL_PORT || 3306;
-
-  sequelize = new Sequelize(
-    process.env.MYSQL_DATABASE || 'streamflix',
-    process.env.MYSQL_USER || 'root',
-    process.env.MYSQL_PASSWORD || '',
-    {
-      host: host,
-      port: port,
-      dialect: 'mysql',
-      logging: false,
-      pool: {
-        max: 5,
-        min: 0,
-        acquire: 30000,
-        idle: 10000
-      }
-    }
-  );
+  sequelize = new Sequelize({
+    dialect: 'sqlite',
+    storage: './database.sqlite',
+    logging: false
+  });
 }
 
 const connectDB = async () => {
