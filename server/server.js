@@ -120,11 +120,51 @@ app.use('/api/movies', movieRoutes);
 app.use('/api/watchlist', watchlistRoutes);
 app.use('/api/admin', adminRoutes);
 
-// Test endpoint
+// Test endpoints
 app.get('/db-check', async (req, res) => {
   try {
-    const movies = await Movie.findAll({ raw: true });
-    res.json({ movieCount: movies.length, movies: movies.map(m => ({ id: m.id, title: m.title })) });
+    const movies = await Movie.findAll();
+    const plainMovies = movies.map(m => m.get({ plain: true }));
+    res.json({ movieCount: movies.length, movies: plainMovies.map(m => ({ 
+      id: m.id, 
+      title: m.title,
+      videoUrl: m.videoUrl ? 'has videoUrl' : 'no videoUrl',
+      externalUrl: m.externalUrl ? 'has externalUrl' : 'no externalUrl',
+      trailerUrl: m.trailerUrl ? 'has trailerUrl' : 'no trailerUrl',
+      thumbnail: m.thumbnail ? 'has thumbnail' : 'no thumbnail'
+    })) });
+  } catch (e) {
+    res.json({ error: e.message });
+  }
+});
+
+app.get('/db-reset', async (req, res) => {
+  try {
+    await sequelize.sync({ force: true, alter: true });
+    res.json({ message: 'Database reset complete' });
+  } catch (e) {
+    res.json({ error: e.message });
+  }
+});
+
+app.get('/seed-test', async (req, res) => {
+  try {
+    const testMovie = await Movie.create({
+      title: 'Test Movie',
+      description: 'A test movie with all fields filled',
+      videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+      externalUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      trailerUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+      thumbnail: 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=400',
+      category: 'Action',
+      genre: JSON.stringify(['Action', 'Adventure']),
+      rating: 8.5,
+      duration: '2h',
+      releaseYear: 2024,
+      director: 'Test Director',
+      featured: true
+    });
+    res.json({ message: 'Test movie created', movie: testMovie.get({ plain: true }) });
   } catch (e) {
     res.json({ error: e.message });
   }
