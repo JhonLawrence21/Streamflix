@@ -47,6 +47,27 @@ const WatchPage = () => {
     return null;
   };
 
+  const getVideoUrl = () => {
+    if (movie.videoUrl && movie.videoUrl.trim()) {
+      const ytId = getYouTubeVideoId(movie.videoUrl);
+      if (ytId) return ytId;
+      return movie.videoUrl;
+    }
+    if (movie.externalUrl && movie.externalUrl.trim()) {
+      const ytId = getYouTubeVideoId(movie.externalUrl);
+      if (ytId) return ytId;
+      return movie.externalUrl;
+    }
+    return null;
+  };
+
+  const isYouTube = (url) => {
+    return url && (url.includes('youtube') || url.includes('youtu.be'));
+  };
+
+  const videoSrc = getVideoUrl();
+  const isYT = videoSrc && isYouTube(movie.videoUrl || movie.externalUrl);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-black">
@@ -97,29 +118,17 @@ const WatchPage = () => {
       </div>
 
       <div className="relative h-screen bg-black flex items-center justify-center">
-        {youtubeId ? (
-          <div className="w-full h-full flex items-center justify-center">
-            <iframe
-              src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0`}
-              className="w-full h-full"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              title={movie.title}
-            />
-          </div>
-        ) : hasExternalUrl ? (
-          <div className="w-full h-full flex items-center justify-center">
-            <iframe
-              src={`https://www.youtube.com/embed/${externalUrlId}?autoplay=1&rel=0`}
-              className="w-full h-full"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              title={movie.title}
-            />
-          </div>
-        ) : movie.videoUrl ? (
+        {isYT ? (
+          <iframe
+            src={`https://www.youtube.com/embed/${videoSrc}?autoplay=1&rel=0`}
+            className="w-full h-full"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            title={movie.title}
+          />
+        ) : videoSrc ? (
           <video
-            src={movie.videoUrl}
+            src={videoSrc}
             controls
             className="w-full h-full object-contain"
             autoPlay
