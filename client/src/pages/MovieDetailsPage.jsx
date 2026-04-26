@@ -20,12 +20,15 @@ const MovieDetailsPage = () => {
       try {
         setLoading(true);
         console.log('[MovieDetailsPage] Fetching movie with id:', id);
+        console.log('[MovieDetailsPage] API URL:', `/movies/${id}`);
+        
         const [movieData, similarData] = await Promise.all([
           movieService.getById(id),
           movieService.getSimilar(id)
         ]);
         
-        console.log('[MovieDetailsPage] Movie data received:', movieData);
+        console.log('[MovieDetailsPage] Raw movieData:', movieData);
+        console.log('[MovieDetailsPage] Raw similarData:', similarData);
         setMovie(movieData);
         setSimilar(similarData);
         
@@ -36,6 +39,7 @@ const MovieDetailsPage = () => {
       } catch (error) {
         console.error('[MovieDetailsPage] Error fetching movie:', error);
         console.error('[MovieDetailsPage] Error response:', error.response?.data);
+        console.error('[MovieDetailsPage] Error status:', error.response?.status);
       } finally {
         setLoading(false);
       }
@@ -80,6 +84,7 @@ const MovieDetailsPage = () => {
         <Navbar />
         <div className="flex flex-col items-center justify-center h-screen">
           <h1 className="text-2xl text-white mb-4">Movie not found</h1>
+          <p className="text-netflix-text-secondary mb-4">ID: {id}</p>
           <Link to="/" className="btn-primary">Go Home</Link>
         </div>
       </div>
