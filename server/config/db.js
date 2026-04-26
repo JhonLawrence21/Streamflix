@@ -3,7 +3,27 @@ const { Sequelize } = require('sequelize');
 
 let sequelize;
 
-if (process.env.MYSQL_HOST) {
+if (process.env.DATABASE_URL) {
+  const isPostgres = process.env.DATABASE_URL.startsWith('postgres://') || process.env.DATABASE_URL.startsWith('postgresql://');
+  
+  if (isPostgres) {
+    sequelize = new Sequelize(process.env.DATABASE_URL, {
+      dialect: 'postgres',
+      protocol: 'postgres',
+      logging: false,
+      dialectOptions: {
+        ssl: {
+          require: true,
+          rejectUnauthorized: false
+        }
+      }
+    });
+  } else {
+    sequelize = new Sequelize(process.env.DATABASE_URL, {
+      logging: false
+    });
+  }
+} else if (process.env.MYSQL_HOST) {
   sequelize = new Sequelize(
     process.env.MYSQL_DATABASE || 'railway',
     process.env.MYSQL_USER || 'root',
@@ -21,18 +41,6 @@ if (process.env.MYSQL_HOST) {
       }
     }
   );
-} else if (process.env.DATABASE_URL) {
-  sequelize = new Sequelize(process.env.DATABASE_URL, {
-    dialect: 'postgres',
-    protocol: 'postgres',
-    logging: false,
-    dialectOptions: {
-      ssl: {
-        require: true,
-        rejectUnauthorized: false
-      }
-    }
-  });
 } else if (process.env.PGHOST) {
   sequelize = new Sequelize({
     dialect: 'postgres',
