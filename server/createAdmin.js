@@ -6,7 +6,7 @@ const createAdmin = async () => {
     const connectDB = require('./config/db');
     await connectDB();
     
-    const adminExists = await User.findOne({ where: { email: 'admin@streamflix.com' });
+    const adminExists = await User.findOne({ where: { email: 'admin@streamflix.com' } });
     if (adminExists) {
       console.log('Admin already exists!');
       process.exit(0);
