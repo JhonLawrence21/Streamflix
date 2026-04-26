@@ -14,5 +14,13 @@ services:
         generateValue: true
       - key: CLIENT_URL
         value: https://streamflix.onrender.com
-      - key: DATABASE_URL
-        value: postgresql://streamflix_db_94tw_user:racco3hBntmpD7MIuK4FTiVDuin50bDW@dpg-d7mocj8sfn5c73dleqmg-a/streamflix_db_94tw
+      - key: PGHOST
+        value: dpg-d7mocj8sfn5c73dleqmg-a
+      - key: PGPORT
+        value: "5432"
+      - key: PGDATABASE
+        value: streamflix_db_94tw
+      - key: PGUSER
+        value: streamflix_db_94tw_user
+      - key: PGPASSWORD
+        value: racco3hBntmpD7MIuK4FTiVDuin50bDW

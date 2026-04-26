@@ -1,10 +1,11 @@
 require('dotenv').config();
 const { Sequelize } = require('sequelize');
+require('pg');
+require('pg-hstore');
 
 let sequelize;
 
 if (process.env.DATABASE_URL) {
-  // PostgreSQL on Render
   sequelize = new Sequelize(process.env.DATABASE_URL, {
     dialect: 'postgres',
     protocol: 'postgres',
@@ -16,8 +17,23 @@ if (process.env.DATABASE_URL) {
       }
     }
   });
+} else if (process.env.PGHOST) {
+  sequelize = new Sequelize({
+    dialect: 'postgres',
+    host: process.env.PGHOST,
+    port: process.env.PGPORT || 5432,
+    database: process.env.PGDATABASE,
+    username: process.env.PGUSER,
+    password: process.env.PGPASSWORD,
+    logging: false,
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    }
+  });
 } else {
-  // MySQL for local development
   const host = process.env.MYSQL_HOST || 'localhost';
   const port = process.env.MYSQL_PORT || 3306;
 
