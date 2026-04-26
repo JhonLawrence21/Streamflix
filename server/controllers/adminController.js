@@ -159,7 +159,7 @@ exports.getAnalytics = async (req, res) => {
   try {
     const totalUsers = await User.count();
     const totalMovies = await Movie.count();
-    const movies = await Movie.findAll({ raw: true });
+    const movies = await Movie.findAll();
     const totalViews = movies.reduce((sum, m) => sum + (m.views || 0), 0);
 
     const categoryCounts = await Movie.findAll({
@@ -167,14 +167,12 @@ exports.getAnalytics = async (req, res) => {
         'category',
         [sequelize.fn('COUNT', sequelize.col('category')), 'count']
       ],
-      group: ['category'],
-      raw: true
+      group: ['category']
     });
 
     const recentMovies = await Movie.findAll({ 
       order: [['createdAt', 'DESC']], 
-      limit: 5,
-      raw: true 
+      limit: 5
     });
 
     res.json({

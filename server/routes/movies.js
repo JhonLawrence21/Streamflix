@@ -12,7 +12,7 @@ const {
 } = require('../controllers/movieController');
 
 router.get('/test', async (req, res) => {
-  const movies = await Movie.findAll({ limit: 5, raw: true });
+  const movies = await Movie.findAll({ limit: 5 });
   res.json({ count: movies.length, movies });
 });
 

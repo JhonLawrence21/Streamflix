@@ -26,8 +26,7 @@ exports.getWatchlist = async (req, res) => {
     }
 
     const movies = await Movie.findAll({
-      where: { id: watchlistIds },
-      raw: true
+      where: { id: watchlistIds }
     });
 
     res.json(movies);
