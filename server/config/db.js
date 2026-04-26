@@ -71,10 +71,13 @@ const connectDB = async () => {
     console.log('Database Connected...');
     await sequelize.sync({ force: false, alter: true });
     console.log('Database synced');
+    return sequelize;
   } catch (error) {
     console.error(`Error: ${error.message}`);
+    return sequelize;
   }
 };
 
 module.exports = connectDB;
 module.exports.sequelize = sequelize;
+module.exports.Sequelize = Sequelize;
