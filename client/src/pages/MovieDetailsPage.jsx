@@ -261,26 +261,27 @@ const MovieDetailsPage = () => {
               <p className="text-netflix-text mb-6 max-w-2xl text-sm md:text-base">{movie.description}</p>
 
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                <Link to={`/watch/${movie.id}`} className="flex items-center justify-center gap-2 bg-netflix-red text-white px-6 md:px-8 py-3 rounded font-semibold hover:bg-red-700 transition-colors text-lg">
+                {movie.externalUrl ? (
+                  <a
+                    href={movie.externalUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 bg-netflix-red text-white px-6 md:px-8 py-3 rounded font-semibold hover:bg-red-700 transition-colors text-lg"
+                  >
+                    <Play size={24} />
+                    Watch Now
+                  </a>
+                ) : (
+                  <Link to={`/watch/${movie.id}`} className="flex items-center justify-center gap-2 bg-netflix-red text-white px-6 md:px-8 py-3 rounded font-semibold hover:bg-red-700 transition-colors text-lg">
                     <Play size={24} />
                     Watch Now
                   </Link>
+                )}
                 {trailerId && (
                   <button onClick={() => setShowTrailer(true)} className="flex items-center justify-center gap-2 bg-gray-700/70 text-white px-6 py-3 rounded font-semibold hover:bg-gray-600 transition-colors">
                     <Video size={24} />
                     Watch Trailer
                   </button>
-                )}
-                {movie.externalUrl && (
-                  <a
-                    href={movie.externalUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 bg-netflix-bg-tertiary/70 text-white px-6 py-3 rounded font-semibold hover:bg-netflix-bg-tertiary transition-colors"
-                  >
-                    <ExternalLink size={24} />
-                    Full Movie
-                  </a>
                 )}
                 <button onClick={handleWatchlist} className="flex items-center justify-center gap-2 bg-netflix-bg-tertiary/70 text-white px-6 py-3 rounded font-semibold hover:bg-netflix-bg-tertiary transition-colors">
                   {inWatchlist ? <Check size={24} /> : <Plus size={24} />}
