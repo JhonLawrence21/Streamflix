@@ -20,14 +20,14 @@ exports.getMovies = async (req, res) => {
       where,
       order: [['createdAt', 'DESC']],
       limit: parseInt(limit),
-      offset: parseInt(offset),
-      raw: true
+      offset: parseInt(offset)
     });
 
+    const plainMovies = movies.map(m => m.get({ plain: true }));
     const total = await Movie.count({ where });
 
     res.json({
-      movies,
+      movies: plainMovies,
       totalPages: Math.ceil(total / limit),
       currentPage: parseInt(page),
       total
@@ -42,14 +42,14 @@ exports.getMovie = async (req, res) => {
     const movieId = parseInt(req.params.id);
     console.log('Looking for movie id:', movieId);
     
-    const movie = await Movie.findByPk(movieId, { raw: true });
-    console.log('Movie found:', movie ? movie.title : 'NOT FOUND');
-
+    const movie = await Movie.findByPk(movieId);
     if (!movie) {
       return res.status(404).json({ message: 'Movie not found' });
     }
 
-    res.json(movie);
+    const plainMovie = movie.get({ plain: true });
+    console.log('Movie found:', plainMovie ? plainMovie.title : 'NOT FOUND');
+    res.json(plainMovie);
   } catch (error) {
     console.error('Error fetching movie:', error);
     res.status(500).json({ message: error.message });
@@ -58,7 +58,8 @@ exports.getMovie = async (req, res) => {
 
 exports.watchMovie = async (req, res) => {
   try {
-    const movie = await Movie.findByPk(req.params.id, { raw: true });
+    const movieId = parseInt(req.params.id);
+    const movie = await Movie.findByPk(movieId);
 
     if (!movie) {
       return res.status(404).json({ message: 'Movie not found' });
@@ -66,8 +67,8 @@ exports.watchMovie = async (req, res) => {
 
     await Movie.increment('views', { where: { id: movie.id } });
 
-    const updatedMovie = await Movie.findByPk(movie.id, { raw: true });
-    res.json(updatedMovie);
+    const updatedMovie = await Movie.findByPk(movie.id);
+    res.json(updatedMovie.get({ plain: true }));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -75,14 +76,12 @@ exports.watchMovie = async (req, res) => {
 
 exports.getFeaturedMovie = async (req, res) => {
   try {
-    const movie = await Movie.findOne({ where: { featured: true }, order: [['createdAt', 'DESC']], raw: true });
-
+    const movie = await Movie.findOne({ where: { featured: true }, order: [['createdAt', 'DESC']] });
     if (!movie) {
-      const randomMovie = await Movie.findOne({ order: [['views', 'DESC']], raw: true });
-      return res.json(randomMovie);
+      const randomMovie = await Movie.findOne({ order: [['views', 'DESC']] });
+      return res.json(randomMovie ? randomMovie.get({ plain: true }) : null);
     }
-
-    res.json(movie);
+    res.json(movie.get({ plain: true }));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -90,8 +89,8 @@ exports.getFeaturedMovie = async (req, res) => {
 
 exports.getTrendingMovies = async (req, res) => {
   try {
-    const movies = await Movie.findAll({ order: [['views', 'DESC']], limit: 10, raw: true });
-    res.json(movies);
+    const movies = await Movie.findAll({ order: [['views', 'DESC']], limit: 10 });
+    res.json(movies.map(m => m.get({ plain: true })));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -100,8 +99,8 @@ exports.getTrendingMovies = async (req, res) => {
 exports.getMoviesByCategory = async (req, res) => {
   try {
     const { category } = req.params;
-    const movies = await Movie.findAll({ where: { category }, order: [['createdAt', 'DESC']], raw: true });
-    res.json(movies);
+    const movies = await Movie.findAll({ where: { category }, order: [['createdAt', 'DESC']] });
+    res.json(movies.map(m => m.get({ plain: true })));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -109,7 +108,8 @@ exports.getMoviesByCategory = async (req, res) => {
 
 exports.getSimilarMovies = async (req, res) => {
   try {
-    const movie = await Movie.findByPk(req.params.id, { raw: true });
+    const movieId = parseInt(req.params.id);
+    const movie = await Movie.findByPk(movieId);
 
     if (!movie) {
       return res.status(404).json({ message: 'Movie not found' });
@@ -138,7 +138,7 @@ exports.getSimilarMovies = async (req, res) => {
     }
 
     const genreConditions = genreArray.map(g => ({
-      genre: { [Op.like]: `%${g}%` }
+      genre: { [Op.iLike]: `%${g}%` }
     }));
 
     const similar = await Movie.findAll({
@@ -146,11 +146,10 @@ exports.getSimilarMovies = async (req, res) => {
         id: { [Op.ne]: movie.id },
         [Op.or]: genreConditions
       },
-      limit: 6,
-      raw: true
+      limit: 6
     });
 
-    res.json(similar);
+    res.json(similar.map(m => m.get({ plain: true })));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

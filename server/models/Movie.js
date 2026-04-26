@@ -20,10 +20,8 @@ const Movie = sequelize.define('Movie', {
   },
   videoUrl: {
     type: DataTypes.STRING,
-    allowNull: false,
-    validate: {
-      notEmpty: { msg: 'Video URL is required' }
-    }
+    allowNull: true,
+    defaultValue: ''
   },
   externalUrl: {
     type: DataTypes.STRING,

@@ -62,8 +62,9 @@ exports.deleteMovie = async (req, res) => {
 
 exports.getAllMovies = async (req, res) => {
   try {
-    const movies = await Movie.findAll({ order: [['createdAt', 'DESC']], raw: true });
-    res.json(movies);
+    const movies = await Movie.findAll({ order: [['createdAt', 'DESC']] });
+    const plainMovies = movies.map(m => m.get({ plain: true }));
+    res.json(plainMovies);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
