@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Play } from 'lucide-react';
 import Navbar from '../components/layout/Navbar';
 import { movieService } from '../services/api';
 
 const WatchPage = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [movie, setMovie] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -16,10 +17,6 @@ const WatchPage = () => {
         setLoading(true);
         const data = await movieService.watchMovie(id);
         setMovie(data);
-        
-        if (data.externalUrl) {
-          window.location.href = data.externalUrl;
-        }
       } catch (err) {
         setError('Movie not found');
       } finally {
