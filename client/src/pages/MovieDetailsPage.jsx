@@ -14,6 +14,7 @@ const MovieDetailsPage = () => {
   const [inWatchlist, setInWatchlist] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showTrailer, setShowTrailer] = useState(false);
+  const [showFullMovie, setShowFullMovie] = useState(false);
   const [trailerStarted, setTrailerStarted] = useState(false);
   const { user } = useAuth();
 
@@ -59,6 +60,21 @@ const MovieDetailsPage = () => {
       return () => clearTimeout(timer);
     }
   }, [movie, trailerStarted]);
+
+  useEffect(() => {
+    if (showTrailer && movie?.trailerUrl) {
+      const closeOnEnd = (e) => {
+        if (e.data === 'VideoEnded') {
+          setShowTrailer(false);
+          if (movie.externalUrl) {
+            setShowFullMovie(true);
+          }
+        }
+      };
+      window.addEventListener('message', closeOnEnd);
+      return () => window.removeEventListener('message', closeOnEnd);
+    }
+  }, [showTrailer, movie]);
 
   const handleWatchlist = async () => {
     if (!user) {
@@ -117,6 +133,7 @@ const MovieDetailsPage = () => {
   };
 
   const trailerId = movie?.trailerUrl ? getYouTubeVideoId(movie.trailerUrl) : null;
+  const externalUrlId = movie?.externalUrl ? getYouTubeVideoId(movie.externalUrl) : null;
 
   const parseJsonField = (value) => {
     if (!value) return [];
@@ -150,11 +167,29 @@ const MovieDetailsPage = () => {
           </button>
           <div className="w-full h-full">
             <iframe
-              src={`https://www.youtube.com/embed/${trailerId}?autoplay=1&controls=1&showinfo=0&modestbranding=1`}
+              src={`https://www.youtube.com/embed/${trailerId}?autoplay=1&controls=1&showinfo=0&modestbranding=1&enablejsapi=1`}
               className="w-full h-full"
               allow="autoplay; encrypted-media; fullscreen"
               allowFullScreen
               title="Trailer"
+              id="trailer-iframe"
+            />
+          </div>
+        </div>
+      )}
+
+      {showFullMovie && movie?.externalUrl && (
+        <div className="fixed inset-0 z-50 bg-black flex items-center justify-center">
+          <button onClick={() => setShowFullMovie(false)} className="absolute top-4 right-4 text-white hover:text-netflix-red z-10">
+            <X size={32} />
+          </button>
+          <div className="w-full h-full">
+            <iframe
+              src={`https://www.youtube.com/embed/${externalUrlId}?autoplay=1&controls=1`}
+              className="w-full h-full"
+              allow="autoplay; encrypted-media; fullscreen"
+              allowFullScreen
+              title="Full Movie"
             />
           </div>
         </div>
