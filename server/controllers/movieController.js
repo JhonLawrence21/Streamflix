@@ -10,8 +10,8 @@ exports.getMovies = async (req, res) => {
     if (category) where.category = category;
     if (search) {
       where[Op.or] = [
-        { title: { [Op.like]: `%${search}%` } },
-        { description: { [Op.like]: `%${search}%` } }
+        { title: { [Op.iLike]: `%${search}%` } },
+        { description: { [Op.iLike]: `%${search}%` } }
       ];
     }
 
@@ -39,14 +39,17 @@ exports.getMovies = async (req, res) => {
 
 exports.getMovie = async (req, res) => {
   try {
-    const movie = await Movie.findByPk(req.params.id, { raw: true });
+    const movieId = parseInt(req.params.id);
+    const movie = await Movie.findByPk(movieId, { raw: true });
 
     if (!movie) {
+      console.log('Movie not found, id:', movieId);
       return res.status(404).json({ message: 'Movie not found' });
     }
 
     res.json(movie);
   } catch (error) {
+    console.error('Error fetching movie:', error);
     res.status(500).json({ message: error.message });
   }
 };
