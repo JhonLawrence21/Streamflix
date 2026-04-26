@@ -14,6 +14,7 @@ const MovieDetailsPage = () => {
   const [inWatchlist, setInWatchlist] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showTrailer, setShowTrailer] = useState(false);
+  const [trailerStarted, setTrailerStarted] = useState(false);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -48,6 +49,16 @@ const MovieDetailsPage = () => {
 
     fetchData();
   }, [id, user]);
+
+  useEffect(() => {
+    if (movie?.trailerUrl && !trailerStarted) {
+      const timer = setTimeout(() => {
+        setShowTrailer(true);
+        setTrailerStarted(true);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [movie, trailerStarted]);
 
   const handleWatchlist = async () => {
     if (!user) {
@@ -133,17 +144,19 @@ const MovieDetailsPage = () => {
       <Navbar />
       
       {showTrailer && trailerId && (
-        <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center">
-          <button onClick={() => setShowTrailer(false)} className="absolute top-4 right-4 text-white hover:text-netflix-red">
+        <div className="fixed inset-0 z-50 bg-black flex items-center justify-center">
+          <button onClick={() => setShowTrailer(false)} className="absolute top-4 right-4 text-white hover:text-netflix-red z-10">
             <X size={32} />
           </button>
-          <iframe
-            src={`https://www.youtube.com/embed/${trailerId}?autoplay=1`}
-            className="w-full max-w-4xl aspect-video"
-            allow="autoplay; encrypted-media"
-            allowFullScreen
-            title="Trailer"
-          />
+          <div className="w-full h-full">
+            <iframe
+              src={`https://www.youtube.com/embed/${trailerId}?autoplay=1&controls=1&showinfo=0&modestbranding=1`}
+              className="w-full h-full"
+              allow="autoplay; encrypted-media; fullscreen"
+              allowFullScreen
+              title="Trailer"
+            />
+          </div>
         </div>
       )}
     <div className="min-h-screen bg-netflix-bg">
