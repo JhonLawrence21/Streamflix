@@ -278,15 +278,15 @@ const AdminMoviesPage = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-netflix-text-secondary text-sm mb-2">Video URL (Embedded)</label>
+                  <label className="block text-netflix-text-secondary text-sm mb-2">Video URL (YouTube Embed)</label>
                   <input
                     type="url"
                     value={formData.videoUrl}
                     onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
                     className="input-field"
-                    placeholder="https://youtube.com/embed/..."
+                    placeholder="https://www.youtube.com/embed/..."
                   />
                 </div>
                 <div>
@@ -299,17 +299,16 @@ const AdminMoviesPage = () => {
                     placeholder="https://..."
                   />
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-netflix-text-secondary text-sm mb-2">Trailer URL (YouTube)</label>
-                <input
-                  type="url"
-                  value={formData.trailerUrl}
-                  onChange={(e) => setFormData({ ...formData, trailerUrl: e.target.value })}
-                  className="input-field"
-                  placeholder="https://youtube.com/embed/..."
-                />
+                <div>
+                  <label className="block text-netflix-text-secondary text-sm mb-2">Trailer URL (YouTube)</label>
+                  <input
+                    type="url"
+                    value={formData.trailerUrl}
+                    onChange={(e) => setFormData({ ...formData, trailerUrl: e.target.value })}
+                    className="input-field"
+                    placeholder="https://www.youtube.com/embed/..."
+                  />
+                </div>
               </div>
 
               <div>
