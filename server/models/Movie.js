@@ -38,8 +38,20 @@ const Movie = sequelize.define('Movie', {
     defaultValue: 'uncategorized'
   },
   genre: {
-    type: DataTypes.JSON,
-    defaultValue: []
+    type: DataTypes.STRING,
+    defaultValue: '[]',
+    get() {
+      const val = this.getDataValue('genre');
+      if (!val) return [];
+      try {
+        return JSON.parse(val);
+      } catch {
+        return [];
+      }
+    },
+    set(val) {
+      this.setDataValue('genre', JSON.stringify(val || []));
+    }
   },
   rating: {
     type: DataTypes.FLOAT,
@@ -57,8 +69,20 @@ const Movie = sequelize.define('Movie', {
     type: DataTypes.INTEGER
   },
   cast: {
-    type: DataTypes.JSON,
-    defaultValue: []
+    type: DataTypes.STRING,
+    defaultValue: '[]',
+    get() {
+      const val = this.getDataValue('cast');
+      if (!val) return [];
+      try {
+        return JSON.parse(val);
+      } catch {
+        return [];
+      }
+    },
+    set(val) {
+      this.setDataValue('cast', JSON.stringify(val || []));
+    }
   },
   director: {
     type: DataTypes.STRING,
