@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const connectDB = require('./config/db');
+const User = require('./models/User');
 
 const authRoutes = require('./routes/auth');
 const movieRoutes = require('./routes/movies');
@@ -11,8 +12,24 @@ const adminRoutes = require('./routes/admin');
 
 const app = express();
 
-// Connect to database
-connectDB();
+const createDefaultAdmin = async () => {
+  try {
+    const adminExists = await User.findOne({ where: { email: 'admin@streamflix.com' } });
+    if (!adminExists) {
+      await User.create({
+        name: 'Admin',
+        email: 'admin@streamflix.com',
+        password: 'admin123',
+        role: 'admin'
+      });
+      console.log('Default admin created: admin@streamflix.com / admin123');
+    }
+  } catch (error) {
+    console.error('Error creating admin:', error);
+  }
+};
+
+connectDB().then(() => createDefaultAdmin());
 
 // Middleware
 const allowedOrigins = process.env.CLIENT_URL 
