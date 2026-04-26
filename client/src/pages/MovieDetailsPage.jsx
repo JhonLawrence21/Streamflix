@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Play, Plus, Check, ArrowLeft, Star, Clock, Calendar, User as UserIcon, ExternalLink } from 'lucide-react';
+import { Play, Plus, Check, ArrowLeft, Star, Clock, Calendar, User as UserIcon, ExternalLink, X, Video } from 'lucide-react';
 import Navbar from '../components/layout/Navbar';
 import MovieCard from '../components/movie/MovieCard';
 import { movieService, watchlistService } from '../services/api';
@@ -13,6 +13,7 @@ const MovieDetailsPage = () => {
   const [similar, setSimilar] = useState([]);
   const [inWatchlist, setInWatchlist] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showTrailer, setShowTrailer] = useState(false);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -91,6 +92,21 @@ const MovieDetailsPage = () => {
     );
   }
 
+  const getYouTubeVideoId = (url) => {
+    if (!url) return null;
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+      /youtube\.com\/watch\?.*v=([^&\n?#]+)/
+    ];
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match) return match[1];
+    }
+    return null;
+  };
+
+  const trailerId = movie?.trailerUrl ? getYouTubeVideoId(movie.trailerUrl) : null;
+
   const parseJsonField = (value) => {
     if (!value) return [];
     if (Array.isArray(value)) return value.filter(s => s && s.trim());
@@ -113,6 +129,23 @@ const MovieDetailsPage = () => {
   const movieCast = parseJsonField(movie.cast);
 
   return (
+    <div className="min-h-screen bg-netflix-bg">
+      <Navbar />
+      
+      {showTrailer && trailerId && (
+        <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center">
+          <button onClick={() => setShowTrailer(false)} className="absolute top-4 right-4 text-white hover:text-netflix-red">
+            <X size={32} />
+          </button>
+          <iframe
+            src={`https://www.youtube.com/embed/${trailerId}?autoplay=1`}
+            className="w-full max-w-4xl aspect-video"
+            allow="autoplay; encrypted-media"
+            allowFullScreen
+            title="Trailer"
+          />
+        </div>
+      )}
     <div className="min-h-screen bg-netflix-bg">
       <Navbar />
       
@@ -184,6 +217,12 @@ const MovieDetailsPage = () => {
                     <Play size={24} />
                     Watch Now
                   </Link>
+                {trailerId && (
+                  <button onClick={() => setShowTrailer(true)} className="flex items-center justify-center gap-2 bg-gray-700/70 text-white px-6 py-3 rounded font-semibold hover:bg-gray-600 transition-colors">
+                    <Video size={24} />
+                    Watch Trailer
+                  </button>
+                )}
                 {movie.externalUrl && (
                   <a
                     href={movie.externalUrl}
