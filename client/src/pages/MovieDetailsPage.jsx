@@ -194,8 +194,6 @@ const MovieDetailsPage = () => {
           </div>
         </div>
       )}
-    <div className="min-h-screen bg-netflix-bg">
-      <Navbar />
       
       <div className="relative">
         <div className="absolute inset-0 h-[60vh] bg-cover bg-center" style={{ backgroundImage: `url(${movie.thumbnail || 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=1920'})` }}>
@@ -327,5 +325,3 @@ const MovieDetailsPage = () => {
     </div>
   );
 };
-
-export default MovieDetailsPage;
