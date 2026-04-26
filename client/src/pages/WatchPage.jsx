@@ -23,7 +23,15 @@ const WatchPage = () => {
         setLoading(false);
       }
     };
+    
+    const viewedKey = `viewed_${id}`;
+    const hasViewed = localStorage.getItem(viewedKey);
+    
     fetchMovie();
+    
+    if (!hasViewed) {
+      localStorage.setItem(viewedKey, 'true');
+    }
   }, [id]);
 
   const getYouTubeVideoId = (url) => {
@@ -63,6 +71,7 @@ const WatchPage = () => {
 
   const youtubeId = getYouTubeVideoId(movie.videoUrl);
   const hasExternalUrl = movie?.externalUrl && movie.externalUrl.trim() !== '';
+  const externalUrlId = hasExternalUrl ? getYouTubeVideoId(movie.externalUrl) : null;
 
   return (
     <div className="min-h-screen bg-black">
@@ -92,6 +101,16 @@ const WatchPage = () => {
           <div className="w-full h-full flex items-center justify-center">
             <iframe
               src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0`}
+              className="w-full h-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              title={movie.title}
+            />
+          </div>
+        ) : hasExternalUrl ? (
+          <div className="w-full h-full flex items-center justify-center">
+            <iframe
+              src={`https://www.youtube.com/embed/${externalUrlId}?autoplay=1&rel=0`}
               className="w-full h-full"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
