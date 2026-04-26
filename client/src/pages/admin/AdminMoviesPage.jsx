@@ -13,6 +13,7 @@ const AdminMoviesPage = () => {
     description: '',
     videoUrl: '',
     externalUrl: '',
+    trailerUrl: '',
     thumbnail: '',
     category: '',
     genre: '',
@@ -48,7 +49,10 @@ const AdminMoviesPage = () => {
       genre: formData.genre.split(',').map(g => g.trim()).filter(g => g),
       cast: formData.cast.split(',').map(c => c.trim()).filter(c => c),
       rating: formData.rating ? parseFloat(formData.rating) : 0,
-      releaseYear: formData.releaseYear ? parseInt(formData.releaseYear) : undefined
+      releaseYear: formData.releaseYear ? parseInt(formData.releaseYear) : undefined,
+      videoUrl: formData.videoUrl || undefined,
+      externalUrl: formData.externalUrl || undefined,
+      trailerUrl: formData.trailerUrl || undefined
     };
 
     console.log('[AdminMoviesPage] Submitting movie data:', JSON.stringify(movieData, null, 2));
@@ -97,6 +101,7 @@ const AdminMoviesPage = () => {
       description: movie.description || '',
       videoUrl: movie.videoUrl || '',
       externalUrl: movie.externalUrl || '',
+      trailerUrl: movie.trailerUrl || '',
       thumbnail: movie.thumbnail || '',
       category: movie.category || '',
       genre: parseGenre(movie.genre),
@@ -128,6 +133,7 @@ const AdminMoviesPage = () => {
       description: '',
       videoUrl: '',
       externalUrl: '',
+      trailerUrl: '',
       thumbnail: '',
       category: '',
       genre: '',
@@ -274,14 +280,13 @@ const AdminMoviesPage = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-netflix-text-secondary text-sm mb-2">Video URL *</label>
+                  <label className="block text-netflix-text-secondary text-sm mb-2">Video URL (Embedded)</label>
                   <input
                     type="url"
                     value={formData.videoUrl}
                     onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
                     className="input-field"
-                    placeholder="https://..."
-                    required
+                    placeholder="https://youtube.com/embed/..."
                   />
                 </div>
                 <div>
@@ -291,9 +296,20 @@ const AdminMoviesPage = () => {
                     value={formData.externalUrl}
                     onChange={(e) => setFormData({ ...formData, externalUrl: e.target.value })}
                     className="input-field"
-                    placeholder="https://another-site.com/movie..."
+                    placeholder="https://..."
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-netflix-text-secondary text-sm mb-2">Trailer URL (YouTube)</label>
+                <input
+                  type="url"
+                  value={formData.trailerUrl}
+                  onChange={(e) => setFormData({ ...formData, trailerUrl: e.target.value })}
+                  className="input-field"
+                  placeholder="https://youtube.com/embed/..."
+                />
               </div>
 
               <div>

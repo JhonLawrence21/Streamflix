@@ -132,8 +132,8 @@ const MovieDetailsPage = () => {
     return null;
   };
 
-  const trailerId = movie?.trailerUrl ? getYouTubeVideoId(movie.trailerUrl) : null;
-  const externalUrlId = movie?.externalUrl ? getYouTubeVideoId(movie.externalUrl) : null;
+  const trailerId = movie?.trailerUrl && movie.trailerUrl.trim() !== '' ? getYouTubeVideoId(movie.trailerUrl) : null;
+  const externalUrlId = movie?.externalUrl && movie.externalUrl.trim() !== '' ? getYouTubeVideoId(movie.externalUrl) : null;
 
   const parseJsonField = (value) => {
     if (!value) return [];
@@ -261,13 +261,13 @@ const MovieDetailsPage = () => {
               <p className="text-netflix-text mb-6 max-w-2xl text-sm md:text-base">{movie.description}</p>
 
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                {movie.videoUrl ? (
+                {movie.videoUrl && movie.videoUrl.trim() !== '' ? (
                   <Link to={`/watch/${movie.id}`} className="flex items-center justify-center gap-2 bg-netflix-red text-white px-6 md:px-8 py-3 rounded font-semibold hover:bg-red-700 transition-colors text-lg">
                     <Play size={24} />
                     Watch Online
                   </Link>
                 ) : null}
-                {movie.externalUrl ? (
+                {movie.externalUrl && movie.externalUrl.trim() !== '' ? (
                   <a
                     href={movie.externalUrl}
                     target="_blank"
