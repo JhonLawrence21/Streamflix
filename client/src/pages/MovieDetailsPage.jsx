@@ -144,7 +144,7 @@ const MovieDetailsPage = () => {
                 {movie.rating > 0 && (
                   <span className="flex items-center gap-1 text-netflix-warning">
                     <Star size={18} fill="currentColor" />
-                    {movie.rating.toFixed(1)}/10
+                    {Number(movie.rating).toFixed(1)}/10
                   </span>
                 )}
                 {movie.releaseYear && (
@@ -162,7 +162,7 @@ const MovieDetailsPage = () => {
                 {movie.views > 0 && (
                   <span className="flex items-center gap-1">
                     <UserIcon size={18} />
-                    {movie.views.toLocaleString()} views
+                    {Number(movie.views).toLocaleString()} views
                   </span>
                 )}
               </div>
@@ -182,7 +182,7 @@ const MovieDetailsPage = () => {
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <Link to={`/watch/${movie.id}`} className="flex items-center justify-center gap-2 bg-netflix-red text-white px-6 md:px-8 py-3 rounded font-semibold hover:bg-red-700 transition-colors text-lg">
                     <Play size={24} />
-                    Watch Online
+                    Watch Now
                   </Link>
                 {movie.externalUrl && (
                   <a
@@ -192,7 +192,7 @@ const MovieDetailsPage = () => {
                     className="flex items-center justify-center gap-2 bg-netflix-bg-tertiary/70 text-white px-6 py-3 rounded font-semibold hover:bg-netflix-bg-tertiary transition-colors"
                   >
                     <ExternalLink size={24} />
-                    Watch Externally
+                    Full Movie
                   </a>
                 )}
                 <button onClick={handleWatchlist} className="flex items-center justify-center gap-2 bg-netflix-bg-tertiary/70 text-white px-6 py-3 rounded font-semibold hover:bg-netflix-bg-tertiary transition-colors">
