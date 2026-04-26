@@ -19,11 +19,13 @@ const MovieDetailsPage = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        console.log('[MovieDetailsPage] Fetching movie with id:', id);
         const [movieData, similarData] = await Promise.all([
           movieService.getById(id),
           movieService.getSimilar(id)
         ]);
         
+        console.log('[MovieDetailsPage] Movie data received:', movieData);
         setMovie(movieData);
         setSimilar(similarData);
         
@@ -32,7 +34,8 @@ const MovieDetailsPage = () => {
           setInWatchlist(watchlist.some(m => m.id === parseInt(id)));
         }
       } catch (error) {
-        console.error('Error fetching movie:', error);
+        console.error('[MovieDetailsPage] Error fetching movie:', error);
+        console.error('[MovieDetailsPage] Error response:', error.response?.data);
       } finally {
         setLoading(false);
       }
