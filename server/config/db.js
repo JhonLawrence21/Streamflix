@@ -4,7 +4,7 @@ const { Sequelize } = require('sequelize');
 let sequelize;
 
 if (process.env.DATABASE_URL) {
-  // Render PostgreSQL or other hosted DB
+  // PostgreSQL on Render
   sequelize = new Sequelize(process.env.DATABASE_URL, {
     dialect: 'postgres',
     protocol: 'postgres',
@@ -15,13 +15,6 @@ if (process.env.DATABASE_URL) {
         rejectUnauthorized: false
       }
     }
-  });
-} else if (process.env.USE_SQLITE === 'true' || !process.env.MYSQL_HOST) {
-  // SQLite for easy deployment
-  sequelize = new Sequelize({
-    dialect: 'sqlite',
-    storage: './database.sqlite',
-    logging: false
   });
 } else {
   // MySQL for local development
