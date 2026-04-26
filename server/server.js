@@ -26,7 +26,7 @@ const sampleMovies = [
     videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
     thumbnail: "https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=400",
     category: "Action",
-    genre: ["Action", "Adventure"],
+    genre: '["Action","Adventure"]',
     rating: 8.5,
     duration: "2h 15m",
     releaseYear: 2024,
@@ -39,7 +39,7 @@ const sampleMovies = [
     videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
     thumbnail: "https://images.unsplash.com/photo-1536440132201-1d93iW3roh1g?w=400",
     category: "Comedy",
-    genre: ["Comedy"],
+    genre: '["Comedy"]',
     rating: 7.8,
     duration: "1h 45m",
     releaseYear: 2024,
@@ -52,7 +52,7 @@ const sampleMovies = [
     videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
     thumbnail: "https://images.unsplash.com/photo-1518676591709-ec05fabc79a2?w=400",
     category: "Drama",
-    genre: ["Drama"],
+    genre: '["Drama"]',
     rating: 9.0,
     duration: "2h 30m",
     releaseYear: 2023,
@@ -64,15 +64,17 @@ const sampleMovies = [
 const seedDatabase = async () => {
   try {
     const movieCount = await Movie.count();
-    console.log('Movie count:', movieCount);
+    console.log('>>> Movie count in DB:', movieCount);
     if (movieCount === 0) {
-      console.log('Seeding sample movies...');
+      console.log('>>> Seeding sample movies...');
       await Category.bulkCreate(sampleCategories, { ignoreDuplicates: true });
       await Movie.bulkCreate(sampleMovies);
-      console.log('Sample movies seeded!');
+      console.log('>>> Sample movies seeded!');
+    } else {
+      console.log('>>> Movies already exist, skipping seed');
     }
   } catch (error) {
-    console.error('Error seeding:', error);
+    console.error('>>> Error seeding:', error);
   }
 };
 
@@ -117,6 +119,16 @@ app.use('/api/auth', authRoutes);
 app.use('/api/movies', movieRoutes);
 app.use('/api/watchlist', watchlistRoutes);
 app.use('/api/admin', adminRoutes);
+
+// Test endpoint
+app.get('/db-check', async (req, res) => {
+  try {
+    const movies = await Movie.findAll({ raw: true });
+    res.json({ movieCount: movies.length, movies: movies.map(m => ({ id: m.id, title: m.title })) });
+  } catch (e) {
+    res.json({ error: e.message });
+  }
+});
 
 // Serve React app for all other routes
 app.get('*', (req, res) => {
