@@ -191,17 +191,17 @@ const MovieDetailsPage = () => {
                 )}
 
                 {/* Watch Trailer */}
-                {trailerId && (
-                  <button 
-                    onClick={() => {
-                      setShowTrailer(true);
-                    }} 
-                    className="flex items-center justify-center gap-2 bg-gray-700/70 text-white px-6 py-3 rounded font-semibold hover:bg-gray-600 transition-colors"
-                  >
-                    <Play size={24} />
-                    Watch Trailer
-                  </button>
-                )}
+                 {trailerId && (
+                   <a 
+                     href={getYouTubeWatchUrl(trailerId)}
+                     target="_blank"
+                     rel="noopener noreferrer"
+                     className="flex items-center justify-center gap-2 bg-gray-700/70 text-white px-6 py-3 rounded font-semibold hover:bg-gray-600 transition-colors"
+                   >
+                     <Play size={24} />
+                     Watch Trailer
+                   </a>
+                 )}
 
                 {/* Add to Watchlist */}
                 <button 

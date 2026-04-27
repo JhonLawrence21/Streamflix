@@ -30,17 +30,17 @@ export const isYouTubeUrl = (url) => {
 };
 
 /**
- * Get YouTube embed URL from video ID
+ * Get YouTube embed URL from video ID - iframe API approach
  */
 export const getYouTubeEmbedUrl = (videoId, autoplay = false) => {
   if (!videoId) return null;
   const params = new URLSearchParams({
-    autoplay: autoplay ? '1' : '0',
+    autoplay: '0',
     rel: '0',
     modestbranding: '1',
     fs: '1',
     playsinline: '1',
-    enablejsapi: '1'
+    origin: window.location.origin
   });
   return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
 };

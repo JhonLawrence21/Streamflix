@@ -114,14 +114,21 @@ const WatchPage = () => {
 
        <div className="relative h-screen bg-black flex items-center justify-center">
          {source.type === 'youtube' && source.src ? (
-           <iframe
-             src={getYouTubeEmbedUrl(source.src, true)}
-             className="w-full h-full"
-             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-             allowFullScreen
-             title={movie.title}
-           />
-        ) : source.type === 'direct' && source.src ? (
+           <div className="w-full h-full flex items-center justify-center bg-black">
+             <div className="text-center text-white p-8">
+               <p className="text-xl mb-4">Video may be blocked from embedding</p>
+               <a
+                 href={`https://www.youtube.com/watch?v=${source.src}`}
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 className="inline-flex items-center gap-2 bg-red-600 text-white px-6 py-3 rounded font-semibold hover:bg-red-700 transition-colors"
+               >
+                 <Play size={20} />
+                 Watch on YouTube
+               </a>
+             </div>
+           </div>
+         ) : source.type === 'direct' && source.src ? (
           <video
             src={source.src}
             controls
