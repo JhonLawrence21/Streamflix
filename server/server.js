@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({ path: __dirname + '/.env' });
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -6,19 +6,14 @@ const rateLimit = require('express-rate-limit');
 const path = require('path');
 const connectDB = require('./config/db');
 
-console.log('[DEBUG] After dotenv - JWT_SECRET:', process.env.JWT_SECRET);
-
-const isProduction = process.env.NODE_ENV === 'production';
-const fallbackSecret = 'dev_fallback_jwt_secret_' + Date.now();
-
-if (!process.env.JWT_SECRET) {
-  process.env.JWT_SECRET = isProduction ? fallbackSecret : fallbackSecret;
-  console.warn('WARNING: JWT_SECRET not found, using temporary fallback');
-}
-
-console.log('[DEBUG] Final JWT_SECRET set:', !!process.env.JWT_SECRET);
+console.log('[DEBUG] JWT_SECRET:', process.env.JWT_SECRET ? 'set' : 'undefined');
 console.log('[DEBUG] NODE_ENV:', process.env.NODE_ENV);
-console.log('[DEBUG] CLIENT_URL:', process.env.CLIENT_URL);
+
+const fallbackSecret = 'dev_fallback_jwt_secret_' + Date.now();
+if (!process.env.JWT_SECRET) {
+  process.env.JWT_SECRET = fallbackSecret;
+  console.warn('WARNING: JWT_SECRET not set, using fallback');
+}
 const User = require('./models/User');
 const Movie = require('./models/Movie');
 const Category = require('./models/Category');
