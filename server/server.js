@@ -6,19 +6,17 @@ const rateLimit = require('express-rate-limit');
 const path = require('path');
 const connectDB = require('./config/db');
 
+console.log('[DEBUG] After dotenv - JWT_SECRET:', process.env.JWT_SECRET);
+
 const isProduction = process.env.NODE_ENV === 'production';
-const jwtSecret = process.env.JWT_SECRET || (isProduction ? null : 'dev_fallback_secret_2024');
+const fallbackSecret = 'dev_fallback_jwt_secret_' + Date.now();
 
-if (!process.env.JWT_SECRET && !isProduction) {
-  console.warn('WARNING: JWT_SECRET not set. Using dev fallback.');
-  process.env.JWT_SECRET = jwtSecret;
+if (!process.env.JWT_SECRET) {
+  process.env.JWT_SECRET = isProduction ? fallbackSecret : fallbackSecret;
+  console.warn('WARNING: JWT_SECRET not found, using temporary fallback');
 }
 
-if (isProduction && !process.env.JWT_SECRET) {
-  console.error('ERROR: JWT_SECRET required in production!');
-}
-
-console.log('[DEBUG] JWT_SECRET set:', !!process.env.JWT_SECRET);
+console.log('[DEBUG] Final JWT_SECRET set:', !!process.env.JWT_SECRET);
 console.log('[DEBUG] NODE_ENV:', process.env.NODE_ENV);
 console.log('[DEBUG] CLIENT_URL:', process.env.CLIENT_URL);
 const User = require('./models/User');
