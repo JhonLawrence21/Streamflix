@@ -45,14 +45,20 @@ const AdminMoviesPage = () => {
     setFormError('');
 
     const movieData = {
-      ...formData,
-      genre: formData.genre.split(',').map(g => g.trim()).filter(g => g),
-      cast: formData.cast.split(',').map(c => c.trim()).filter(c => c),
+      title: formData.title,
+      description: formData.description || '',
+      thumbnail: formData.thumbnail || '',
+      videoUrl: formData.videoUrl || '',
+      externalUrl: formData.externalUrl || '',
+      trailerUrl: formData.trailerUrl || '',
+      category: formData.category || '',
+      director: formData.director || '',
+      duration: formData.duration || '',
+      genre: formData.genre ? formData.genre.split(',').map(g => g.trim()).filter(g => g) : [],
+      cast: formData.cast ? formData.cast.split(',').map(c => c.trim()).filter(c => c) : [],
       rating: formData.rating ? parseFloat(formData.rating) : 0,
-      releaseYear: formData.releaseYear ? parseInt(formData.releaseYear) : undefined,
-      videoUrl: formData.videoUrl || undefined,
-      externalUrl: formData.externalUrl || undefined,
-      trailerUrl: formData.trailerUrl || undefined
+      releaseYear: formData.releaseYear ? parseInt(formData.releaseYear) : null,
+      featured: formData.featured
     };
 
     console.log('[AdminMoviesPage] Submitting movie data:', JSON.stringify(movieData, null, 2));
