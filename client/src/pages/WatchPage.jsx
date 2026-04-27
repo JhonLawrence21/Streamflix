@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Play, ExternalLink } from 'lucide-react';
 import Navbar from '../components/layout/Navbar';
 import { movieService } from '../services/api';
+import { getYouTubeVideoId, getYouTubeEmbedUrl, isYouTubeUrl, isDirectVideoUrl } from '../utils/imageUtils';
 
 const WatchPage = () => {
   const { id } = useParams();
@@ -27,50 +28,43 @@ const WatchPage = () => {
     fetchMovie();
   }, [id]);
 
-  const getYouTubeVideoId = (url) => {
-    if (!url) return null;
-    const patterns = [
-      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
-      /youtube\.com\/watch\?.*v=([^&\n?#]+)/
-    ];
-    for (const pattern of patterns) {
-      const match = url.match(pattern);
-      if (match) return match[1];
+  // Determine the best video source to display
+  const getVideoSource = () => {
+    if (!movie) return { type: 'none', src: null, href: null };
+
+    const videoUrl = movie.videoUrl?.trim();
+    const externalUrl = movie.externalUrl?.trim();
+
+    // 1. Primary videoUrl
+    if (videoUrl) {
+      const ytId = getYouTubeVideoId(videoUrl);
+      if (ytId) {
+        return { type: 'youtube', src: ytId, href: null };
+      }
+      if (isDirectVideoUrl(videoUrl)) {
+        return { type: 'direct', src: videoUrl, href: null };
+      }
+      // Unknown videoUrl type — treat as external link
+      return { type: 'external', src: null, href: videoUrl };
     }
-    return null;
-  };
 
-  const isYouTube = (url) => {
-    return url && (url.includes('youtube') || url.includes('youtu.be'));
-  };
-
-  const isDirectVideo = (url) => {
-    if (!url) return false;
-    return url.match(/\.(mp4|webm|mov|avi|mkv)$/i);
-  };
-
-  const getVideoUrl = () => {
-    if (movie?.videoUrl) {
-      const ytId = getYouTubeVideoId(movie.videoUrl);
-      if (ytId) return ytId;
-      if (isDirectVideo(movie.videoUrl)) return movie.videoUrl;
+    // 2. Fallback to externalUrl
+    if (externalUrl) {
+      const ytId = getYouTubeVideoId(externalUrl);
+      if (ytId) {
+        return { type: 'youtube', src: ytId, href: null };
+      }
+      if (isDirectVideoUrl(externalUrl)) {
+        return { type: 'direct', src: externalUrl, href: null };
+      }
+      // Non-YouTube, non-direct external URL
+      return { type: 'external', src: null, href: externalUrl };
     }
-    return null;
+
+    return { type: 'none', src: null, href: null };
   };
 
-  const getExternalUrl = () => {
-    if (movie?.externalUrl && movie.externalUrl.trim()) {
-      const ytId = getYouTubeVideoId(movie.externalUrl);
-      if (ytId) return ytId;
-      return movie.externalUrl;
-    }
-    return null;
-  };
-
-  const videoSrc = getVideoUrl();
-  const externalSrc = getExternalUrl();
-  const isYT = videoSrc && isYouTube(movie?.videoUrl);
-  const hasExternalSrc = externalSrc && !isYouTube(externalSrc);
+  const source = getVideoSource();
 
   if (loading) {
     return (
@@ -104,9 +98,9 @@ const WatchPage = () => {
           <ArrowLeft size={20} />
           Back
         </button>
-        {hasExternalSrc && (
+        {source.type === 'external' && source.href && (
           <a
-            href={externalSrc}
+            href={source.href}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 text-white/80 hover:text-white transition-colors bg-netflix-red/80 hover:bg-netflix-red px-4 py-2 rounded"
@@ -118,27 +112,27 @@ const WatchPage = () => {
       </div>
 
       <div className="relative h-screen bg-black flex items-center justify-center">
-        {isYT ? (
+        {source.type === 'youtube' && source.src ? (
           <iframe
-            src={`https://www.youtube.com/embed/${videoSrc}?autoplay=1&rel=0`}
+            src={getYouTubeEmbedUrl(source.src, true)}
             className="w-full h-full"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
             title={movie.title}
           />
-        ) : videoSrc ? (
+        ) : source.type === 'direct' && source.src ? (
           <video
-            src={videoSrc}
+            src={source.src}
             controls
             className="w-full h-full object-contain"
             autoPlay
           />
-        ) : hasExternalSrc ? (
+        ) : source.type === 'external' && source.href ? (
           <div className="flex flex-col items-center justify-center">
             <Play size={64} className="text-netflix-text-secondary mb-4" />
-            <p className="text-netflix-text-secondary text-lg mb-4">This movie opens in an external site</p>
+            <p className="text-netflix-text-secondary text-lg mb-4">This movie opens on an external site</p>
             <a
-              href={externalSrc}
+              href={source.href}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 bg-netflix-red text-white px-6 py-3 rounded font-semibold hover:bg-red-700 transition-colors"
@@ -165,3 +159,4 @@ const WatchPage = () => {
 };
 
 export default WatchPage;
+

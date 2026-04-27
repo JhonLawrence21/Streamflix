@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Film, X } from 'lucide-react';
 import { adminService } from '../../services/api';
+import { getThumbnailUrl, handleImageError } from '../../utils/imageUtils';
 
 const AdminMoviesPage = () => {
   const [movies, setMovies] = useState([]);
@@ -196,9 +197,10 @@ const AdminMoviesPage = () => {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <img 
-                          src={movie.thumbnail || 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=100'} 
+                          src={getThumbnailUrl(movie.thumbnail)} 
                           alt={movie.title}
                           className="w-12 h-12 object-cover rounded"
+                          onError={handleImageError}
                         />
                         <div>
                           <p className="text-white font-medium">{movie.title}</p>
@@ -326,6 +328,17 @@ const AdminMoviesPage = () => {
                   className="input-field"
                   placeholder="https://..."
                 />
+                {formData.thumbnail && (
+                  <div className="mt-2">
+                    <img
+                      src={formData.thumbnail}
+                      alt="Thumbnail preview"
+                      className="w-24 h-36 object-cover rounded border border-netflix-bg-tertiary"
+                      onError={(e) => { e.target.src = getThumbnailUrl(null); }}
+                    />
+                    <p className="text-xs text-netflix-text-muted mt-1">Preview</p>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

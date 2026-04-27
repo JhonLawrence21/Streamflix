@@ -5,21 +5,7 @@ import Navbar from '../components/layout/Navbar';
 import MovieCard from '../components/movie/MovieCard';
 import { movieService, watchlistService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-
-const DEFAULT_IMAGE = 'https://placehold.co/400x600/1a1a1a/ffffff?text=No+Image';
-
-const getYouTubeVideoId = (url) => {
-  if (!url) return null;
-  const patterns = [
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
-    /youtube\.com\/watch\?.*v=([^&\n?#]+)/
-  ];
-  for (const pattern of patterns) {
-    const match = url.match(pattern);
-    if (match) return match[1];
-  }
-  return null;
-};
+import { getYouTubeVideoId, getYouTubeEmbedUrl, getYouTubeWatchUrl, getThumbnailUrl, handleImageError, isYouTubeUrl } from '../utils/imageUtils';
 
 const MovieDetailsPage = () => {
   const { id } = useParams();
@@ -29,7 +15,6 @@ const MovieDetailsPage = () => {
   const [similar, setSimilar] = useState([]);
   const [inWatchlist, setInWatchlist] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [showFullMovie, setShowFullMovie] = useState(false);
   const [showTrailer, setShowTrailer] = useState(false);
 
   useEffect(() => {
@@ -37,13 +22,17 @@ const MovieDetailsPage = () => {
       try {
         setLoading(true);
         const [movieData, similarData, watchlistData] = await Promise.all([
-          movieService.getMovie(id),
+          movieService.getById(id),
           movieService.getSimilar(id),
           user ? watchlistService.get() : Promise.resolve([])
         ]);
         setMovie(movieData);
         setSimilar(similarData);
-        setInWatchlist(watchlistData.includes(parseInt(id)));
+        // watchlistData is an array of movie objects, map to IDs before checking includes
+        const watchlistIds = Array.isArray(watchlistData) 
+          ? watchlistData.map(m => m.id) 
+          : [];
+        setInWatchlist(watchlistIds.includes(parseInt(id)));
       } catch (error) {
         console.error('Error:', error);
       } finally {
@@ -67,12 +56,13 @@ const MovieDetailsPage = () => {
     }
   };
 
-  const isYouTube = (url) => {
-    return url && (url.includes('youtube') || url.includes('youtu.be'));
-  };
-
   const trailerId = getYouTubeVideoId(movie?.trailerUrl);
-  const externalUrlId = movie?.externalUrl?.trim() ? getYouTubeVideoId(movie.externalUrl) : null;
+  const externalUrl = movie?.externalUrl?.trim() || '';
+  const externalIsYouTube = isYouTubeUrl(externalUrl);
+  const externalYouTubeId = externalIsYouTube ? getYouTubeVideoId(externalUrl) : null;
+  const externalHref = externalYouTubeId 
+    ? getYouTubeWatchUrl(externalYouTubeId) 
+    : externalUrl;
 
   if (loading) {
     return (
@@ -108,7 +98,7 @@ const MovieDetailsPage = () => {
       <div className="relative">
         <div 
           className="absolute inset-0 h-[60vh] bg-cover bg-center" 
-          style={{ backgroundImage: movie.thumbnail ? `url(${movie.thumbnail})` : `url(${DEFAULT_IMAGE})` }}
+          style={{ backgroundImage: `url(${getThumbnailUrl(movie.thumbnail, 'hero')})` }}
         >
           <div className="absolute inset-0 bg-gradient-to-r from-netflix-bg via-netflix-bg/80 to-transparent"></div>
           <div className="absolute inset-0 bg-gradient-to-t from-netflix-bg via-transparent to-netflix-bg"></div>
@@ -124,10 +114,10 @@ const MovieDetailsPage = () => {
             {/* Thumbnail */}
             <div className="w-full lg:w-80 flex-shrink-0 mx-auto lg:mx-0">
               <img 
-                src={movie.thumbnail || DEFAULT_IMAGE} 
+                src={getThumbnailUrl(movie.thumbnail, 'detail')} 
                 alt={movie.title}
                 className="w-full rounded-lg shadow-2xl"
-                onError={(e) => e.target.src = DEFAULT_IMAGE}
+                onError={handleImageError}
               />
             </div>
             
@@ -172,9 +162,9 @@ const MovieDetailsPage = () => {
                 </Link>
 
                 {/* Watch Full Movie (External) */}
-                {movie.externalUrl && movie.externalUrl.trim() && (
+                {externalUrl && (
                   <a
-                    href={movie.externalUrl}
+                    href={externalHref}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center justify-center gap-2 bg-blue-600 text-white px-6 md:px-8 py-3 rounded font-semibold hover:bg-blue-700 transition-colors text-lg"
@@ -189,7 +179,6 @@ const MovieDetailsPage = () => {
                   <button 
                     onClick={() => {
                       setShowTrailer(true);
-                      setShowFullMovie(false);
                     }} 
                     className="flex items-center justify-center gap-2 bg-gray-700/70 text-white px-6 py-3 rounded font-semibold hover:bg-gray-600 transition-colors"
                   >
@@ -240,7 +229,7 @@ const MovieDetailsPage = () => {
           <h2 className="text-xl md:text-2xl font-semibold text-white mb-6">Similar Movies</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
             {similar.map(m => (
-              <MovieCard key={m.id} movie={m} onWatchlist={inWatchlist ? [id] : []} />
+              <MovieCard key={m.id} movie={m} onWatchlist={inWatchlist ? [parseInt(id)] : []} />
             ))}
           </div>
         </div>
@@ -253,7 +242,7 @@ const MovieDetailsPage = () => {
             <X size={32} />
           </button>
           <iframe
-            src={`https://www.youtube.com/embed/${trailerId}?autoplay=1`}
+            src={getYouTubeEmbedUrl(trailerId, true)}
             className="w-full h-full max-w-4xl aspect-video"
             allow="autoplay; encrypted-media"
             allowFullScreen
@@ -266,3 +255,4 @@ const MovieDetailsPage = () => {
 };
 
 export default MovieDetailsPage;
+

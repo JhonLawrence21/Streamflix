@@ -1,46 +1,28 @@
-# Video Playlist TODO
+# Fix Movie URLs and Details Viewing
 
-## Fixes Completed ✅
-- [x] Fix `server/controllers/adminController.js` — remove unnecessary JSON.stringify for genre/cast
-- [x] Fix `server/controllers/movieController.js` — handle genre as array or string in getSimilarMovies
-- [x] Fix `client/src/pages/admin/AdminMoviesPage.jsx` — add cast to form state and UI
-- [x] Fix `client/src/pages/WatchPage.jsx` — external URL iframe → open in new tab button
-- [x] Fix `client/src/pages/MovieDetailsPage.jsx` — add external link button
-- [x] Fix `client/src/pages/LoginPage.jsx` — remove pre-filled credentials (autoComplete + readOnly trick)
+## Issues Found
+1. **Nested `<Link>` tags** in `MovieCard.jsx` and `MovieRow.jsx` — causes invalid HTML and broken navigation
+2. **Watchlist data format mismatch** in `MovieDetailsPage.jsx` — checking `.includes()` on array of objects
+3. **External URL bug** in `WatchPage.jsx` — generates invalid hrefs for YouTube external URLs
+4. **Duplicated YouTube URL parsing** across multiple files
+5. **Thumbnail fallback** duplicated and inconsistent
 
-## Render Deployment Ready ✅
-- [x] `server/config/db.js` — added SQLite/PostgreSQL support with fallback
-- [x] `server/package.json` — added pg, pg-hstore, sqlite3 dependencies
-- [x] `server/server.js` — updated CORS to use CLIENT_URL env var
-- [x] `package.json` — changed start script for production, added engines
-- [x] `.env.example` — created with all required environment variables
-- [x] `render.yaml` — created for one-click Render deployment
+## Implementation Steps
 
-## Deployment Instructions
+- [x] 1. Update `client/src/utils/imageUtils.js` with shared URL utilities
+- [x] 2. Fix `client/src/components/movie/MovieCard.jsx` — remove nested Link, fix navigation
+- [x] 3. Fix `client/src/components/home/MovieRow.jsx` — remove nested Link, fix navigation
+- [x] 4. Fix `client/src/pages/MovieDetailsPage.jsx` — fix watchlist check, fix external URL handling, use shared utilities
+- [x] 5. Fix `client/src/pages/WatchPage.jsx` — fix video/external URL logic, use shared utilities
+- [x] 6. Update `client/src/pages/admin/AdminMoviesPage.jsx` — thumbnail preview improvements
+- [x] 7. Update `client/src/components/home/HeroBanner.jsx` — use shared thumbnail utility
 
-### Option 1: Deploy to Render (Recommended)
-1. Push code to GitHub
-2. In Render Dashboard → "New Web Service"
-3. Connect your GitHub repo
-4. Render will auto-detect `render.yaml` settings
-5. Set environment variables from `.env.example`
-6. Deploy!
-
-### Option 2: Manual Deploy with SQLite (Easiest)
-Set these environment variables in Render:
-- `USE_SQLITE=true`
-- `JWT_SECRET=your-random-secret`
-- `NODE_ENV=production`
-
-### Option 3: Deploy with PostgreSQL (Production)
-1. Create PostgreSQL database in Render
-2. Copy `DATABASE_URL` from database settings
-3. Set `DATABASE_URL` in web service environment variables
-4. Remove `USE_SQLITE` or set to `false`
-
-## Local Development
-```bash
-npm run install:all
-npm run dev
-```
+## Testing
+- [ ] Click movie card → navigates to `/movie/:id` without errors
+- [ ] Click play button → navigates to `/watch/:id` without errors
+- [ ] Click "More Info" → navigates to `/movie/:id` without errors
+- [ ] YouTube embed URLs load correctly
+- [ ] External URLs open properly (non-YouTube and YouTube)
+- [ ] Thumbnails show fallback on error
+- [ ] Watchlist status displays correctly on MovieDetailsPage
 

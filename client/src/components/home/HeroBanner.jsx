@@ -2,14 +2,19 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Play, Info } from 'lucide-react';
 import { movieService } from '../../services/api';
+import { getThumbnailUrl, handleImageError } from '../../utils/imageUtils';
 
 const HeroBanner = () => {
   const [movie, setMovie] = useState(null);
 
   useEffect(() => {
     const fetchFeatured = async () => {
-      const data = await movieService.getFeatured();
-      setMovie(data);
+      try {
+        const data = await movieService.getFeatured();
+        setMovie(data);
+      } catch (error) {
+        console.error('Error fetching featured movie:', error);
+      }
     };
     fetchFeatured();
   }, []);
@@ -24,7 +29,10 @@ const HeroBanner = () => {
 
   return (
     <div className="relative h-[85vh] overflow-hidden">
-      <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${movie.thumbnail || 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=1920'})` }}>
+      <div 
+        className="absolute inset-0 bg-cover bg-center" 
+        style={{ backgroundImage: `url(${getThumbnailUrl(movie.thumbnail, 'hero')})` }}
+      >
         <div className="absolute inset-0 bg-gradient-to-r from-netflix-bg via-transparent to-transparent"></div>
         <div className="absolute inset-0 bg-gradient-to-t from-netflix-bg via-transparent to-transparent"></div>
       </div>
@@ -67,3 +75,4 @@ const HeroBanner = () => {
 };
 
 export default HeroBanner;
+

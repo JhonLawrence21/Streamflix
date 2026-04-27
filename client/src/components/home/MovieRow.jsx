@@ -1,15 +1,16 @@
 import { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Play, Plus, Check } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { watchlistService } from '../../services/api';
+import { getThumbnailUrl, handleImageError } from '../../utils/imageUtils';
 
-const ThumbnailWithFallback = ({ movie, onRemoveContainer }) => {
+const ThumbnailWithFallback = ({ movie }) => {
   const [imageError, setImageError] = useState(false);
   
   const src = imageError || !movie.thumbnail 
-    ? 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=400'
-    : movie.thumbnail;
+    ? getThumbnailUrl(null)
+    : getThumbnailUrl(movie.thumbnail);
 
   return (
     <div className="relative aspect-[2/3] rounded overflow-hidden bg-netflix-bg-tertiary">
@@ -18,13 +19,17 @@ const ThumbnailWithFallback = ({ movie, onRemoveContainer }) => {
         alt={movie.title}
         className="w-full h-full object-cover transition-transform duration-300 group-hover/card:scale-110"
         loading="lazy"
-        onError={() => setImageError(true)}
+        onError={(e) => {
+          setImageError(true);
+          handleImageError(e);
+        }}
       />
     </div>
   );
 };
 
 const MovieRow = ({ title, movies, onWatchlist = [] }) => {
+  const navigate = useNavigate();
   const rowRef = useRef(null);
   const [showButtons, setShowButtons] = useState(false);
   const [localWatchlist, setLocalWatchlist] = useState(onWatchlist);
@@ -60,6 +65,15 @@ const MovieRow = ({ title, movies, onWatchlist = [] }) => {
     }
   };
 
+  const handleCardClick = (movieId) => {
+    navigate(`/movie/${movieId}`);
+  };
+
+  const handlePlay = (e, movieId) => {
+    e.stopPropagation();
+    navigate(`/watch/${movieId}`);
+  };
+
   if (!movies || movies.length === 0) return null;
 
   return (
@@ -84,17 +98,20 @@ const MovieRow = ({ title, movies, onWatchlist = [] }) => {
         
         <div ref={rowRef} className="flex gap-2 overflow-x-auto scrollbar-hide pb-4">
           {movies.map((movie) => (
-            <Link 
-              key={movie.id} 
-              to={`/movie/${movie.id}`}
-              className="flex-shrink-0 w-36 sm:w-40 md:w-48 group/card relative"
+            <div 
+              key={movie.id}
+              onClick={() => handleCardClick(movie.id)}
+              className="flex-shrink-0 w-36 sm:w-40 md:w-48 group/card relative cursor-pointer"
             >
               <ThumbnailWithFallback movie={movie} />
                 
               <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/card:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                <Link to={`/watch/${movie.id}`} className="w-12 h-12 rounded-full bg-white flex items-center justify-center hover:scale-110 transition-transform">
+                <button 
+                  onClick={(e) => handlePlay(e, movie.id)}
+                  className="w-12 h-12 rounded-full bg-white flex items-center justify-center hover:scale-110 transition-transform"
+                >
                   <Play size={20} className="text-black ml-1" />
-                </Link>
+                </button>
                 {user && (
                   <button 
                     onClick={(e) => handleAddToWatchlist(e, movie.id)}
@@ -112,7 +129,7 @@ const MovieRow = ({ title, movies, onWatchlist = [] }) => {
                   {movie.releaseYear && <span>{movie.releaseYear}</span>}
                 </div>
               </div>
-            </Link>
+            </div>
           ))}
         </div>
       </div>
@@ -121,3 +138,4 @@ const MovieRow = ({ title, movies, onWatchlist = [] }) => {
 };
 
 export default MovieRow;
+

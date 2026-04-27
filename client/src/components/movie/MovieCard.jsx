@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Play, Plus, Check } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { watchlistService } from '../../services/api';
+import { getThumbnailUrl, handleImageError } from '../../utils/imageUtils';
 
 const MovieCard = ({ movie, onWatchlist = [] }) => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [isInWatchlist, setIsInWatchlist] = useState(onWatchlist.includes(movie.id));
   const [imageError, setImageError] = useState(false);
@@ -31,26 +33,43 @@ const MovieCard = ({ movie, onWatchlist = [] }) => {
     }
   };
 
-  const getThumbnail = () => {
-    if (movie.thumbnail && !imageError) return movie.thumbnail;
-    return 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=400';
+  const handlePlay = (e) => {
+    e.stopPropagation();
+    navigate(`/watch/${movie.id}`);
   };
 
+  const handleCardClick = () => {
+    navigate(`/movie/${movie.id}`);
+  };
+
+  const thumbnailSrc = imageError
+    ? getThumbnailUrl(null)
+    : getThumbnailUrl(movie.thumbnail);
+
   return (
-    <Link to={`/movie/${movie.id}`} className="block group">
+    <div 
+      onClick={handleCardClick}
+      className="block group cursor-pointer"
+    >
       <div className="relative aspect-[2/3] rounded overflow-hidden bg-netflix-bg-tertiary">
         <img 
-          src={getThumbnail()} 
+          src={thumbnailSrc}
           alt={movie.title}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           loading="lazy"
-          onError={() => setImageError(true)}
+          onError={(e) => {
+            setImageError(true);
+            handleImageError(e);
+          }}
         />
         
         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-          <Link to={`/watch/${movie.id}`} className="w-12 h-12 rounded-full bg-white flex items-center justify-center hover:scale-110 transition-transform">
+          <button 
+            onClick={handlePlay}
+            className="w-12 h-12 rounded-full bg-white flex items-center justify-center hover:scale-110 transition-transform"
+          >
             <Play size={20} className="text-black ml-1" />
-          </Link>
+          </button>
           {user && (
             <button 
               onClick={handleAddToWatchlist}
@@ -70,8 +89,9 @@ const MovieCard = ({ movie, onWatchlist = [] }) => {
           </div>
         </div>
       </div>
-    </Link>
+    </div>
   );
 };
 
 export default MovieCard;
+
