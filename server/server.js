@@ -196,13 +196,21 @@ const PORT = process.env.PORT || 10000;
 
 const startServer = async () => {
   try {
-    await connectDB();
+    console.log('Starting server, connecting to DB...');
+    const db = await connectDB();
+    console.log('DB connected:', !!db);
+    
     createDefaultAdmin();
     seedDatabase();
     
-    app.listen(PORT, '0.0.0.0', () => {
+    const server = app.listen(PORT, '0.0.0.0', () => {
       console.log(`StreamFlix running on port ${PORT}`);
       console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    });
+    
+    server.on('error', (err) => {
+      console.error('Server error:', err);
+      process.exit(1);
     });
   } catch (err) {
     console.error('Failed to start server:', err);
@@ -211,3 +219,4 @@ const startServer = async () => {
 };
 
 startServer();
+console.log('Server startup initiated');
