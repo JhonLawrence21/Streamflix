@@ -18,6 +18,8 @@ const MovieDetailsPage = () => {
   const [showTrailer, setShowTrailer] = useState(false);
   const [watchlistIds, setWatchlistIds] = useState([]);
 
+  const [bgError, setBgError] = useState(false);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -112,13 +114,14 @@ const MovieDetailsPage = () => {
       
       {/* Header with thumbnail background */}
       <div className="relative">
-        <div 
-          className="absolute inset-0 h-[60vh] bg-cover bg-center" 
-          style={{ backgroundImage: `url(${getThumbnailUrl(movie.thumbnail, 'hero')})` }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-netflix-bg via-netflix-bg/80 to-transparent"></div>
-          <div className="absolute inset-0 bg-gradient-to-t from-netflix-bg via-transparent to-netflix-bg"></div>
-        </div>
+        <img
+          src={bgError ? getThumbnailUrl(null, 'hero') : getThumbnailUrl(movie.thumbnail, 'hero')}
+          alt={movie.title}
+          className="absolute inset-0 w-full h-[60vh] object-cover"
+          onError={() => setBgError(true)}
+        />
+        <div className="absolute inset-0 h-[60vh] bg-gradient-to-r from-netflix-bg via-netflix-bg/80 to-transparent"></div>
+        <div className="absolute inset-0 h-[60vh] bg-gradient-to-t from-netflix-bg via-transparent to-netflix-bg"></div>
 
         <div className="relative pt-[40vh] px-4 md:px-12 pb-8">
           <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-netflix-text-secondary hover:text-white mb-4 transition-colors">

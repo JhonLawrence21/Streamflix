@@ -30,7 +30,7 @@ const sampleMovies = [
     title: "Comedy Night",
     description: "A hilarious comedy that will keep you laughing all night.",
     videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-    thumbnail: "https://images.unsplash.com/photo-1536440132201-1d93iW3roh1g?w=400",
+    thumbnail: "https://images.unsplash.com/photo-1536440132201-1d93eW3roh1g?w=400",
     category: "Comedy",
     genre: ["Comedy"],
     rating: 7.8,
@@ -58,17 +58,23 @@ const seedDatabase = async () => {
   try {
     const connectDB = require('./config/db');
     await connectDB();
-    
-    console.log('Clearing existing data...');
-    await Movie.destroy({ where: {}, truncate: true });
-    await Category.destroy({ where: {}, truncate: true });
-    
+
+    // Only seed if database is empty — preserves existing movies permanently
+    const existingMovies = await Movie.count();
+    const existingCategories = await Category.count();
+
+    if (existingMovies > 0 || existingCategories > 0) {
+      console.log('Database already has data. Skipping seed to preserve existing movies.');
+      console.log(`Movies: ${existingMovies}, Categories: ${existingCategories}`);
+      process.exit(0);
+    }
+
     console.log('Seeding categories...');
     await Category.bulkCreate(sampleCategories);
-    
+
     console.log('Seeding movies...');
     await Movie.bulkCreate(sampleMovies);
-    
+
     console.log('Database seeded successfully!');
     process.exit(0);
   } catch (error) {

@@ -53,7 +53,18 @@ const apiLimiter = rateLimit({
   message: { message: 'Too many requests, please try again later.' }
 });
 
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:", "http:"],
+      mediaSrc: ["'self'", "https:", "http:"],
+      frameSrc: ["'self'", "https://www.youtube.com", "https://youtube.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'"]
+    }
+  }
+}));
 app.use(cors({
   origin: allowedOrigins,
   credentials: true

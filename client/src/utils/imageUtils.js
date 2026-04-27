@@ -1,6 +1,6 @@
 const DEFAULT_THUMBNAIL = 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=400';
 const DEFAULT_HERO_THUMBNAIL = 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=1920';
-const DEFAULT_DETAIL_THUMBNAIL = 'https://via.placeholder.com/400x600/1a1a1a/ffffff?text=No+Image';
+const DEFAULT_DETAIL_THUMBNAIL = 'https://placehold.co/400x600/1a1a1a/ffffff?text=No+Image';
 
 /**
  * Extract YouTube video ID from various YouTube URL formats

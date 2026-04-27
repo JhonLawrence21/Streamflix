@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Play, Info } from 'lucide-react';
 import { movieService } from '../../services/api';
-import { getThumbnailUrl } from '../../utils/imageUtils';
+import { getThumbnailUrl, handleImageError } from '../../utils/imageUtils';
 
 const HeroBanner = () => {
   const [movie, setMovie] = useState(null);
+  const [bgError, setBgError] = useState(false);
 
   useEffect(() => {
     const fetchFeatured = async () => {
@@ -27,15 +28,18 @@ const HeroBanner = () => {
     );
   }
 
+  const bgSrc = bgError ? getThumbnailUrl(null, 'hero') : getThumbnailUrl(movie.thumbnail, 'hero');
+
   return (
     <div className="relative h-[85vh] overflow-hidden">
-      <div 
-        className="absolute inset-0 bg-cover bg-center" 
-        style={{ backgroundImage: `url(${getThumbnailUrl(movie.thumbnail, 'hero')})` }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-r from-netflix-bg via-transparent to-transparent"></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-netflix-bg via-transparent to-transparent"></div>
-      </div>
+      <img
+        src={bgSrc}
+        alt={movie.title}
+        className="absolute inset-0 w-full h-full object-cover"
+        onError={() => setBgError(true)}
+      />
+      <div className="absolute inset-0 bg-gradient-to-r from-netflix-bg via-transparent to-transparent"></div>
+      <div className="absolute inset-0 bg-gradient-to-t from-netflix-bg via-transparent to-transparent"></div>
 
       <div className="relative h-full flex items-center px-4 md:px-12">
         <div className="max-w-xl">

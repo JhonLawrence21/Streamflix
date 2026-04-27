@@ -322,7 +322,7 @@ const AdminMoviesPage = () => {
               <div>
                 <label className="block text-netflix-text-secondary text-sm mb-2">Thumbnail URL</label>
                 <input
-                  type="url"
+                  type="text"
                   value={formData.thumbnail}
                   onChange={(e) => setFormData({ ...formData, thumbnail: e.target.value })}
                   className="input-field"
