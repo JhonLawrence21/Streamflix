@@ -24,6 +24,10 @@ exports.getMovies = async (req, res) => {
     });
 
     const plainMovies = movies.map(m => m.get({ plain: true }));
+    console.log('[getMovies] Movies found:', movies.length);
+    if (movies.length > 0) {
+      console.log('[getMovies] First movie thumbnail:', plainMovies[0].thumbnail);
+    }
     const total = await Movie.count({ where });
 
     res.json({

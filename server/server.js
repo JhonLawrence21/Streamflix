@@ -36,7 +36,7 @@ const sampleMovies = [
     title: "The Action Hero",
     description: "An epic adventure of a hero who must save the world.",
     videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-    thumbnail: "https://image.tmdb.org/t/p/w500/1E5baAaYm26Q5vdnJIBNLEqF0mK.jpg",
+    thumbnail: "https://image.tmdb.org/t/p/w500/1E5baAaYm26Q5vdnJIBNLEqF0mK4.jpg",
     category: "Action",
     genre: '["Action","Adventure"]',
     rating: 8.5,
@@ -44,45 +44,6 @@ const sampleMovies = [
     releaseYear: 2024,
     director: "John Director",
     featured: true
-  },
-  {
-    title: "Comedy Night",
-    description: "A hilarious comedy that will keep you laughing.",
-    videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-    thumbnail: "https://image.tmdb.org/t/p/w500/2CAL2433ZeIihfXbruHbK2gF9wT1.jpg",
-    category: "Comedy",
-    genre: '["Comedy"]',
-    rating: 7.8,
-    duration: "1h 45m",
-    releaseYear: 2024,
-    director: "Jane Director",
-    featured: false
-  },
-  {
-    title: "Dark Drama",
-    description: "A compelling drama that explores human emotion.",
-    videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-    thumbnail: "https://image.tmdb.org/t/p/w500/qA5KcBZQxV9E6K5TzMIJWM4GShG.jpg",
-    category: "Drama",
-    genre: '["Drama"]',
-    rating: 9.0,
-    duration: "2h 30m",
-    releaseYear: 2023,
-    director: "Bob Director",
-    featured: false
-  },
-  {
-    title: "Horror Night",
-    description: "A scary horror movie.",
-    videoUrl: "",
-    thumbnail: "https://image.tmdb.org/t/p/w500/tFI8VLMgSTTU38i0TtIsDp9q8ab.jpg",
-    category: "Horror",
-    genre: '["Horror"]',
-    rating: 7.5,
-    duration: "1h 30m",
-    releaseYear: 2024,
-    director: "Scary Director",
-    featured: false
   }
 ];
 
