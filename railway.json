@@ -2,8 +2,8 @@
   "$schema": "https://railway.app/railway.json",
   "build": {
     "builder": "NIXPACKS",
-    "buildCommand": "npm install && npm run build",
-    "startCommand": "npm start",
+    "buildCommand": "cd server && npm install && cd ../client && npm install && npm run build",
+    "startCommand": "cd server && npm start",
     "env": {
       "NODE_ENV": "production"
     }
