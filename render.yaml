@@ -11,7 +11,7 @@ services:
       - key: PORT
         value: 10000
       - key: JWT_SECRET
-        generateValue: true
+        value: streamflix_jwt_secret_key_2024_prod
       - key: CLIENT_URL
         value: https://streamflix-1fdz.onrender.com
       - key: DATABASE_URL

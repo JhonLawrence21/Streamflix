@@ -2,10 +2,11 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
 const verifyToken = (token) => {
-  if (!process.env.JWT_SECRET) {
-    throw new Error('JWT_SECRET environment variable is required');
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET not configured');
   }
-  return jwt.verify(token, process.env.JWT_SECRET);
+  return jwt.verify(token, secret);
 };
 
 exports.protect = async (req, res, next) => {
