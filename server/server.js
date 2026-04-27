@@ -7,10 +7,20 @@ const path = require('path');
 const connectDB = require('./config/db');
 
 const isProduction = process.env.NODE_ENV === 'production';
-if (!isProduction && !process.env.JWT_SECRET) {
-  console.warn('WARNING: JWT_SECRET not set. Setting default for development only.');
-  process.env.JWT_SECRET = 'dev_only_change_in_production_' + Date.now();
+const jwtSecret = process.env.JWT_SECRET || (isProduction ? null : 'dev_fallback_secret_2024');
+
+if (!process.env.JWT_SECRET && !isProduction) {
+  console.warn('WARNING: JWT_SECRET not set. Using dev fallback.');
+  process.env.JWT_SECRET = jwtSecret;
 }
+
+if (isProduction && !process.env.JWT_SECRET) {
+  console.error('ERROR: JWT_SECRET required in production!');
+}
+
+console.log('[DEBUG] JWT_SECRET set:', !!process.env.JWT_SECRET);
+console.log('[DEBUG] NODE_ENV:', process.env.NODE_ENV);
+console.log('[DEBUG] CLIENT_URL:', process.env.CLIENT_URL);
 const User = require('./models/User');
 const Movie = require('./models/Movie');
 const Category = require('./models/Category');
