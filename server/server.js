@@ -33,16 +33,14 @@ const sampleCategories = [
 
 const sampleMovies = [
   {
-    title: "The Action Hero",
-    description: "An epic adventure of a hero who must save the world.",
+    title: "Sample Movie",
+    description: "Sample movie with working image.",
     videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
     thumbnail: "https://image.tmdb.org/t/p/w500/1E5baAaYm26Q5vdnJIBNLEqF0mK4.jpg",
     category: "Action",
-    genre: '["Action","Adventure"]',
     rating: 8.5,
-    duration: "2h 15m",
+    duration: "2h",
     releaseYear: 2024,
-    director: "John Director",
     featured: true
   }
 ];
@@ -50,17 +48,13 @@ const sampleMovies = [
 const seedDatabase = async () => {
   try {
     const movieCount = await Movie.count();
-    console.log('>>> Movie count in DB:', movieCount);
+    console.log('>>> Movie count:', movieCount);
     if (movieCount === 0) {
-      console.log('>>> Seeding sample movies...');
-      await Category.bulkCreate(sampleCategories, { ignoreDuplicates: true });
       await Movie.bulkCreate(sampleMovies);
-      console.log('>>> Sample movies seeded!');
-    } else {
-      console.log('>>> Movies already exist, skipping seed');
+      console.log('>>> Sample movie created!');
     }
   } catch (error) {
-    console.error('>>> Error seeding:', error);
+    console.error('>>> Error:', error);
   }
 };
 
@@ -138,7 +132,17 @@ if (!isProduction) {
     }
   });
 
-  app.get('/db-reset', async (req, res) => {
+// Test endpoint to check movies
+app.get('/test-movies', async (req, res) => {
+  try {
+    const movies = await Movie.findAll({ raw: true });
+    res.json(movies.map(m => ({ id: m.id, title: m.title, thumbnail: m.thumbnail })));
+  } catch (e) {
+    res.json({ error: e.message });
+  }
+});
+
+app.get('/db-reset', async (req, res) => {
     try {
       await sequelize.sync({ force: true, alter: true });
       res.json({ message: 'Database reset complete' });
