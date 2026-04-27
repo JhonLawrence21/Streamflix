@@ -9,11 +9,42 @@ exports.createMovie = async (req, res) => {
   try {
     console.log('[createMovie] Received body:', JSON.stringify(req.body));
     const { genre, cast, ...otherData } = req.body;
-    const movieData = {
-      ...otherData,
-      genre: Array.isArray(genre) ? genre : (genre || []),
-      cast: Array.isArray(cast) ? cast : (cast || [])
-    };
+    
+    const movieData = {};
+    const stringFields = ['title', 'description', 'videoUrl', 'externalUrl', 'trailerUrl', 'thumbnail', 'category', 'director', 'duration'];
+    const numberFields = ['rating', 'releaseYear', 'views'];
+    const booleanFields = ['featured'];
+    
+    for (const field of stringFields) {
+      if (otherData[field] !== undefined && otherData[field] !== null && otherData[field] !== '') {
+        movieData[field] = otherData[field];
+      }
+    }
+    
+    if (Array.isArray(genre)) {
+      movieData.genre = genre;
+    } else if (typeof genre === 'string' && genre.length > 0) {
+      movieData.genre = [genre];
+    }
+    
+    if (Array.isArray(cast)) {
+      movieData.cast = cast;
+    } else if (typeof cast === 'string' && cast.length > 0) {
+      movieData.cast = [cast];
+    }
+    
+    for (const field of numberFields) {
+      if (otherData[field] !== undefined && otherData[field] !== null && otherData[field] !== '') {
+        movieData[field] = parseFloat(otherData[field]) || 0;
+      }
+    }
+    
+    for (const field of booleanFields) {
+      if (otherData[field] !== undefined) {
+        movieData[field] = Boolean(otherData[field]);
+      }
+    }
+    
     console.log('[createMovie] Movie data to save:', JSON.stringify(movieData));
     const movie = await Movie.create(movieData);
     const savedMovie = movie.get({ plain: true });
@@ -69,6 +100,10 @@ exports.getAllMovies = async (req, res) => {
   try {
     const movies = await Movie.findAll({ order: [['createdAt', 'DESC']] });
     const plainMovies = movies.map(m => m.get({ plain: true }));
+    console.log('[getAllMovies] Found', movies.length, 'movies');
+    if (movies.length > 0) {
+      console.log('[getAllMovies] First movie:', JSON.stringify(plainMovies[0]));
+    }
     res.json(plainMovies);
   } catch (error) {
     res.status(500).json({ message: error.message });
