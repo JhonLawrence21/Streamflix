@@ -1,8 +1,16 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const path = require('path');
 const connectDB = require('./config/db');
+
+const isProduction = process.env.NODE_ENV === 'production';
+if (!isProduction && !process.env.JWT_SECRET) {
+  console.warn('WARNING: JWT_SECRET not set. Setting default for development only.');
+  process.env.JWT_SECRET = 'dev_only_change_in_production_' + Date.now();
+}
 const User = require('./models/User');
 const Movie = require('./models/Movie');
 const Category = require('./models/Category');
@@ -13,6 +21,10 @@ const watchlistRoutes = require('./routes/watchlist');
 const adminRoutes = require('./routes/admin');
 
 const app = express();
+
+const allowedOrigins = process.env.CLIENT_URL 
+  ? [process.env.CLIENT_URL, 'http://localhost:3000', 'http://localhost:5000']
+  : ['http://localhost:3000', 'http://localhost:5000'];
 
 const sampleCategories = [
   { name: "Action" }, { name: "Comedy" }, { name: "Drama" },
@@ -102,11 +114,14 @@ connectDB().then(() => {
   seedDatabase();
 });
 
-// Middleware
-const allowedOrigins = process.env.CLIENT_URL 
-  ? [process.env.CLIENT_URL, 'http://localhost:3000', 'http://localhost:5000']
-  : ['http://localhost:3000', 'http://localhost:5000'];
+// Security Middleware
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: { message: 'Too many requests, please try again later.' }
+});
 
+app.use(helmet());
 app.use(cors({
   origin: allowedOrigins,
   credentials: true
@@ -115,60 +130,62 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, '../client/build')));
 
 // API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/movies', movieRoutes);
-app.use('/api/watchlist', watchlistRoutes);
-app.use('/api/admin', adminRoutes);
+app.use('/api/auth', apiLimiter, authRoutes);
+app.use('/api/movies', apiLimiter, movieRoutes);
+app.use('/api/watchlist', apiLimiter, watchlistRoutes);
+app.use('/api/admin', apiLimiter, adminRoutes);
 
-// Test endpoints
-app.get('/db-check', async (req, res) => {
-  try {
-    const movies = await Movie.findAll();
-    const plainMovies = movies.map(m => m.get({ plain: true }));
-    res.json({ movieCount: movies.length, movies: plainMovies.map(m => ({ 
-      id: m.id, 
-      title: m.title,
-      videoUrl: m.videoUrl ? 'has videoUrl' : 'no videoUrl',
-      externalUrl: m.externalUrl ? 'has externalUrl' : 'no externalUrl',
-      trailerUrl: m.trailerUrl ? 'has trailerUrl' : 'no trailerUrl',
-      thumbnail: m.thumbnail ? 'has thumbnail' : 'no thumbnail'
-    })) });
-  } catch (e) {
-    res.json({ error: e.message });
-  }
-});
+// Development-only endpoints (disable in production)
+if (!isProduction) {
+  app.get('/db-check', async (req, res) => {
+    try {
+      const movies = await Movie.findAll();
+      const plainMovies = movies.map(m => m.get({ plain: true }));
+      res.json({ movieCount: movies.length, movies: plainMovies.map(m => ({ 
+        id: m.id, 
+        title: m.title,
+        videoUrl: m.videoUrl ? 'has videoUrl' : 'no videoUrl',
+        externalUrl: m.externalUrl ? 'has externalUrl' : 'no externalUrl',
+        trailerUrl: m.trailerUrl ? 'has trailerUrl' : 'no trailerUrl',
+        thumbnail: m.thumbnail ? 'has thumbnail' : 'no thumbnail'
+      })) });
+    } catch (e) {
+      res.json({ error: e.message });
+    }
+  });
 
-app.get('/db-reset', async (req, res) => {
-  try {
-    await sequelize.sync({ force: true, alter: true });
-    res.json({ message: 'Database reset complete' });
-  } catch (e) {
-    res.json({ error: e.message });
-  }
-});
+  app.get('/db-reset', async (req, res) => {
+    try {
+      await sequelize.sync({ force: true, alter: true });
+      res.json({ message: 'Database reset complete' });
+    } catch (e) {
+      res.json({ error: e.message });
+    }
+  });
 
-app.get('/seed-test', async (req, res) => {
-  try {
-    const testMovie = await Movie.create({
-      title: 'Test Movie',
-      description: 'A test movie with all fields filled',
-      videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-      externalUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-      trailerUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-      thumbnail: 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=400',
-      category: 'Action',
-      genre: JSON.stringify(['Action', 'Adventure']),
-      rating: 8.5,
-      duration: '2h',
-      releaseYear: 2024,
-      director: 'Test Director',
-      featured: true
-    });
-    res.json({ message: 'Test movie created', movie: testMovie.get({ plain: true }) });
-  } catch (e) {
-    res.json({ error: e.message });
-  }
-});
+  app.get('/seed-test', async (req, res) => {
+    try {
+      const testMovie = await Movie.create({
+        title: 'Test Movie',
+        description: 'A test movie with all fields filled',
+        videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+        externalUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        trailerUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+        thumbnail: 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=400',
+        category: 'Action',
+        genre: JSON.stringify(['Action', 'Adventure']),
+        rating: 8.5,
+        duration: '2h',
+        releaseYear: 2024,
+        director: 'Test Director',
+        featured: true
+      });
+      res.json({ message: 'Test movie created', movie: testMovie.get({ plain: true }) });
+    } catch (e) {
+      res.json({ error: e.message });
+    }
+  });
+}
 
 // Serve React app for all other routes
 app.get('*', (req, res) => {

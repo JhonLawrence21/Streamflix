@@ -1,6 +1,13 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
+const verifyToken = (token) => {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET environment variable is required');
+  }
+  return jwt.verify(token, process.env.JWT_SECRET);
+};
+
 exports.protect = async (req, res, next) => {
   let token;
 
@@ -16,7 +23,7 @@ exports.protect = async (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'streamflix_secret_key_2024');
+    const decoded = verifyToken(token);
     req.user = await User.findByPk(decoded.id);
     next();
   } catch (error) {

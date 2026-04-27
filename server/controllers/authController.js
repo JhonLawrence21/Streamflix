@@ -1,13 +1,18 @@
-const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || 'streamflix_secret_key_2024', {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET environment variable is required');
+  }
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: '30d'
   });
 };
 
-exports.registerUser = async (req, res) => {
+const registerUser = async (req, res) => {
+  if (!process.env.JWT_SECRET) {
+    return res.status(500).json({ message: 'Server configuration error' });
+  }
   try {
     const { name, email, password } = req.body;
 
