@@ -105,7 +105,6 @@ const MovieDetailsPage = () => {
   }
 
   const movieCast = Array.isArray(movie.cast) ? movie.cast : [];
-  const movieGenre = Array.isArray(movie.genre) ? movie.genre : [];
 
   return (
     <div className="min-h-screen bg-netflix-bg">
