@@ -29,6 +29,19 @@ api.interceptors.response.use(
   }
 );
 
+// Helper to get movie by ID with proper error handling
+export const getMovieById = async (id) => {
+  try {
+    const response = await api.get(`/movies/${id}`);
+    return response.data;
+  } catch (error) {
+    if (error.response?.status === 404) {
+      throw new Error('Movie not found');
+    }
+    throw error;
+  }
+};
+
 export const authService = {
   register: async (data) => {
     const response = await api.post('/auth/register', data);

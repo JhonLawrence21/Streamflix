@@ -16,23 +16,40 @@ const MovieDetailsPage = () => {
   const [inWatchlist, setInWatchlist] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showTrailer, setShowTrailer] = useState(false);
+  const [watchlistIds, setWatchlistIds] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [movieData, similarData, watchlistData] = await Promise.all([
+        const [movieResult, similarResult, watchlistResult] = await Promise.allSettled([
           movieService.getById(id),
           movieService.getSimilar(id),
           user ? watchlistService.get() : Promise.resolve([])
         ]);
-        setMovie(movieData);
-        setSimilar(similarData);
-        // watchlistData is an array of movie objects, map to IDs before checking includes
-        const watchlistIds = Array.isArray(watchlistData) 
-          ? watchlistData.map(m => m.id) 
-          : [];
-        setInWatchlist(watchlistIds.includes(parseInt(id)));
+
+        if (movieResult.status === 'fulfilled') {
+          setMovie(movieResult.value);
+        } else {
+          console.error('Failed to fetch movie:', movieResult.reason);
+          setMovie(null);
+        }
+
+        if (similarResult.status === 'fulfilled') {
+          setSimilar(similarResult.value);
+        } else {
+          console.error('Failed to fetch similar movies:', similarResult.reason);
+          setSimilar([]);
+        }
+
+        if (watchlistResult.status === 'fulfilled') {
+          const watchlistData = watchlistResult.value;
+          const ids = Array.isArray(watchlistData)
+            ? watchlistData.map(m => m.id)
+            : [];
+          setWatchlistIds(ids);
+          setInWatchlist(ids.includes(parseInt(id)));
+        }
       } catch (error) {
         console.error('Error:', error);
       } finally {
@@ -229,7 +246,7 @@ const MovieDetailsPage = () => {
           <h2 className="text-xl md:text-2xl font-semibold text-white mb-6">Similar Movies</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
             {similar.map(m => (
-              <MovieCard key={m.id} movie={m} onWatchlist={inWatchlist ? [parseInt(id)] : []} />
+              <MovieCard key={m.id} movie={m} onWatchlist={watchlistIds} />
             ))}
           </div>
         </div>

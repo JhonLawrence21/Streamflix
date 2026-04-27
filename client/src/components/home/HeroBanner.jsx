@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Play, Info } from 'lucide-react';
 import { movieService } from '../../services/api';
-import { getThumbnailUrl, handleImageError } from '../../utils/imageUtils';
+import { getThumbnailUrl } from '../../utils/imageUtils';
 
 const HeroBanner = () => {
   const [movie, setMovie] = useState(null);

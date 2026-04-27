@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Play, ExternalLink } from 'lucide-react';
 import Navbar from '../components/layout/Navbar';
 import { movieService } from '../services/api';
-import { getYouTubeVideoId, getYouTubeEmbedUrl, isYouTubeUrl, isDirectVideoUrl } from '../utils/imageUtils';
+import { getYouTubeVideoId, getYouTubeEmbedUrl, isDirectVideoUrl } from '../utils/imageUtils';
 
 const WatchPage = () => {
   const { id } = useParams();
@@ -16,15 +16,16 @@ const WatchPage = () => {
     const fetchMovie = async () => {
       try {
         setLoading(true);
+        setError(null);
         const data = await movieService.watchMovie(id);
         setMovie(data);
       } catch (err) {
-        setError('Movie not found');
+        setError(err.response?.data?.message || 'Movie not found');
       } finally {
         setLoading(false);
       }
     };
-    
+
     fetchMovie();
   }, [id]);
 
