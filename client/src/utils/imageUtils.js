@@ -34,8 +34,14 @@ export const isYouTubeUrl = (url) => {
  */
 export const getYouTubeEmbedUrl = (videoId, autoplay = false) => {
   if (!videoId) return null;
-  const base = `https://www.youtube.com/embed/${videoId}`;
-  return autoplay ? `${base}?autoplay=1&rel=0` : base;
+  const params = new URLSearchParams({
+    autoplay: autoplay ? '1' : '0',
+    rel: '0',
+    modestbranding: '1',
+    fs: '1',
+    playsinline: '1'
+  });
+  return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
 };
 
 /**
@@ -59,7 +65,10 @@ export const isDirectVideoUrl = (url) => {
  */
 export const getThumbnailUrl = (url, size = 'small') => {
   if (url && typeof url === 'string' && url.trim().length > 0) {
-    return url.trim();
+    const trimmedUrl = url.trim();
+    if (trimmedUrl.startsWith('http')) return trimmedUrl;
+    if (trimmedUrl.startsWith('/')) return trimmedUrl;
+    return trimmedUrl;
   }
   if (size === 'hero') return DEFAULT_HERO_THUMBNAIL;
   if (size === 'detail') return DEFAULT_DETAIL_THUMBNAIL;
