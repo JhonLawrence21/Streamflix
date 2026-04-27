@@ -88,6 +88,16 @@ connectDB().then(() => {
   seedDatabase();
 });
 
+app.get('/db-reset', async (req, res) => {
+  try {
+    const { sequelize } = require('./config/db');
+    await sequelize.sync({ force: true, alter: true });
+    res.json({ message: 'Database reset complete' });
+  } catch (e) {
+    res.json({ error: e.message });
+  }
+});
+
 // Security Middleware
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
