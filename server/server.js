@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -26,38 +27,6 @@ const allowedOrigins = process.env.CLIENT_URL
   ? [process.env.CLIENT_URL, 'http://localhost:3000', 'http://localhost:5000']
   : ['http://localhost:3000', 'http://localhost:5000'];
 
-const sampleCategories = [
-  { name: "Action" }, { name: "Comedy" }, { name: "Drama" },
-  { name: "Horror" }, { name: "Sci-Fi" }, { name: "Thriller" }, { name: "Romance" }
-];
-
-const sampleMovies = [
-  {
-    title: "Sample Movie",
-    description: "Sample movie with working image.",
-    videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-    thumbnail: "https://image.tmdb.org/t/p/w500/1E5baAaYm26Q5vdnJIBNLEqF0mK4.jpg",
-    category: "Action",
-    rating: 8.5,
-    duration: "2h",
-    releaseYear: 2024,
-    featured: true
-  }
-];
-
-const seedDatabase = async () => {
-  try {
-    const movieCount = await Movie.count();
-    console.log('>>> Movie count:', movieCount);
-    if (movieCount === 0) {
-      await Movie.bulkCreate(sampleMovies);
-      console.log('>>> Sample movie created!');
-    }
-  } catch (error) {
-    console.error('>>> Error:', error);
-  }
-};
-
 const createDefaultAdmin = async () => {
   if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD) return;
   
@@ -76,21 +45,6 @@ const createDefaultAdmin = async () => {
     console.error('Error creating admin:', error);
   }
 };
-
-connectDB().then(() => {
-  createDefaultAdmin();
-  seedDatabase();
-});
-
-app.get('/db-reset', async (req, res) => {
-  try {
-    const { sequelize } = require('./config/db');
-    await sequelize.sync({ force: true, alter: true });
-    res.json({ message: 'Database reset complete' });
-  } catch (e) {
-    res.json({ error: e.message });
-  }
-});
 
 // Security Middleware
 const apiLimiter = rateLimit({
@@ -113,25 +67,6 @@ app.use('/api/movies', apiLimiter, movieRoutes);
 app.use('/api/watchlist', apiLimiter, watchlistRoutes);
 app.use('/api/admin', apiLimiter, adminRoutes);
 
-// Development-only endpoints (disable in production)
-if (!isProduction) {
-  app.get('/db-check', async (req, res) => {
-    try {
-      const movies = await Movie.findAll();
-      const plainMovies = movies.map(m => m.get({ plain: true }));
-      res.json({ movieCount: movies.length, movies: plainMovies.map(m => ({ 
-        id: m.id, 
-        title: m.title,
-        videoUrl: m.videoUrl ? 'has videoUrl' : 'no videoUrl',
-        externalUrl: m.externalUrl ? 'has externalUrl' : 'no externalUrl',
-        trailerUrl: m.trailerUrl ? 'has trailerUrl' : 'no trailerUrl',
-        thumbnail: m.thumbnail ? 'has thumbnail' : 'no thumbnail'
-      })) });
-    } catch (e) {
-      res.json({ error: e.message });
-    }
-  });
-
 // Test endpoint to check movies
 app.get('/test-movies', async (req, res) => {
   try {
@@ -141,39 +76,6 @@ app.get('/test-movies', async (req, res) => {
     res.json({ error: e.message });
   }
 });
-
-app.get('/db-reset', async (req, res) => {
-    try {
-      await sequelize.sync({ force: true, alter: true });
-      res.json({ message: 'Database reset complete' });
-    } catch (e) {
-      res.json({ error: e.message });
-    }
-  });
-
-  app.get('/seed-test', async (req, res) => {
-    try {
-      const testMovie = await Movie.create({
-        title: 'Test Movie',
-        description: 'A test movie with all fields filled',
-        videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-        externalUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-        trailerUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-        thumbnail: 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=400',
-        category: 'Action',
-        genre: JSON.stringify(['Action', 'Adventure']),
-        rating: 8.5,
-        duration: '2h',
-        releaseYear: 2024,
-        director: 'Test Director',
-        featured: true
-      });
-      res.json({ message: 'Test movie created', movie: testMovie.get({ plain: true }) });
-    } catch (e) {
-      res.json({ error: e.message });
-    }
-  });
-}
 
 // Serve React app for all other routes
 app.get('*', (req, res) => {
@@ -188,7 +90,6 @@ app.listen(PORT, '0.0.0.0', () => {
 
 connectDB().then(() => {
   createDefaultAdmin();
-  seedDatabase();
 }).catch(err => {
   console.error('DB connection error:', err);
 });
