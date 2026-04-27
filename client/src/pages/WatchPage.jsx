@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Play } from 'lucide-react';
+import { ArrowLeft, Play, ExternalLink } from 'lucide-react';
 import Navbar from '../components/layout/Navbar';
 import { movieService } from '../services/api';
 
@@ -40,13 +40,26 @@ const WatchPage = () => {
     return null;
   };
 
+  const isYouTube = (url) => {
+    return url && (url.includes('youtube') || url.includes('youtu.be'));
+  };
+
+  const isDirectVideo = (url) => {
+    if (!url) return false;
+    return url.match(/\.(mp4|webm|mov|avi|mkv)$/i);
+  };
+
   const getVideoUrl = () => {
-    if (movie.videoUrl && movie.videoUrl.trim()) {
+    if (movie?.videoUrl) {
       const ytId = getYouTubeVideoId(movie.videoUrl);
       if (ytId) return ytId;
-      return movie.videoUrl;
+      if (isDirectVideo(movie.videoUrl)) return movie.videoUrl;
     }
-    if (movie.externalUrl && movie.externalUrl.trim()) {
+    return null;
+  };
+
+  const getExternalUrl = () => {
+    if (movie?.externalUrl && movie.externalUrl.trim()) {
       const ytId = getYouTubeVideoId(movie.externalUrl);
       if (ytId) return ytId;
       return movie.externalUrl;
@@ -54,12 +67,10 @@ const WatchPage = () => {
     return null;
   };
 
-  const isYouTube = (url) => {
-    return url && (url.includes('youtube') || url.includes('youtu.be'));
-  };
-
   const videoSrc = getVideoUrl();
-  const isYT = videoSrc && isYouTube(movie.videoUrl || movie.externalUrl);
+  const externalSrc = getExternalUrl();
+  const isYT = videoSrc && isYouTube(movie?.videoUrl);
+  const hasExternalSrc = externalSrc && !isYouTube(externalSrc);
 
   if (loading) {
     return (
@@ -83,10 +94,6 @@ const WatchPage = () => {
     );
   }
 
-  const youtubeId = getYouTubeVideoId(movie.videoUrl);
-  const hasExternalUrl = movie?.externalUrl && movie.externalUrl.trim() !== '';
-  const externalUrlId = hasExternalUrl ? getYouTubeVideoId(movie.externalUrl) : null;
-
   return (
     <div className="min-h-screen bg-black">
       <div className="fixed top-0 left-0 right-0 z-50 p-4 flex items-center justify-between">
@@ -97,9 +104,9 @@ const WatchPage = () => {
           <ArrowLeft size={20} />
           Back
         </button>
-        {hasExternalUrl && (
+        {hasExternalSrc && (
           <a
-            href={movie.externalUrl}
+            href={externalSrc}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 text-white/80 hover:text-white transition-colors bg-netflix-red/80 hover:bg-netflix-red px-4 py-2 rounded"
@@ -126,6 +133,23 @@ const WatchPage = () => {
             className="w-full h-full object-contain"
             autoPlay
           />
+        ) : hasExternalSrc ? (
+          <div className="flex flex-col items-center justify-center">
+            <Play size={64} className="text-netflix-text-secondary mb-4" />
+            <p className="text-netflix-text-secondary text-lg mb-4">This movie opens in an external site</p>
+            <a
+              href={externalSrc}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 bg-netflix-red text-white px-6 py-3 rounded font-semibold hover:bg-red-700 transition-colors"
+            >
+              <ExternalLink size={24} />
+              Watch Now
+            </a>
+            <Link to={`/movie/${id}`} className="text-netflix-text-secondary mt-4 hover:text-white">
+              View Details
+            </Link>
+          </div>
         ) : (
           <div className="flex flex-col items-center justify-center">
             <Play size={64} className="text-netflix-text-secondary mb-4" />

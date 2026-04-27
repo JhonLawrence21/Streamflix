@@ -325,3 +325,5 @@ const MovieDetailsPage = () => {
     </div>
   );
 };
+
+export default MovieDetailsPage;
