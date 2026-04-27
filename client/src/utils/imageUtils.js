@@ -39,7 +39,8 @@ export const getYouTubeEmbedUrl = (videoId, autoplay = false) => {
     rel: '0',
     modestbranding: '1',
     fs: '1',
-    playsinline: '1'
+    playsinline: '1',
+    enablejsapi: '1'
   });
   return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
 };

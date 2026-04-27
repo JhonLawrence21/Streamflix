@@ -112,15 +112,15 @@ const WatchPage = () => {
         )}
       </div>
 
-      <div className="relative h-screen bg-black flex items-center justify-center">
-        {source.type === 'youtube' && source.src ? (
-          <iframe
-            src={getYouTubeEmbedUrl(source.src, true)}
-            className="w-full h-full"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            title={movie.title}
-          />
+       <div className="relative h-screen bg-black flex items-center justify-center">
+         {source.type === 'youtube' && source.src ? (
+           <iframe
+             src={getYouTubeEmbedUrl(source.src, true)}
+             className="w-full h-full"
+             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+             allowFullScreen
+             title={movie.title}
+           />
         ) : source.type === 'direct' && source.src ? (
           <video
             src={source.src}
