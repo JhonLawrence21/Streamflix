@@ -7,6 +7,7 @@ import { watchlistService } from '../../services/api';
 const MovieCard = ({ movie, onWatchlist = [] }) => {
   const { user } = useAuth();
   const [isInWatchlist, setIsInWatchlist] = useState(onWatchlist.includes(movie.id));
+  const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
     setIsInWatchlist(onWatchlist.includes(movie.id));
@@ -30,14 +31,20 @@ const MovieCard = ({ movie, onWatchlist = [] }) => {
     }
   };
 
+  const getThumbnail = () => {
+    if (movie.thumbnail && !imageError) return movie.thumbnail;
+    return 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=400';
+  };
+
   return (
     <Link to={`/movie/${movie.id}`} className="block group">
       <div className="relative aspect-[2/3] rounded overflow-hidden bg-netflix-bg-tertiary">
         <img 
-          src={movie.thumbnail || 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=400'} 
+          src={getThumbnail()} 
           alt={movie.title}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           loading="lazy"
+          onError={() => setImageError(true)}
         />
         
         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">

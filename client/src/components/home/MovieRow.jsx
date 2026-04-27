@@ -4,6 +4,26 @@ import { ChevronLeft, ChevronRight, Play, Plus, Check } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { watchlistService } from '../../services/api';
 
+const ThumbnailWithFallback = ({ movie, onRemoveContainer }) => {
+  const [imageError, setImageError] = useState(false);
+  
+  const src = imageError || !movie.thumbnail 
+    ? 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=400'
+    : movie.thumbnail;
+
+  return (
+    <div className="relative aspect-[2/3] rounded overflow-hidden bg-netflix-bg-tertiary">
+      <img 
+        src={src}
+        alt={movie.title}
+        className="w-full h-full object-cover transition-transform duration-300 group-hover/card:scale-110"
+        loading="lazy"
+        onError={() => setImageError(true)}
+      />
+    </div>
+  );
+};
+
 const MovieRow = ({ title, movies, onWatchlist = [] }) => {
   const rowRef = useRef(null);
   const [showButtons, setShowButtons] = useState(false);
@@ -69,34 +89,27 @@ const MovieRow = ({ title, movies, onWatchlist = [] }) => {
               to={`/movie/${movie.id}`}
               className="flex-shrink-0 w-36 sm:w-40 md:w-48 group/card relative"
             >
-              <div className="relative aspect-[2/3] rounded overflow-hidden bg-netflix-bg-tertiary">
-                <img 
-                  src={movie.thumbnail || 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=400'} 
-                  alt={movie.title}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover/card:scale-110"
-                  loading="lazy"
-                />
+              <ThumbnailWithFallback movie={movie} />
                 
-                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/card:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                  <Link to={`/watch/${movie.id}`} className="w-12 h-12 rounded-full bg-white flex items-center justify-center hover:scale-110 transition-transform">
-                    <Play size={20} className="text-black ml-1" />
-                  </Link>
-                  {user && (
-                    <button 
-                      onClick={(e) => handleAddToWatchlist(e, movie.id)}
-                      className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-colors ${localWatchlist.includes(movie.id) ? 'bg-netflix-red border-netflix-red' : 'border-white hover:border-netflix-red'}`}
-                    >
-                      {localWatchlist.includes(movie.id) ? <Check size={16} /> : <Plus size={16} />}
-                    </button>
-                  )}
-                </div>
+              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/card:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                <Link to={`/watch/${movie.id}`} className="w-12 h-12 rounded-full bg-white flex items-center justify-center hover:scale-110 transition-transform">
+                  <Play size={20} className="text-black ml-1" />
+                </Link>
+                {user && (
+                  <button 
+                    onClick={(e) => handleAddToWatchlist(e, movie.id)}
+                    className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-colors ${localWatchlist.includes(movie.id) ? 'bg-netflix-red border-netflix-red' : 'border-white hover:border-netflix-red'}`}
+                  >
+                    {localWatchlist.includes(movie.id) ? <Check size={16} /> : <Plus size={16} />}
+                  </button>
+                )}
+              </div>
 
-                <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black to-transparent">
-                  <h3 className="text-sm font-medium text-white truncate">{movie.title}</h3>
-                  <div className="flex items-center gap-2 text-xs text-netflix-text-secondary">
-                    {movie.rating > 0 && <span>{movie.rating.toFixed(1)}</span>}
-                    {movie.releaseYear && <span>{movie.releaseYear}</span>}
-                  </div>
+              <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black to-transparent">
+                <h3 className="text-sm font-medium text-white truncate">{movie.title}</h3>
+                <div className="flex items-center gap-2 text-xs text-netflix-text-secondary">
+                  {movie.rating > 0 && <span>{movie.rating.toFixed(1)}</span>}
+                  {movie.releaseYear && <span>{movie.releaseYear}</span>}
                 </div>
               </div>
             </Link>
