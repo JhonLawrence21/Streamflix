@@ -196,6 +196,22 @@ app.get('*', (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`StreamFlix running on port ${PORT}`);
-});
+const PORT = process.env.PORT || 5000;
+
+const startServer = async () => {
+  try {
+    await connectDB();
+    createDefaultAdmin();
+    seedDatabase();
+    
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`StreamFlix running on port ${PORT}`);
+      console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    });
+  } catch (err) {
+    console.error('Failed to start server:', err);
+    process.exit(1);
+  }
+};
+
+startServer();
