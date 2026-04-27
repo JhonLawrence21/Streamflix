@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const User = require('../models/User');
 
 const generateToken = (id) => {
   if (!process.env.JWT_SECRET) {
@@ -40,6 +41,7 @@ const registerUser = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+exports.registerUser = registerUser;
 
 exports.loginUser = async (req, res) => {
   try {
