@@ -1,4 +1,3 @@
-require('dotenv').config({ path: __dirname + '/.env' });
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -6,14 +5,12 @@ const rateLimit = require('express-rate-limit');
 const path = require('path');
 const connectDB = require('./config/db');
 
-console.log('[DEBUG] JWT_SECRET:', process.env.JWT_SECRET ? 'set' : 'undefined');
-console.log('[DEBUG] NODE_ENV:', process.env.NODE_ENV);
-
-const fallbackSecret = 'dev_fallback_jwt_secret_' + Date.now();
 if (!process.env.JWT_SECRET) {
-  process.env.JWT_SECRET = fallbackSecret;
-  console.warn('WARNING: JWT_SECRET not set, using fallback');
+  process.env.JWT_SECRET = 'streamflix_jwt_secret_key_2024_prod';
 }
+
+const isProduction = process.env.NODE_ENV === 'production';
+
 const User = require('./models/User');
 const Movie = require('./models/Movie');
 const Category = require('./models/Category');
