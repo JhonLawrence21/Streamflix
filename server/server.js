@@ -86,10 +86,18 @@ const PORT = process.env.PORT || 10000;
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`StreamFlix running on port ${PORT}`);
+  console.log(`Environment: ${isProduction ? 'production' : 'development'}`);
 });
 
-connectDB().then(() => {
-  createDefaultAdmin();
-}).catch(err => {
-  console.error('DB connection error:', err);
+connectDB()
+  .then(() => {
+    console.log('Database connected successfully');
+    createDefaultAdmin();
+  })
+  .catch(err => {
+    console.error('DB connection error:', err.message);
+  });
+
+process.on('unhandledRejection', (err) => {
+  console.error('Unhandled rejection:', err.message);
 });

@@ -68,13 +68,12 @@ const connectDB = async () => {
   try {
     await sequelize.authenticate();
     console.log('Database Connected...');
-    
-    // Don't sync, just ensure tables exist
     await sequelize.sync({ force: false });
     console.log('Database synced');
     return sequelize;
   } catch (error) {
-    console.error(`Error: ${error.message}`);
+    console.error(`DB Error: ${error.message}`);
+    console.error(error.stack);
     return sequelize;
   }
 };
