@@ -7,15 +7,20 @@ const sequelize = db.sequelize;
 
 exports.createMovie = async (req, res) => {
   try {
+    console.log('[createMovie] Received body:', JSON.stringify(req.body));
     const { genre, cast, ...otherData } = req.body;
     const movieData = {
       ...otherData,
       genre: Array.isArray(genre) ? genre : (genre || []),
       cast: Array.isArray(cast) ? cast : (cast || [])
     };
+    console.log('[createMovie] Movie data to save:', JSON.stringify(movieData));
     const movie = await Movie.create(movieData);
-    res.status(201).json(movie.get({ plain: true }));
+    const savedMovie = movie.get({ plain: true });
+    console.log('[createMovie] Saved movie:', JSON.stringify(savedMovie));
+    res.status(201).json(savedMovie);
   } catch (error) {
+    console.error('[createMovie] Error:', error);
     res.status(500).json({ message: error.message });
   }
 };
