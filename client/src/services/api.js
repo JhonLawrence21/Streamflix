@@ -118,6 +118,16 @@ export const movieService = {
   getSimilar: async (id) => {
     const response = await api.get(`/movies/similar/${id}`);
     return response.data;
+  },
+
+  getUpcoming: async () => {
+    const response = await api.get('/movies/upcoming');
+    return response.data;
+  },
+
+  getReleasesByMonth: async (year, month) => {
+    const response = await api.get(`/movies/releases/${year}/${month}`);
+    return response.data;
   }
 };
 

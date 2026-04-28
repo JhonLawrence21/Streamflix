@@ -12,6 +12,7 @@ import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import AdminMoviesPage from './pages/admin/AdminMoviesPage';
 import AdminUsersPage from './pages/admin/AdminUsersPage';
 import ProfilePage from './pages/ProfilePage';
+import UpcomingReleasesPage from './pages/UpcomingReleasesPage';
 
 function App() {
   return (
@@ -26,8 +27,9 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/profile" element={<ProfilePage />} />
-          
-          <Route path="/admin" element={<AdminLayout />}>
+          <Route path="/upcoming" element={<UpcomingReleasesPage />} />
+           
+           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboardPage />} />
             <Route path="movies" element={<AdminMoviesPage />} />
             <Route path="users" element={<AdminUsersPage />} />

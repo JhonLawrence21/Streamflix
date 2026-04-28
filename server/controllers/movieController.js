@@ -187,3 +187,39 @@ exports.getSimilarMovies = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+exports.getUpcomingReleases = async (req, res) => {
+  try {
+    const movies = await Movie.findAll({
+      where: {
+        status: 'upcoming',
+        releaseDate: { [Op.gte]: new Date() }
+      },
+      order: [['releaseDate', 'ASC']]
+    });
+    res.json(movies.map(m => m.get({ plain: true })));
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getReleasesByMonth = async (req, res) => {
+  try {
+    const { year, month } = req.params;
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0);
+
+    const movies = await Movie.findAll({
+      where: {
+        releaseDate: {
+          [Op.between]: [startDate, endDate]
+        },
+        status: 'released'
+      },
+      order: [['releaseDate', 'ASC']]
+    });
+    res.json(movies.map(m => m.get({ plain: true })));
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

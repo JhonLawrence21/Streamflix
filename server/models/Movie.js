@@ -70,6 +70,14 @@ const Movie = sequelize.define('Movie', {
   releaseYear: {
     type: DataTypes.INTEGER
   },
+  releaseDate: {
+    type: DataTypes.DATE,
+    allowNull: true
+  },
+  status: {
+    type: DataTypes.ENUM('released', 'upcoming', 'in-production'),
+    defaultValue: 'released'
+  },
   cast: {
     type: DataTypes.STRING,
     defaultValue: '[]',

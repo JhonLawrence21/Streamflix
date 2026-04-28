@@ -45,6 +45,7 @@ const Navbar = () => {
             <Link to="/" className="text-netflix-text text-sm hover:text-netflix-text-secondary transition-colors">Home</Link>
             <Link to="/search?category=Action" className="text-netflix-text-secondary text-sm hover:text-white transition-colors">Action</Link>
             <Link to="/search?category=Drama" className="text-netflix-text-secondary text-sm hover:text-white transition-colors">Drama</Link>
+            <Link to="/upcoming" className="text-netflix-text-secondary text-sm hover:text-white transition-colors">Upcoming</Link>
             <Link to="/watchlist" className="text-netflix-text-secondary text-sm hover:text-white transition-colors">My List</Link>
           </div>
         </div>
@@ -112,12 +113,13 @@ const Navbar = () => {
         </div>
       </div>
 
-      {mobileMenuOpen && (
+          {mobileMenuOpen && (
         <div className="md:hidden bg-netflix-bg border-t border-netflix-bg-tertiary">
           <div className="flex flex-col p-4 gap-4">
             <Link to="/" className="text-netflix-text py-2" onClick={() => setMobileMenuOpen(false)}>Home</Link>
             <Link to="/search?category=Action" className="text-netflix-text-secondary py-2" onClick={() => setMobileMenuOpen(false)}>Action</Link>
             <Link to="/search?category=Drama" className="text-netflix-text-secondary py-2" onClick={() => setMobileMenuOpen(false)}>Drama</Link>
+            <Link to="/upcoming" className="text-netflix-text-secondary py-2" onClick={() => setMobileMenuOpen(false)}>Upcoming</Link>
             {user && (
               <Link to="/watchlist" className="text-netflix-text-secondary py-2" onClick={() => setMobileMenuOpen(false)}>My List</Link>
             )}
