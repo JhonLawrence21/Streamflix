@@ -22,6 +22,8 @@ const AdminMoviesPage = () => {
     rating: '',
     duration: '',
     releaseYear: '',
+    releaseDate: '',
+    status: 'released',
     director: '',
     featured: false,
     trending: false
@@ -60,6 +62,8 @@ const AdminMoviesPage = () => {
       cast: formData.cast ? formData.cast.split(',').map(c => c.trim()).filter(c => c) : [],
       rating: formData.rating ? parseFloat(formData.rating) : 0,
       releaseYear: formData.releaseYear ? parseInt(formData.releaseYear) : null,
+      releaseDate: formData.releaseDate || null,
+      status: formData.status || 'released',
       featured: formData.featured,
       trending: formData.trending
     };
@@ -388,6 +392,27 @@ const AdminMoviesPage = () => {
                     onChange={(e) => setFormData({ ...formData, releaseYear: e.target.value })}
                     className="input-field"
                   />
+                </div>
+                <div>
+                  <label className="block text-netflix-text-secondary text-sm mb-2">Release Date</label>
+                  <input
+                    type="date"
+                    value={formData.releaseDate}
+                    onChange={(e) => setFormData({ ...formData, releaseDate: e.target.value })}
+                    className="input-field"
+                  />
+                </div>
+                <div>
+                  <label className="block text-netflix-text-secondary text-sm mb-2">Status</label>
+                  <select
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                    className="input-field"
+                  >
+                    <option value="released">Released</option>
+                    <option value="upcoming">Upcoming</option>
+                    <option value="in-production">In Production</option>
+                  </select>
                 </div>
               </div>
 

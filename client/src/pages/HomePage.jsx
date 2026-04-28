@@ -18,14 +18,15 @@ const HomePage = () => {
   const [tvShows, setTvShows] = useState([]);
   const [myList, setMyList] = useState([]);
   const [watchlist, setWatchlist] = useState([]);
+  const [upcoming, setUpcoming] = useState([]);
   const { user } = useAuth();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [trendingData, popularData, actionData, dramaData, comedyData, horrorData, sciFiData, thrillerData, animationData, tvData] = await Promise.all([
+        const [trendingData, popularData, actionData, dramaData, comedyData, horrorData, sciFiData, thrillerData, animationData, tvData, upcomingData] = await Promise.all([
           movieService.getTrending(),
-          movieService.getAll({ category: 'Popular', limit: 10 }),
+          movieService.getAll({ category: 'Popular', limit: 20 }),
           movieService.getByCategory('Action'),
           movieService.getByCategory('Drama'),
           movieService.getByCategory('Comedy'),
@@ -33,19 +34,21 @@ const HomePage = () => {
           movieService.getByCategory('Sci-Fi'),
           movieService.getByCategory('Thriller'),
           movieService.getByCategory('Animation'),
-          movieService.getByCategory('TV Shows')
+          movieService.getByCategory('TV Shows'),
+          movieService.getUpcoming()
         ]);
         
-        setTrending(trendingData.slice(0, 10));
-        setPopular(popularData.movies || popularData.slice(0, 10));
-        setAction(actionData.slice(0, 10));
-        setDrama(dramaData.slice(0, 10));
-        setComedy(comedyData.slice(0, 10));
-        setHorror(horrorData.slice(0, 10));
-        setSciFi(sciFiData.slice(0, 10));
-        setThriller(thrillerData.slice(0, 10));
-        setAnimation(animationData.slice(0, 10));
-        setTvShows(tvData.slice(0, 10));
+        setTrending(trendingData.slice(0, 20));
+        setPopular(popularData.movies || popularData.slice(0, 20));
+        setAction(actionData.slice(0, 20));
+        setDrama(dramaData.slice(0, 20));
+        setComedy(comedyData.slice(0, 20));
+        setHorror(horrorData.slice(0, 20));
+        setSciFi(sciFiData.slice(0, 20));
+        setThriller(thrillerData.slice(0, 20));
+        setAnimation(animationData.slice(0, 20));
+        setTvShows(tvData.slice(0, 20));
+        setUpcoming(upcomingData);
       } catch (error) {
         console.error('Error fetching movies:', error);
       }
@@ -70,12 +73,20 @@ const HomePage = () => {
     fetchWatchlist();
   }, [user]);
 
-  return (
+    return (
     <div className="min-h-screen bg-netflix-bg">
       <Navbar />
       <HeroBanner />
       
       <div className="relative -mt-32 z-10 pb-8">
+        {upcoming.length > 0 && (
+          <MovieRow 
+            title="Upcoming Releases" 
+            movies={upcoming} 
+            onWatchlist={watchlist}
+          />
+        )}
+        
         <MovieRow 
           title="Trending Now" 
           movies={trending} 
