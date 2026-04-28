@@ -11,18 +11,20 @@ const HomePage = () => {
   const [action, setAction] = useState([]);
   const [drama, setDrama] = useState([]);
   const [comedy, setComedy] = useState([]);
+  const [tvShows, setTvShows] = useState([]);
   const [watchlist, setWatchlist] = useState([]);
   const { user } = useAuth();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [trendingData, popularData, actionData, dramaData, comedyData] = await Promise.all([
+        const [trendingData, popularData, actionData, dramaData, comedyData, tvData] = await Promise.all([
           movieService.getTrending(),
           movieService.getAll({ category: 'Popular', limit: 10 }),
           movieService.getByCategory('Action'),
           movieService.getByCategory('Drama'),
-          movieService.getByCategory('Comedy')
+          movieService.getByCategory('Comedy'),
+          movieService.getByCategory('TV Shows')
         ]);
         
         setTrending(trendingData.slice(0, 10));
@@ -30,6 +32,7 @@ const HomePage = () => {
         setAction(actionData.slice(0, 10));
         setDrama(dramaData.slice(0, 10));
         setComedy(comedyData.slice(0, 10));
+        setTvShows(tvData.slice(0, 10));
       } catch (error) {
         console.error('Error fetching movies:', error);
       }
@@ -86,6 +89,12 @@ const HomePage = () => {
         <MovieRow 
           title="Comedy" 
           movies={comedy} 
+          onWatchlist={watchlist}
+        />
+        
+        <MovieRow 
+          title="TV Shows" 
+          movies={tvShows} 
           onWatchlist={watchlist}
         />
       </div>

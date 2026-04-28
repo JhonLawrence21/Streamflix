@@ -97,6 +97,10 @@ const Movie = sequelize.define('Movie', {
   views: {
     type: DataTypes.INTEGER,
     defaultValue: 0
+  },
+  trending: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
   }
 }, {
   tableName: 'movies',

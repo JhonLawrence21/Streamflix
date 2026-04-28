@@ -78,6 +78,26 @@ const connectDB = async (retries = 3) => {
       console.log('[DB] Database Connected successfully');
       await sequelize.sync({ force: false });
       console.log('[DB] Database synced (force: false)');
+
+      // Auto-migrate: add trending column if missing (safe for existing data)
+      try {
+        const queryInterface = sequelize.getQueryInterface();
+        const tableInfo = await queryInterface.describeTable('movies');
+        if (!tableInfo.trending) {
+          console.log('[DB] Migrating: adding trending column to movies...');
+          await queryInterface.addColumn('movies', 'trending', {
+            type: Sequelize.BOOLEAN,
+            defaultValue: false,
+            allowNull: false
+          });
+          console.log('[DB] Migration complete: trending column added');
+        } else {
+          console.log('[DB] Migration check: trending column already exists');
+        }
+      } catch (migrateErr) {
+        console.error('[DB] Migration warning (non-fatal):', migrateErr.message);
+      }
+
       return sequelize;
     } catch (error) {
       console.error(`[DB] Attempt ${attempt}/${retries} failed: ${error.message}`);

@@ -9,7 +9,8 @@ const sampleCategories = [
   { name: "Horror", description: "Hair-raising horror movies" },
   { name: "Sci-Fi", description: "Mind-bending science fiction" },
   { name: "Thriller", description: "Edge-of-your-seat thrillers" },
-  { name: "Romance", description: "Heartwarming love stories" }
+  { name: "Romance", description: "Heartwarming love stories" },
+  { name: "TV Shows", description: "Binge-worthy TV series and shows" }
 ];
 
 const sampleMovies = [
@@ -24,7 +25,8 @@ const sampleMovies = [
     duration: "2h 15m",
     releaseYear: 2024,
     director: "John Director",
-    featured: true
+    featured: true,
+    trending: true
   },
   {
     title: "Comedy Night",
@@ -37,7 +39,8 @@ const sampleMovies = [
     duration: "1h 45m",
     releaseYear: 2024,
     director: "Jane Director",
-    featured: false
+    featured: false,
+    trending: false
   },
   {
     title: "Dark Drama",
@@ -50,7 +53,22 @@ const sampleMovies = [
     duration: "2h 30m",
     releaseYear: 2023,
     director: "Bob Director",
-    featured: false
+    featured: false,
+    trending: false
+  },
+  {
+    title: "Mystery Manor",
+    description: "A gripping TV series following detectives solving impossible cases in a haunted manor.",
+    videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    thumbnail: "https://images.unsplash.com/photo-1509347528160-9a9e33742cdb?w=400",
+    category: "TV Shows",
+    genre: ["Mystery", "Thriller"],
+    rating: 8.9,
+    duration: "8 Episodes",
+    releaseYear: 2024,
+    director: "Sarah Showrunner",
+    featured: false,
+    trending: true
   }
 ];
 

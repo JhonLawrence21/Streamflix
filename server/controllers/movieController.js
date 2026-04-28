@@ -111,7 +111,18 @@ exports.getFeaturedMovie = async (req, res) => {
 
 exports.getTrendingMovies = async (req, res) => {
   try {
-    const movies = await Movie.findAll({ order: [['views', 'DESC']], limit: 10 });
+    // First try to get manually-tagged trending movies
+    let movies = await Movie.findAll({
+      where: { trending: true },
+      order: [['createdAt', 'DESC']],
+      limit: 10
+    });
+
+    // Fallback to most-viewed if no movies are tagged as trending
+    if (movies.length === 0) {
+      movies = await Movie.findAll({ order: [['views', 'DESC']], limit: 10 });
+    }
+
     res.json(movies.map(m => m.get({ plain: true })));
   } catch (error) {
     res.status(500).json({ message: error.message });

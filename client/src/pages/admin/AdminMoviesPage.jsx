@@ -23,7 +23,8 @@ const AdminMoviesPage = () => {
     duration: '',
     releaseYear: '',
     director: '',
-    featured: false
+    featured: false,
+    trending: false
   });
 
   useEffect(() => {
@@ -59,27 +60,21 @@ const AdminMoviesPage = () => {
       cast: formData.cast ? formData.cast.split(',').map(c => c.trim()).filter(c => c) : [],
       rating: formData.rating ? parseFloat(formData.rating) : 0,
       releaseYear: formData.releaseYear ? parseInt(formData.releaseYear) : null,
-      featured: formData.featured
+      featured: formData.featured,
+      trending: formData.trending
     };
 
-    console.log('[AdminMoviesPage] Submitting movie data:', JSON.stringify(movieData, null, 2));
-
     try {
-      let response;
       if (editingMovie) {
-        response = await adminService.updateMovie(editingMovie.id, movieData);
-        console.log('[AdminMoviesPage] Update response:', response);
+        await adminService.updateMovie(editingMovie.id, movieData);
       } else {
-        response = await adminService.createMovie(movieData);
-        console.log('[AdminMoviesPage] Create response:', response);
+        await adminService.createMovie(movieData);
       }
-
       setShowModal(false);
       setEditingMovie(null);
       resetForm();
       fetchMovies();
     } catch (error) {
-      console.error('[AdminMoviesPage] Error saving movie:', error);
       const msg = error.response?.data?.message || error.message || 'Failed to save movie';
       setFormError(msg);
     }
@@ -101,7 +96,6 @@ const AdminMoviesPage = () => {
   };
 
   const handleEdit = (movie) => {
-    console.log('[AdminMoviesPage] Editing movie:', movie);
     setEditingMovie(movie);
     setFormData({
       title: movie.title || '',
@@ -117,7 +111,8 @@ const AdminMoviesPage = () => {
       duration: movie.duration || '',
       releaseYear: movie.releaseYear?.toString() || '',
       director: movie.director || '',
-      featured: !!movie.featured
+      featured: !!movie.featured,
+      trending: !!movie.trending
     });
     setFormError('');
     setShowModal(true);
@@ -149,16 +144,27 @@ const AdminMoviesPage = () => {
       duration: '',
       releaseYear: '',
       director: '',
-      featured: false
+      featured: false,
+      trending: false
     });
     setFormError('');
+  };
+
+  const renderGenreTags = (genreValue) => {
+    const genreList = parseGenre(genreValue);
+    if (!genreList) return <span className="text-netflix-text-muted text-sm">—</span>;
+    return genreList.split(',').slice(0, 3).map((g, i) => (
+      <span key={i} className="text-xs px-2 py-0.5 bg-netflix-bg-tertiary text-netflix-text-secondary rounded-full">
+        {g.trim()}
+      </span>
+    ));
   };
 
   return (
     <div className="p-8">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-bold text-white">Movies</h1>
-        <button 
+        <button
           onClick={() => { resetForm(); setEditingMovie(null); setShowModal(true); }}
           className="flex items-center gap-2 btn-primary"
         >
@@ -186,6 +192,7 @@ const AdminMoviesPage = () => {
                 <tr>
                   <th className="px-6 py-3 text-left text-netflix-text-secondary text-sm">Title</th>
                   <th className="px-6 py-3 text-left text-netflix-text-secondary text-sm">Category</th>
+                  <th className="px-6 py-3 text-left text-netflix-text-secondary text-sm">Genre</th>
                   <th className="px-6 py-3 text-left text-netflix-text-secondary text-sm">Rating</th>
                   <th className="px-6 py-3 text-left text-netflix-text-secondary text-sm">Views</th>
                   <th className="px-6 py-3 text-right text-netflix-text-secondary text-sm">Actions</th>
@@ -196,32 +203,42 @@ const AdminMoviesPage = () => {
                   <tr key={movie.id} className="border-t border-netflix-bg-tertiary">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <img 
-                          src={getThumbnailUrl(movie.thumbnail)} 
+                        <img
+                          src={getThumbnailUrl(movie.thumbnail)}
                           alt={movie.title}
                           className="w-12 h-12 object-cover rounded"
                           onError={handleImageError}
                         />
                         <div>
                           <p className="text-white font-medium">{movie.title}</p>
-                          {movie.featured && (
-                            <span className="text-xs text-netflix-red">Featured</span>
-                          )}
+                          <div className="flex gap-1 flex-wrap">
+                            {movie.featured && (
+                              <span className="text-xs px-1.5 py-0.5 bg-red-900/50 text-red-200 rounded">Featured</span>
+                            )}
+                            {movie.trending && (
+                              <span className="text-xs px-1.5 py-0.5 bg-amber-900/50 text-amber-200 rounded">Trending</span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-netflix-text-secondary">{movie.category || 'N/A'}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-wrap gap-1">
+                        {renderGenreTags(movie.genre)}
+                      </div>
+                    </td>
                     <td className="px-6 py-4 text-netflix-success">{movie.rating?.toFixed(1) || 'N/A'}</td>
                     <td className="px-6 py-4 text-netflix-text-secondary">{movie.views || 0}</td>
                     <td className="px-6 py-4 text-right">
-                      <button 
-                        onClick={() => handleEdit(movie)} 
+                      <button
+                        onClick={() => handleEdit(movie)}
                         className="text-netflix-text-secondary hover:text-white p-2"
                       >
                         <Edit size={18} />
                       </button>
-                      <button 
-                        onClick={() => handleDelete(movie.id)} 
+                      <button
+                        onClick={() => handleDelete(movie.id)}
                         className="text-netflix-text-secondary hover:text-netflix-red p-2 ml-2"
                       >
                         <Trash2 size={18} />
@@ -272,7 +289,7 @@ const AdminMoviesPage = () => {
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                     className="input-field"
-                    placeholder="e.g., Action, Drama, Comedy"
+                    placeholder="e.g., Action, Drama, Comedy, TV Shows"
                   />
                 </div>
               </div>
@@ -288,7 +305,7 @@ const AdminMoviesPage = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-netflix-text-secondary text-sm mb-2">Video URL (YouTube Embed)</label>
+                  <label className="block text-netflix-text-secondary text-sm mb-2">Video URL</label>
                   <input
                     type="url"
                     value={formData.videoUrl}
@@ -298,7 +315,7 @@ const AdminMoviesPage = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-netflix-text-secondary text-sm mb-2">External Full Movie URL</label>
+                  <label className="block text-netflix-text-secondary text-sm mb-2">External URL</label>
                   <input
                     type="url"
                     value={formData.externalUrl}
@@ -308,7 +325,7 @@ const AdminMoviesPage = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-netflix-text-secondary text-sm mb-2">Trailer URL (YouTube)</label>
+                  <label className="block text-netflix-text-secondary text-sm mb-2">Trailer URL</label>
                   <input
                     type="url"
                     value={formData.trailerUrl}
@@ -360,7 +377,7 @@ const AdminMoviesPage = () => {
                     value={formData.duration}
                     onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
                     className="input-field"
-                    placeholder="2h 15m"
+                    placeholder="2h 15m or 8 Episodes"
                   />
                 </div>
                 <div>
@@ -382,7 +399,7 @@ const AdminMoviesPage = () => {
                     value={formData.genre}
                     onChange={(e) => setFormData({ ...formData, genre: e.target.value })}
                     className="input-field"
-                    placeholder="Action, Adventure"
+                    placeholder="Action, Adventure, Mystery"
                   />
                 </div>
                 <div>
@@ -407,15 +424,27 @@ const AdminMoviesPage = () => {
                 />
               </div>
 
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="featured"
-                  checked={formData.featured}
-                  onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
-                  className="w-4 h-4"
-                />
-                <label htmlFor="featured" className="text-white">Feature on homepage</label>
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="featured"
+                    checked={formData.featured}
+                    onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
+                    className="w-4 h-4"
+                  />
+                  <label htmlFor="featured" className="text-white">Feature on homepage</label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="trending"
+                    checked={formData.trending}
+                    onChange={(e) => setFormData({ ...formData, trending: e.target.checked })}
+                    className="w-4 h-4"
+                  />
+                  <label htmlFor="trending" className="text-white">Show in Trending Now</label>
+                </div>
               </div>
 
               <button type="submit" className="w-full btn-primary py-3">
@@ -430,3 +459,4 @@ const AdminMoviesPage = () => {
 };
 
 export default AdminMoviesPage;
+
