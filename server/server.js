@@ -76,7 +76,16 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '../client/build')));
+app.use(express.static(path.join(__dirname, '../client/build'), {
+  maxAge: '1m',
+  setHeaders: (res, path) => {
+    if (path.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    }
+  }
+}));
 
 // API Routes - auth has stricter limiter for login/register, others use general
 app.use('/api/auth', authLimiter, authRoutes);
