@@ -47,10 +47,16 @@ const createDefaultAdmin = async () => {
 };
 
 // Security Middleware
-const apiLimiter = rateLimit({
+const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 1000,
   message: { message: 'Too many requests, please try again later.' }
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 50,
+  message: { message: 'Too many login attempts, please try again later.' }
 });
 
 app.use(helmet({
@@ -72,11 +78,11 @@ app.use(cors({
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../client/build')));
 
-// API Routes
-app.use('/api/auth', apiLimiter, authRoutes);
-app.use('/api/movies', apiLimiter, movieRoutes);
-app.use('/api/watchlist', apiLimiter, watchlistRoutes);
-app.use('/api/admin', apiLimiter, adminRoutes);
+// API Routes - auth has stricter limiter for login/register, others use general
+app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/movies', generalLimiter, movieRoutes);
+app.use('/api/watchlist', generalLimiter, watchlistRoutes);
+app.use('/api/admin', generalLimiter, adminRoutes);
 
 // Test endpoint to check movies
 app.get('/test-movies', async (req, res) => {
@@ -85,6 +91,24 @@ app.get('/test-movies', async (req, res) => {
     res.json(movies.map(m => ({ id: m.id, title: m.title, thumbnail: m.thumbnail })));
   } catch (e) {
     res.json({ error: e.message });
+  }
+});
+
+// Health check endpoint - shows DB status and movie count
+app.get('/api/health', async (req, res) => {
+  try {
+    const movieCount = await Movie.count();
+    const userCount = await User.count();
+    const dbType = process.env.DATABASE_URL ? 'postgresql' : (process.env.MYSQL_HOST ? 'mysql' : (process.env.PGHOST ? 'postgres' : 'sqlite'));
+    res.json({
+      status: 'ok',
+      database: dbType,
+      movies: movieCount,
+      users: userCount,
+      timestamp: new Date().toISOString()
+    });
+  } catch (e) {
+    res.status(500).json({ status: 'error', message: e.message });
   }
 });
 

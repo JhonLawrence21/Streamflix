@@ -64,17 +64,30 @@ if (process.env.DATABASE_URL) {
   });
 }
 
-const connectDB = async () => {
-  try {
-    await sequelize.authenticate();
-    console.log('Database Connected...');
-    await sequelize.sync({ force: false });
-    console.log('Database synced');
-    return sequelize;
-  } catch (error) {
-    console.error(`DB Error: ${error.message}`);
-    console.error(error.stack);
-    return sequelize;
+const connectDB = async (retries = 3) => {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const dbType = process.env.DATABASE_URL ? 'postgresql' : (process.env.MYSQL_HOST ? 'mysql' : (process.env.PGHOST ? 'postgres' : 'sqlite'));
+      console.log(`[DB] Attempt ${attempt}/${retries}: Connecting to ${dbType}...`);
+      if (process.env.DATABASE_URL) {
+        console.log(`[DB] DATABASE_URL is set`);
+      } else {
+        console.log(`[DB] DATABASE_URL is NOT set — using ${dbType}`);
+      }
+      await sequelize.authenticate();
+      console.log('[DB] Database Connected successfully');
+      await sequelize.sync({ force: false });
+      console.log('[DB] Database synced (force: false)');
+      return sequelize;
+    } catch (error) {
+      console.error(`[DB] Attempt ${attempt}/${retries} failed: ${error.message}`);
+      if (attempt === retries) {
+        console.error('[DB] All retries exhausted. Server will exit.');
+        throw error;
+      }
+      console.log(`[DB] Retrying in 3 seconds...`);
+      await new Promise(r => setTimeout(r, 3000));
+    }
   }
 };
 
