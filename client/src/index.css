@@ -24,17 +24,72 @@ body {
   .btn-primary {
     @apply bg-netflix-red hover:bg-netflix-red-hover text-white font-semibold py-2 px-4 rounded transition-all duration-200 transform hover:scale-105 active:scale-95;
   }
-  
+
   .btn-secondary {
     @apply bg-netflix-bg-tertiary hover:bg-netflix-text-muted text-white font-semibold py-2 px-4 rounded transition-all duration-200;
   }
-  
+
   .input-field {
     @apply w-full bg-netflix-bg-tertiary border border-netflix-text-muted rounded px-4 py-3 text-white placeholder-netflix-text-muted focus:outline-none focus:border-netflix-red transition-colors;
   }
-  
+
   .card-hover {
     @apply transition-transform duration-300 hover:scale-105 hover:z-10;
+  }
+
+  /* Scrollbar hide utility */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Card entrance animation */
+  .animate-card-entrance {
+    animation: cardEntrance 0.5s ease-out forwards;
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+
+  @keyframes cardEntrance {
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  /* Fade in up animation */
+  .animate-fade-in-up {
+    animation: fadeInUp 0.6s ease-out forwards;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Slide in left animation */
+  .animate-slide-in-left {
+    animation: slideInLeft 0.5s ease-out forwards;
+  }
+
+  @keyframes slideInLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
   }
 }
 
