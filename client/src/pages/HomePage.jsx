@@ -11,19 +11,28 @@ const HomePage = () => {
   const [action, setAction] = useState([]);
   const [drama, setDrama] = useState([]);
   const [comedy, setComedy] = useState([]);
+  const [horror, setHorror] = useState([]);
+  const [sciFi, setSciFi] = useState([]);
+  const [thriller, setThriller] = useState([]);
+  const [animation, setAnimation] = useState([]);
   const [tvShows, setTvShows] = useState([]);
+  const [myList, setMyList] = useState([]);
   const [watchlist, setWatchlist] = useState([]);
   const { user } = useAuth();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [trendingData, popularData, actionData, dramaData, comedyData, tvData] = await Promise.all([
+        const [trendingData, popularData, actionData, dramaData, comedyData, horrorData, sciFiData, thrillerData, animationData, tvData] = await Promise.all([
           movieService.getTrending(),
           movieService.getAll({ category: 'Popular', limit: 10 }),
           movieService.getByCategory('Action'),
           movieService.getByCategory('Drama'),
           movieService.getByCategory('Comedy'),
+          movieService.getByCategory('Horror'),
+          movieService.getByCategory('Sci-Fi'),
+          movieService.getByCategory('Thriller'),
+          movieService.getByCategory('Animation'),
           movieService.getByCategory('TV Shows')
         ]);
         
@@ -32,6 +41,10 @@ const HomePage = () => {
         setAction(actionData.slice(0, 10));
         setDrama(dramaData.slice(0, 10));
         setComedy(comedyData.slice(0, 10));
+        setHorror(horrorData.slice(0, 10));
+        setSciFi(sciFiData.slice(0, 10));
+        setThriller(thrillerData.slice(0, 10));
+        setAnimation(animationData.slice(0, 10));
         setTvShows(tvData.slice(0, 10));
       } catch (error) {
         console.error('Error fetching movies:', error);
@@ -47,6 +60,7 @@ const HomePage = () => {
         try {
           const data = await watchlistService.get();
           setWatchlist(data.map(m => m.id));
+          setMyList(data.slice(0, 10));
         } catch (error) {
           console.error('Error fetching watchlist:', error);
         }
@@ -74,8 +88,16 @@ const HomePage = () => {
           onWatchlist={watchlist}
         />
         
+        {user && myList.length > 0 && (
+          <MovieRow 
+            title="My List" 
+            movies={myList} 
+            onWatchlist={watchlist}
+          />
+        )}
+        
         <MovieRow 
-          title="Action Movies" 
+          title="Action" 
           movies={action} 
           onWatchlist={watchlist}
         />
@@ -89,6 +111,30 @@ const HomePage = () => {
         <MovieRow 
           title="Comedy" 
           movies={comedy} 
+          onWatchlist={watchlist}
+        />
+        
+        <MovieRow 
+          title="Horror" 
+          movies={horror} 
+          onWatchlist={watchlist}
+        />
+        
+        <MovieRow 
+          title="Sci-Fi" 
+          movies={sciFi} 
+          onWatchlist={watchlist}
+        />
+        
+        <MovieRow 
+          title="Thriller" 
+          movies={thriller} 
+          onWatchlist={watchlist}
+        />
+        
+        <MovieRow 
+          title="Animation" 
+          movies={animation} 
           onWatchlist={watchlist}
         />
         
