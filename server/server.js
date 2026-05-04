@@ -77,21 +77,27 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Serve static files from client/build
+const path = require('path');
+const fs = require('fs');
+
 const buildPath = path.join(__dirname, '../client/build');
-if (require('fs').existsSync(buildPath)) {
-  app.use(express.static(buildPath, {
-    maxAge: '1m',
-    setHeaders: (res, filePath) => {
-      if (filePath.endsWith('.html')) {
-        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-        res.setHeader('Pragma', 'no-cache');
-        res.setHeader('Expires', '0');
-      }
-    }
-  }));
-} else {
-  console.warn('Warning: client/build folder not found. Static files will not be served.');
+console.log(`Checking for build at: ${buildPath}`);
+console.log(`Build exists: ${fs.existsSync(buildPath)}`);
+if (fs.existsSync(buildPath)) {
+  console.log(`Build contents: ${fs.readdirSync(buildPath)}`);
 }
+
+app.use(express.static(buildPath, {
+  maxAge: '1m',
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    }
+  }
+}));
 
 // API Routes - auth has stricter limiter for login/register, others use general
 app.use('/api/auth', authLimiter, authRoutes);
@@ -130,10 +136,13 @@ app.get('/api/health', async (req, res) => {
 // Serve React app for all other routes
 app.get('*', (req, res) => {
   const indexPath = path.join(__dirname, '../client/build/index.html');
-  if (require('fs').existsSync(indexPath)) {
+  console.log(`Serving index.html from: ${indexPath}`);
+  console.log(`Index exists: ${fs.existsSync(indexPath)}`);
+  
+  if (fs.existsSync(indexPath)) {
     res.sendFile(indexPath);
   } else {
-    res.status(503).send('Service temporarily unavailable - build in progress');
+    res.status(503).send(`Build not found. Path: ${indexPath}. Build exists: ${fs.existsSync(buildPath)}`);
   }
 });
 
