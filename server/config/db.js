@@ -76,26 +76,22 @@ const connectDB = async (retries = 3) => {
       }
       await sequelize.authenticate();
       console.log('[DB] Database Connected successfully');
-      await sequelize.sync({ force: false });
-      console.log('[DB] Database synced (force: false)');
+      await sequelize.sync({ alter: true });
+      console.log('[DB] Database synced and migrated (alter: true)');
 
-      // Auto-migrate: add trending column if missing (safe for existing data)
+      // Verify User table has new columns
       try {
         const queryInterface = sequelize.getQueryInterface();
-        const tableInfo = await queryInterface.describeTable('movies');
-        if (!tableInfo.trending) {
-          console.log('[DB] Migrating: adding trending column to movies...');
-          await queryInterface.addColumn('movies', 'trending', {
-            type: Sequelize.BOOLEAN,
-            defaultValue: false,
-            allowNull: false
-          });
-          console.log('[DB] Migration complete: trending column added');
-        } else {
-          console.log('[DB] Migration check: trending column already exists');
+        const userTable = await queryInterface.describeTable('users');
+        if (!userTable.isVerified || !userTable.otp || !userTable.otpExpiry) {
+          console.log('[DB] Adding missing User OTP columns...');
+          if (!userTable.isVerified) await queryInterface.addColumn('users', 'isVerified', { type: Sequelize.BOOLEAN, defaultValue: false });
+          if (!userTable.otp) await queryInterface.addColumn('users', 'otp', { type: Sequelize.STRING, defaultValue: null });
+          if (!userTable.otpExpiry) await queryInterface.addColumn('users', 'otpExpiry', { type: Sequelize.DATE, defaultValue: null });
+          console.log('[DB] User OTP migration complete');
         }
-      } catch (migrateErr) {
-        console.error('[DB] Migration warning (non-fatal):', migrateErr.message);
+      } catch (err) {
+        console.error('[DB] Migration error:', err.message);
       }
 
       return sequelize;
