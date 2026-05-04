@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { GoogleLogin } from '@react-oauth/google';
-import { authService } from '../services/api';
+
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -12,7 +12,7 @@ const LoginPage = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [readOnly, setReadOnly] = useState(true);
-  const { login } = useAuth();
+  const { login, googleLogin } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -37,10 +37,7 @@ const LoginPage = () => {
 
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
-      const { credential } = credentialResponse;
-      const data = await authService.googleLogin(credential);
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data));
+      await googleLogin(credentialResponse);
       navigate('/');
     } catch (err) {
       setError('Google sign-in failed');

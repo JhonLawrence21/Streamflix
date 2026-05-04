@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const { OAuth2Client } = require('google-auth-library');
 
 const generateToken = (id) => {
   const secret = process.env.JWT_SECRET;
@@ -9,7 +10,42 @@ const generateToken = (id) => {
   }
   return jwt.sign({ id }, secret, {
     expiresIn: '30d'
-  });
+  }
+};
+
+const googleVerify = async (req, res) => {
+  try {
+    const { token } = req.body;
+    const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID
+    });
+    const { email, name, picture } = ticket.getPayload();
+
+    let user = await User.findOne({ where: { email } });
+    if (!user) {
+      user = await User.create({
+        name,
+        email,
+        password: Math.random().toString(36).slice(-16),
+        isVerified: true,
+        profileImage: picture
+      });
+    }
+
+    res.json({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      profileImage: user.profileImage,
+      watchlist: user.watchlist || [],
+      token: generateToken(user.id)
+    });
+  } catch (err) {
+    res.status(401).json({ message: 'Google sign-in failed' });
+  }
 };
 
 const registerUser = async (req, res) => {
@@ -87,6 +123,8 @@ exports.getMe = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+exports.googleVerify = googleVerify;
 
 exports.updateProfile = async (req, res) => {
   try {

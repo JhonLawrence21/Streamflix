@@ -1,23 +1,17 @@
-# Implementation Steps for OTP Signup & Forgot Password
+# Google Sign-In Fix Progress
 
-## 1. Backend Setup ✅
-- [x] Create server/utils/email.js
-- [x] Update server/models/User.js (add isVerified, otp, otpExpiry)
-- [x] Update server/controllers/authController.js (OTP logic in register/login + new verify/forgot/reset)
-- [x] Update server/routes/auth.js (new routes)
-- [x] cd server && npm install nodemailer
-- [x] Created server/.env.example → Created & configured server/.env with your Gmail/app-password
+✅ **Step 1**: Create this TODO.md to track progress
+✅ **Step 2**: Update server/controllers/authController.js - Add googleVerify function
+✅ **Step 3**: Update server/routes/auth.js - Use controller's googleVerify
+✅ **Step 4**: Delete server/config/googleAuth.js (unused Passport)
 
-## 2. Frontend Setup ✅
-- [x] Update client/src/services/api.js
-- [x] Update client/src/context/AuthContext.jsx 
-- [x] Update client/src/App.js (add routes)
-- [x] Update RegisterPage.jsx (→ OTP page), LoginPage.jsx (forgot link)
-- [x] Create VerifyOTPPage.jsx, ForgotPasswordPage.jsx, ResetPasswordPage.jsx
+**Next steps**:
+- [ ] **Step 5**: Update client/src/context/AuthContext.jsx - Add googleLogin method
+- [ ] **Step 5**: Update client/src/context/AuthContext.jsx - Add googleLogin method
+- [ ] **Step 6**: Update client/src/pages/LoginPage.jsx - Use context.googleLogin
+- [ ] **Step 7**: Update client/src/pages/RegisterPage.jsx - Use context.googleLogin  
+- [ ] **Step 8**: Delete client/src/pages/AuthCallbackPage.jsx (unused)
+- [ ] **Step 9**: Test Google sign-in on Login/Register pages
+- [ ] **Step 10**: Update this TODO.md as complete & attempt_completion
 
-## 3. Test [ ]
-
-## 3. Test [ ]
-- [ ] Run server (may need DB migration for new columns)
-- [ ] Test full flow
-
+**Goal**: Fix Google sign-in so user state updates in AuthContext (Navbar shows logged in).
