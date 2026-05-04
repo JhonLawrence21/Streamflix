@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Bell, User, Menu, X, Plus } from 'lucide-react';
+import { Search, Bell, Menu, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const Navbar = () => {
@@ -8,7 +8,7 @@ const Navbar = () => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-// const { user, logout } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -29,8 +29,10 @@ const Navbar = () => {
   };
 
   const handleLogout = () => {
-    logout();
-    navigate('/');
+    if (logout) {
+      logout();
+      navigate('/');
+    }
   };
 
   return (

@@ -44,16 +44,16 @@ const HomePage = () => {
         ]);
         
         setTrending(Array.isArray(trendingData) ? trendingData.slice(0, 20) : []);
-        setPopular(popularData.movies || (Array.isArray(popularData) ? popularData.slice(0, 20) : []));
-        setAction(actionData.slice(0, 20));
-        setDrama(dramaData.slice(0, 20));
-        setComedy(comedyData.slice(0, 20));
-        setHorror(horrorData.slice(0, 20));
-        setSciFi(sciFiData.slice(0, 20));
-        setThriller(thrillerData.slice(0, 20));
-        setAnimation(animationData.slice(0, 20));
-        setTvShows(tvData.slice(0, 20));
-        setUpcoming(upcomingData);
+        setPopular(Array.isArray(popularData) ? popularData.slice(0, 20) : (popularData?.movies || []).slice(0, 20));
+        setAction(Array.isArray(actionData) ? actionData.slice(0, 20) : []);
+        setDrama(Array.isArray(dramaData) ? dramaData.slice(0, 20) : []);
+        setComedy(Array.isArray(comedyData) ? comedyData.slice(0, 20) : []);
+        setHorror(Array.isArray(horrorData) ? horrorData.slice(0, 20) : []);
+        setSciFi(Array.isArray(sciFiData) ? sciFiData.slice(0, 20) : []);
+        setThriller(Array.isArray(thrillerData) ? thrillerData.slice(0, 20) : []);
+        setAnimation(Array.isArray(animationData) ? animationData.slice(0, 20) : []);
+        setTvShows(Array.isArray(tvData) ? tvData.slice(0, 20) : []);
+        setUpcoming(Array.isArray(upcomingData) ? upcomingData : []);
       } catch (error) {
         console.error('Error fetching movies:', error);
         setError('Failed to load movies. Please refresh the page.');

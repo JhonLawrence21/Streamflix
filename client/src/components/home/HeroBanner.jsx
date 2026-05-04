@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { movieService } from '../../services/api';
-import { getThumbnailUrl, handleImageError } from '../../utils/imageUtils';
+import { getThumbnailUrl } from '../../utils/imageUtils';
 
 const HeroBanner = () => {
   const [movie, setMovie] = useState(null);
@@ -22,11 +22,16 @@ const HeroBanner = () => {
 if (!movie) {
     return (
       <div className="h-[85vh] bg-netflix-bg flex items-center justify-center">
-        <div className="space-y-8">
-          <div className="animate-pulse w-24 h-24 bg-netflix-bg-tertiary rounded-full mx-auto"></div>
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-white mb-2">Loading Featured Movie...</h2>
-            <p className="text-netflix-text-secondary">Discover today's top pick</p>
+        <div className="text-center px-4">
+          <h2 className="text-4xl md:text-6xl font-bold text-white mb-4">Welcome to StreamFlix</h2>
+          <p className="text-xl text-netflix-text-secondary mb-8">Discover amazing movies and TV shows</p>
+          <div className="flex flex-wrap gap-4 justify-center">
+            <Link to="/search" className="bg-white text-black px-8 py-3 rounded font-semibold hover:bg-gray-200 transition-colors">
+              Browse Movies
+            </Link>
+            <Link to="/upcoming" className="bg-netflix-bg-tertiary/70 text-white px-8 py-3 rounded font-semibold hover:bg-netflix-bg-tertiary transition-colors">
+              Upcoming Releases
+            </Link>
           </div>
         </div>
       </div>
