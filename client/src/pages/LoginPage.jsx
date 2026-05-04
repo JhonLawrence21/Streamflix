@@ -29,7 +29,7 @@ const LoginPage = () => {
     } catch (err) {
       const data = err.response?.data;
       if (data?.unverified && data?.email) {
-        navigate(`/verify-otp?email=${encodeURIComponent(data.email)}&otp=${encodeURIComponent(data.otp || '')}`);
+        navigate(`/verify-otp?email=${encodeURIComponent(data.email)}`);
         return;
       }
       setError(data?.message || 'Login failed');

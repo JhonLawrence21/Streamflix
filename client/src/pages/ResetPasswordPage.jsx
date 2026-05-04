@@ -17,14 +17,10 @@ const ResetPasswordPage = () => {
 
   useEffect(() => {
     const emailParam = searchParams.get('email');
-    const otpParam = searchParams.get('otp');
     if (emailParam) {
       setEmail(emailParam);
     } else {
       navigate('/forgot-password');
-    }
-    if (otpParam) {
-      setOtp(otpParam);
     }
   }, [searchParams, navigate]);
 
@@ -70,13 +66,6 @@ const ResetPasswordPage = () => {
         <div className="bg-netflix-bg-secondary p-8 rounded-lg">
           <h1 className="text-2xl font-bold text-white mb-6">Reset Password</h1>
           <p className="text-netflix-text-secondary mb-6">Enter OTP and new password for <strong>{email}</strong></p>
-
-          {otp.length === 6 && (
-            <div className="bg-green-900/50 border border-green-500 rounded p-4 mb-4 text-center">
-              <p className="text-green-200 text-sm mb-1">Your Reset OTP Code:</p>
-              <p className="text-white text-3xl font-bold tracking-widest">{otp}</p>
-            </div>
-          )}
 
           {error && (
             <div className="bg-red-900/50 border border-red-500 text-red-200 px-4 py-2 rounded mb-4">

@@ -1,29 +1,40 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Mail, Key, ArrowLeft } from 'lucide-react';
+import { Mail, Key, ArrowLeft, RefreshCw } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { authService } from '../services/api';
 
 const VerifyOTPPage = () => {
   const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
+  const [resending, setResending] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { verifyOtp } = useAuth();
 
   useEffect(() => {
     const emailParam = searchParams.get('email');
-    const otpParam = searchParams.get('otp');
     if (emailParam) {
       setEmail(emailParam);
     } else {
       navigate('/register');
     }
-    if (otpParam) {
-      setOtp(otpParam);
-    }
   }, [searchParams, navigate]);
+
+  const handleResend = async () => {
+    setError('');
+    setResending(true);
+    try {
+      await authService.resendOTP(email);
+      setError('New OTP sent! Check your email.');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to resend OTP');
+    } finally {
+      setResending(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -52,16 +63,8 @@ const VerifyOTPPage = () => {
           <h1 className="text-2xl font-bold text-white mb-6">Verify Email</h1>
           <p className="text-netflix-text-secondary mb-6">Enter OTP sent to <strong>{email}</strong></p>
 
-          {otp.length === 6 && (
-            <div className="bg-green-900/50 border border-green-500 rounded p-4 mb-4 text-center">
-              <p className="text-green-200 text-sm mb-1">Your OTP Code:</p>
-              <p className="text-white text-3xl font-bold tracking-widest">{otp}</p>
-              <p className="text-green-300 text-xs mt-2">Copy this code and enter below, then click Verify</p>
-            </div>
-          )}
-
           {error && (
-            <div className="bg-red-900/50 border border-red-500 text-red-200 px-4 py-2 rounded mb-4">
+            <div className={`border rounded px-4 py-2 mb-4 ${error.includes('sent') ? 'bg-green-900/50 border-green-500 text-green-200' : 'bg-red-900/50 border-red-500 text-red-200'}`}>
               {error}
             </div>
           )}
@@ -99,6 +102,17 @@ const VerifyOTPPage = () => {
               {loading ? 'Verifying...' : 'Verify OTP'}
             </button>
           </form>
+
+          <div className="mt-4 text-center">
+            <button
+              onClick={handleResend}
+              disabled={resending}
+              className="flex items-center justify-center gap-2 mx-auto text-netflix-text-secondary hover:text-white disabled:opacity-50"
+            >
+              <RefreshCw size={16} />
+              {resending ? 'Sending...' : 'Resend OTP'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -31,8 +31,8 @@ const RegisterPage = () => {
     setLoading(true);
 
     try {
-      const result = await register(name, email, password);
-      navigate(`/verify-otp?email=${encodeURIComponent(email)}&otp=${encodeURIComponent(result.otp || '')}`);
+      await register(name, email, password);
+      navigate(`/verify-otp?email=${encodeURIComponent(email)}`);
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed');
     } finally {

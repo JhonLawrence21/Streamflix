@@ -46,8 +46,7 @@ const registerUser = async (req, res) => {
     res.status(201).json({
       message: 'User created. Check email for OTP.',
       userId: user.id,
-      email,
-      otp
+      email
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -80,8 +79,7 @@ exports.loginUser = async (req, res) => {
       return res.status(401).json({
         message: 'Please verify your email first. A new OTP has been sent.',
         unverified: true,
-        email: user.email,
-        otp
+        email: user.email
       });
     }
 
@@ -165,7 +163,7 @@ exports.forgotPassword = async (req, res) => {
     const { sendResetOTP } = require('../utils/email');
     await sendResetOTP(email, otp);
 
-    res.json({ message: 'Reset OTP sent to email', otp });
+    res.json({ message: 'Reset OTP sent to email' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -228,6 +226,35 @@ exports.updateProfile = async (req, res) => {
       profileImage: freshUser.profileImage,
       watchlist: freshUser.watchlist || []
     });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.resendOTP = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({ message: 'Already verified' });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+
+    user.otp = otp;
+    user.otpExpiry = otpExpiry;
+    await user.save();
+
+    const { sendOTP } = require('../utils/email');
+    await sendOTP(email, otp);
+
+    res.json({ message: 'New OTP sent to email' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
