@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
 const connectDB = require('./config/db');
+// v2 - Google sign-in fixed
 
 if (!process.env.JWT_SECRET) {
   process.env.JWT_SECRET = 'streamflix_jwt_secret_key_2024_prod';
