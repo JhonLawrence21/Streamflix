@@ -84,13 +84,28 @@ app.use('/api/movies', generalLimiter, movieRoutes);
 app.use('/api/watchlist', generalLimiter, watchlistRoutes);
 app.use('/api/admin', generalLimiter, adminRoutes);
 
-// Frontend static serve
-const buildPath = path.join(__dirname, '..', 'client', 'build');
-console.log(`Frontend build path: ${buildPath}`);
-console.log(`Build exists: ${fs.existsSync(buildPath)}`);
-if (fs.existsSync(buildPath)) {
-  const contents = fs.readdirSync(buildPath);
-  console.log(`Contents: ${contents.slice(0, 5).join(', ')}${contents.length > 5 ? '...' : ''}`);
+// Frontend static serve - check multiple possible locations
+const possiblePaths = [
+  path.join(__dirname, '..', 'client', 'build'),
+  path.join(process.cwd(), 'client', 'build'),
+  '/opt/render/project/src/client/build'
+];
+
+let buildPath = null;
+for (const p of possiblePaths) {
+  console.log(`Checking: ${p}`);
+  if (fs.existsSync(p) && fs.existsSync(path.join(p, 'index.html'))) {
+    buildPath = p;
+    console.log(`Found build at: ${p}`);
+    break;
+  }
+}
+
+console.log(`Frontend build path: ${buildPath || 'NOT FOUND'}`);
+if (!buildPath) {
+  console.log(`Build exists: false`);
+  console.log(`Working directory: ${process.cwd()}`);
+  console.log(`__dirname: ${__dirname}`);
 }
 
 app.use(express.static(buildPath, {
