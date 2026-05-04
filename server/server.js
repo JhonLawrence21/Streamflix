@@ -85,7 +85,7 @@ app.use('/api/watchlist', generalLimiter, watchlistRoutes);
 app.use('/api/admin', generalLimiter, adminRoutes);
 
 // Frontend static serve
-const buildPath = path.join(__dirname, '..', 'client', 'build');
+const buildPath = path.join(__dirname, '..', 'public');
 console.log(`Frontend build path: ${buildPath}`);
 console.log(`__dirname: ${__dirname}`);
 console.log(`cwd: ${process.cwd()}`);
@@ -95,9 +95,6 @@ if (fs.existsSync(buildPath)) {
   console.log(`Contents: ${contents.slice(0, 5).join(', ')}${contents.length > 5 ? '...' : ''}`);
 } else {
   console.log(`WARNING: Build directory not found at ${buildPath}`);
-  console.log(`Checking if client/build exists relative to cwd...`);
-  const altPath = path.join(process.cwd(), 'client', 'build');
-  console.log(`Alt path: ${altPath}, exists: ${fs.existsSync(altPath)}`);
 }
 
 app.use(express.static(buildPath, {
