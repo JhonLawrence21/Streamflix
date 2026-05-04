@@ -76,16 +76,22 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '../client/build'), {
-  maxAge: '1m',
-  setHeaders: (res, path) => {
-    if (path.endsWith('.html')) {
-      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-      res.setHeader('Pragma', 'no-cache');
-      res.setHeader('Expires', '0');
+
+const buildPath = path.join(__dirname, '../client/build');
+if (require('fs').existsSync(buildPath)) {
+  app.use(express.static(buildPath, {
+    maxAge: '1m',
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('.html')) {
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+      }
     }
-  }
-}));
+  }));
+} else {
+  console.warn('Warning: client/build folder not found. Static files will not be served.');
+}
 
 // API Routes - auth has stricter limiter for login/register, others use general
 app.use('/api/auth', authLimiter, authRoutes);
