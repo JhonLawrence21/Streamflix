@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, Key, Eye, EyeOff, ArrowLeft } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 
 const ResetPasswordPage = () => {
   const [otp, setOtp] = useState('');

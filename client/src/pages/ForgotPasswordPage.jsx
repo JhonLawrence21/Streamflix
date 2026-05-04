@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Mail, ArrowLeft } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState('');
@@ -21,6 +21,7 @@ const ForgotPasswordPage = () => {
     try {
       await forgotPassword(email);
       setMessage('Reset OTP sent to your email!');
+      setTimeout(() => navigate(`/reset-password?email=${encodeURIComponent(email)}`), 1500);
     } catch (err) {
       setError(err.response?.data?.message || 'Request failed');
     } finally {

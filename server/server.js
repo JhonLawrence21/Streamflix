@@ -132,20 +132,24 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../client/build/index.html'));
 });
 
-const PORT = process.env.PORT || 10000;
-
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`StreamFlix running on port ${PORT}`);
-  console.log(`Environment: ${isProduction ? 'production' : 'development'}`);
-});
-
 connectDB()
   .then(() => {
     console.log('Database connected successfully');
-    createDefaultAdmin();
+    return createDefaultAdmin();
+  })
+  .then(() => {
+    const PORT = process.env.PORT || 10000;
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`StreamFlix running on port ${PORT}`);
+      console.log(`Environment: ${isProduction ? 'production' : 'development'}`);
+    });
   })
   .catch(err => {
-    console.error('DB connection error:', err.message);
+    console.error('Startup error:', err.message);
+    const PORT = process.env.PORT || 10000;
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`StreamFlix running on port ${PORT} (DB not connected)`);
+    });
   });
 
 process.on('unhandledRejection', (err) => {

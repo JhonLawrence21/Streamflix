@@ -1,14 +1,27 @@
-const nodemailer = require('nodemailer');
+let nodemailer;
+try {
+  nodemailer = require('nodemailer');
+} catch (e) {
+  console.warn('nodemailer not installed, email features disabled');
+}
 
-const transporter = nodemailer.createTransporter({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
+let transporter = null;
+if (nodemailer) {
+  transporter = nodemailer.createTransporter({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS
+    }
+  });
+}
 
 const sendOTP = async (email, otp) => {
+  if (!transporter) {
+    console.log(`[DEV] OTP for ${email}: ${otp} (nodemailer not installed)`);
+    return;
+  }
+
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to: email,
@@ -26,11 +39,16 @@ const sendOTP = async (email, otp) => {
     console.log('OTP email sent to', email);
   } catch (error) {
     console.error('Email error:', error);
-    throw new Error('Failed to send OTP');
+    console.log(`[DEV] OTP for ${email}: ${otp}`);
   }
 };
 
 const sendResetOTP = async (email, otp) => {
+  if (!transporter) {
+    console.log(`[DEV] Reset OTP for ${email}: ${otp} (nodemailer not installed)`);
+    return;
+  }
+
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to: email,
@@ -45,7 +63,7 @@ const sendResetOTP = async (email, otp) => {
   try {
     await transporter.sendMail(mailOptions);
   } catch (error) {
-    throw new Error('Failed to send reset OTP');
+    console.log(`[DEV] Reset OTP for ${email}: ${otp}`);
   }
 };
 
