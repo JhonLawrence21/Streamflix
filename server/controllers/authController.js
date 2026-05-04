@@ -64,7 +64,23 @@ exports.loginUser = async (req, res) => {
     }
 
     if (!user.isVerified) {
-      return res.status(401).json({ message: 'Please verify your email first' });
+      // Resend OTP automatically for unverified users
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+      user.otp = otp;
+      user.otpExpiry = otpExpiry;
+      await user.save();
+
+      try {
+        const { sendOTP } = require('../utils/email');
+        await sendOTP(user.email, otp);
+      } catch (e) {}
+
+      return res.status(401).json({
+        message: 'Please verify your email first. A new OTP has been sent.',
+        unverified: true,
+        email: user.email
+      });
     }
 
     const isMatch = await user.matchPassword(password);

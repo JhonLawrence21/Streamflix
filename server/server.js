@@ -28,27 +28,40 @@ const allowedOrigins = process.env.CLIENT_URL
   : ['http://localhost:3000', 'http://localhost:5000'];
 
 const createDefaultAdmin = async () => {
-  if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD) return;
-  
   try {
-    const adminExists = await User.findOne({ where: { email: process.env.ADMIN_EMAIL } });
-    if (!adminExists) {
-      await User.create({
-        name: 'Admin',
-        email: process.env.ADMIN_EMAIL,
-        password: process.env.ADMIN_PASSWORD,
-        role: 'admin',
-        isVerified: true
-      });
-      console.log(`Admin created: ${process.env.ADMIN_EMAIL}`);
-    } else if (!adminExists.isVerified) {
-      adminExists.isVerified = true;
-      adminExists.role = 'admin';
-      await adminExists.save();
-      console.log(`Admin verified: ${process.env.ADMIN_EMAIL}`);
+    const adminEmail = process.env.ADMIN_EMAIL;
+    const adminPassword = process.env.ADMIN_PASSWORD;
+
+    if (adminEmail && adminPassword) {
+      const existingAdmin = await User.findOne({ where: { email: adminEmail } });
+      if (!existingAdmin) {
+        await User.create({
+          name: 'Admin',
+          email: adminEmail,
+          password: adminPassword,
+          role: 'admin',
+          isVerified: true
+        });
+        console.log(`[Admin] Created: ${adminEmail}`);
+      } else if (!existingAdmin.isVerified || existingAdmin.role !== 'admin') {
+        existingAdmin.isVerified = true;
+        existingAdmin.role = 'admin';
+        await existingAdmin.save();
+        console.log(`[Admin] Verified & promoted: ${adminEmail}`);
+      }
+    }
+
+    // Also verify any other admin accounts in the database
+    const allAdmins = await User.findAll({ where: { role: 'admin' } });
+    for (const admin of allAdmins) {
+      if (!admin.isVerified) {
+        admin.isVerified = true;
+        await admin.save();
+        console.log(`[Admin] Auto-verified: ${admin.email}`);
+      }
     }
   } catch (error) {
-    console.error('Error creating admin:', error);
+    console.error('[Admin] Error:', error);
   }
 };
 

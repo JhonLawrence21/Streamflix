@@ -27,7 +27,12 @@ const LoginPage = () => {
       await login(email, password);
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
+      const data = err.response?.data;
+      if (data?.unverified && data?.email) {
+        navigate(`/verify-otp?email=${encodeURIComponent(data.email)}`);
+        return;
+      }
+      setError(data?.message || 'Login failed');
     } finally {
       setLoading(false);
     }
