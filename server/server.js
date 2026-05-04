@@ -76,7 +76,7 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '../client/build'), {
+app.use(express.static(path.join(__dirname, '../build'), {
   maxAge: '1m',
   setHeaders: (res, path) => {
     if (path.endsWith('.html')) {
@@ -123,7 +123,7 @@ app.get('/api/health', async (req, res) => {
 
 // Serve React app for all other routes
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../client/build/index.html'));
+  res.sendFile(path.join(__dirname, '../build/index.html'));
 });
 
 const PORT = process.env.PORT || 10000;

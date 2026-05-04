@@ -3,7 +3,7 @@ services:
     name: streamflix
     runtime: node
     plan: free
-    buildCommand: npm install && cd client && npm install && npm run build
+    buildCommand: cd client && npm install && npm run build && cd .. && cp -r client/build ./build
     startCommand: node server/server.js
     envVars:
       - key: NODE_ENV
