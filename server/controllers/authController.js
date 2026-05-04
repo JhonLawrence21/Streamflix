@@ -46,7 +46,8 @@ const registerUser = async (req, res) => {
     res.status(201).json({
       message: 'User created. Check email for OTP.',
       userId: user.id,
-      email
+      email,
+      otp
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -79,7 +80,8 @@ exports.loginUser = async (req, res) => {
       return res.status(401).json({
         message: 'Please verify your email first. A new OTP has been sent.',
         unverified: true,
-        email: user.email
+        email: user.email,
+        otp
       });
     }
 
@@ -163,7 +165,7 @@ exports.forgotPassword = async (req, res) => {
     const { sendResetOTP } = require('../utils/email');
     await sendResetOTP(email, otp);
 
-    res.json({ message: 'Reset OTP sent to email' });
+    res.json({ message: 'Reset OTP sent to email', otp });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

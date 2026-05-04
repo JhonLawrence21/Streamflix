@@ -19,9 +19,9 @@ const ForgotPasswordPage = () => {
     setLoading(true);
 
     try {
-      await forgotPassword(email);
-      setMessage('Reset OTP sent to your email!');
-      setTimeout(() => navigate(`/reset-password?email=${encodeURIComponent(email)}`), 1500);
+      const result = await forgotPassword(email);
+      setMessage(`Reset OTP sent! Your code: ${result.otp}`);
+      setTimeout(() => navigate(`/reset-password?email=${encodeURIComponent(email)}&otp=${encodeURIComponent(result.otp || '')}`), 2000);
     } catch (err) {
       setError(err.response?.data?.message || 'Request failed');
     } finally {
