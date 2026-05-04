@@ -1,20 +1,14 @@
-const nodemailer = require("nodemailer");
+const sgMail = require("@sendgrid/mail");
 
-const emailUser = (process.env.EMAIL_USER || "").trim();
-const emailPass = (process.env.EMAIL_PASS || "").replace(/\s+/g, "").trim();
+const sgApiKey = process.env.SENDGRID_API_KEY || "";
+const senderEmail = process.env.SENDER_EMAIL || "noreply@streamflix.com";
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
-  auth: {
-    user: emailUser,
-    pass: emailPass
-  },
-  connectionTimeout: 4000,
-  greetingTimeout: 4000,
-  socketTimeout: 4000
-});
+if (sgApiKey) {
+  sgMail.setApiKey(sgApiKey);
+  console.log("[Email] SendGrid configured with sender:", senderEmail);
+} else {
+  console.log("[Email] SENDGRID_API_KEY not set. OTP will show in server logs.");
+}
 
 const printOTP = (label, email, otp) => {
   console.log("");
@@ -26,39 +20,42 @@ const printOTP = (label, email, otp) => {
   console.log("");
 };
 
-const sendEmail = (mailOptions) => {
-  return new Promise((resolve) => {
-    transporter.sendMail(mailOptions, (err, info) => {
-      if (err) {
-        console.log("[Email] Error:", err.message);
-      } else {
-        console.log("[Email] Sent:", info.messageId);
-      }
-      resolve();
-    });
-  });
-};
-
 const sendOTP = async (email, otp) => {
   printOTP("Signup", email, otp);
-  await sendEmail({
-    from: `"StreamFlix" <${emailUser}>`,
-    to: email,
-    subject: "Your OTP Code",
-    text: `Your OTP is ${otp}. Valid for 10 minutes.`,
-    html: `<p>Your OTP is <b>${otp}</b>. Valid for 10 minutes.</p>`
-  });
+
+  if (!sgApiKey) return;
+
+  try {
+    await sgMail.send({
+      to: email,
+      from: senderEmail,
+      subject: "Your OTP Code",
+      text: `Your OTP is ${otp}. It will expire in 10 minutes.`,
+      html: `<p>Your OTP is <b>${otp}</b>. Valid for 10 minutes.</p>`
+    });
+    console.log("[Email] OTP sent via SendGrid to", email);
+  } catch (err) {
+    console.log("[Email] SendGrid error:", err.message || err.response?.body);
+  }
 };
 
 const sendResetOTP = async (email, otp) => {
   printOTP("Password Reset", email, otp);
-  await sendEmail({
-    from: `"StreamFlix" <${emailUser}>`,
-    to: email,
-    subject: "Password Reset OTP",
-    text: `Your reset OTP is ${otp}. Valid for 10 minutes.`,
-    html: `<p>Your reset OTP is <b>${otp}</b>. Valid for 10 minutes.</p>`
-  });
+
+  if (!sgApiKey) return;
+
+  try {
+    await sgMail.send({
+      to: email,
+      from: senderEmail,
+      subject: "Password Reset OTP",
+      text: `Your password reset OTP is ${otp}. Valid for 10 minutes.`,
+      html: `<p>Your reset OTP is <b>${otp}</b>. Valid for 10 minutes.</p>`
+    });
+    console.log("[Email] Reset OTP sent via SendGrid to", email);
+  } catch (err) {
+    console.log("[Email] SendGrid error:", err.message || err.response?.body);
+  }
 };
 
 module.exports = { sendOTP, sendResetOTP };
