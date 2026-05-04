@@ -10,7 +10,7 @@ const generateToken = (id) => {
   }
   return jwt.sign({ id }, secret, {
     expiresIn: '30d'
-  }
+  });
 };
 
 const googleVerify = async (req, res) => {
