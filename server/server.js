@@ -138,24 +138,10 @@ connectDB()
     console.log('Database connected successfully');
     createDefaultAdmin();
     
-    // Auto-seed fallback if very low data
+    // Data check - log counts only, NO auto-seed (Render DB shared)
     const movieCount = await Movie.count();
     const categoryCount = await Category.count();
-    if (movieCount < 10) {
-      console.log(`Low data detected (Movies: ${movieCount}). Running seed...`);
-      try {
-        const seed = require('./seed');
-        await new Promise((resolve, reject) => {
-          const child = require('child_process').fork('server/seed.js');
-          child.on('close', (code) => code === 0 ? resolve() : reject(new Error('Seed failed')));
-        });
-        console.log('Auto-seed completed.');
-      } catch (seedError) {
-        console.error('Auto-seed error, continuing:', seedError.message);
-      }
-    } else {
-      console.log(`Data check OK - Movies: ${movieCount}, Categories: ${categoryCount}`);
-    }
+    console.log(`Data check - Movies: ${movieCount}, Categories: ${categoryCount}`);
   })
   .catch(err => {
     console.error('DB connection error:', err.message);
