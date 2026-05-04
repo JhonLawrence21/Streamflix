@@ -12,6 +12,7 @@ import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import AdminMoviesPage from './pages/admin/AdminMoviesPage';
 import AdminUsersPage from './pages/admin/AdminUsersPage';
 import ProfilePage from './pages/ProfilePage';
+import AuthCallbackPage from './pages/AuthCallbackPage';
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
           <Route path="/watchlist" element={<WatchlistPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/auth/callback" element={<AuthCallbackPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           
           <Route path="/admin" element={<AdminLayout />}>

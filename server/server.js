@@ -3,8 +3,10 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const session = require('express-session');
 const path = require('path');
 const connectDB = require('./config/db');
+const passport = require('./config/googleAuth');
 
 if (!process.env.JWT_SECRET) {
   process.env.JWT_SECRET = 'streamflix_jwt_secret_key_2024_prod';
@@ -95,6 +97,9 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
+app.use(session({ secret: process.env.JWT_SECRET, resave: false, saveUninitialized: false }));
+app.use(passport.initialize());
+app.use(passport.session());
 app.use(express.static(path.join(__dirname, '../client/build'), {
   maxAge: '1m',
   setHeaders: (res, path) => {
