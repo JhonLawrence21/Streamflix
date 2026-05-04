@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import Navbar from '../components/layout/Navbar';
 import HeroBanner from '../components/home/HeroBanner';
 import MovieRow from '../components/home/MovieRow';
+import LoadingSkeleton from '../components/LoadingSkeleton'; // Will create if needed
 import { movieService, watchlistService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -18,36 +19,46 @@ const HomePage = () => {
   const [tvShows, setTvShows] = useState([]);
   const [myList, setMyList] = useState([]);
   const [watchlist, setWatchlist] = useState([]);
+  const [upcoming, setUpcoming] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const { user } = useAuth();
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
+      setError(null);
       try {
-        const [trendingData, popularData, actionData, dramaData, comedyData, horrorData, sciFiData, thrillerData, animationData, tvData] = await Promise.all([
-          movieService.getTrending(),
-          movieService.getAll({ category: 'Popular', limit: 10 }),
-          movieService.getByCategory('Action'),
-          movieService.getByCategory('Drama'),
-          movieService.getByCategory('Comedy'),
-          movieService.getByCategory('Horror'),
-          movieService.getByCategory('Sci-Fi'),
-          movieService.getByCategory('Thriller'),
-          movieService.getByCategory('Animation'),
-          movieService.getByCategory('TV Shows')
+        const [trendingData, popularData, actionData, dramaData, comedyData, horrorData, sciFiData, thrillerData, animationData, tvData, upcomingData] = await Promise.all([
+          movieService.getTrending().catch(() => []),
+          movieService.getPopular().catch(() => []),
+          movieService.getByCategory('Action').catch(() => []),
+          movieService.getByCategory('Drama').catch(() => []),
+          movieService.getByCategory('Comedy').catch(() => []),
+          movieService.getByCategory('Horror').catch(() => []),
+          movieService.getByCategory('Sci-Fi').catch(() => []),
+          movieService.getByCategory('Thriller').catch(() => []),
+          movieService.getByCategory('Animation').catch(() => []),
+          movieService.getByCategory('TV Shows').catch(() => []),
+          movieService.getUpcoming().catch(() => [])
         ]);
         
-        setTrending(trendingData.slice(0, 10));
-        setPopular(popularData.movies || popularData.slice(0, 10));
-        setAction(actionData.slice(0, 10));
-        setDrama(dramaData.slice(0, 10));
-        setComedy(comedyData.slice(0, 10));
-        setHorror(horrorData.slice(0, 10));
-        setSciFi(sciFiData.slice(0, 10));
-        setThriller(thrillerData.slice(0, 10));
-        setAnimation(animationData.slice(0, 10));
-        setTvShows(tvData.slice(0, 10));
+        setTrending(Array.isArray(trendingData) ? trendingData.slice(0, 20) : []);
+        setPopular(Array.isArray(popularData) ? popularData.slice(0, 20) : (popularData?.movies || []).slice(0, 20));
+        setAction(Array.isArray(actionData) ? actionData.slice(0, 20) : []);
+        setDrama(Array.isArray(dramaData) ? dramaData.slice(0, 20) : []);
+        setComedy(Array.isArray(comedyData) ? comedyData.slice(0, 20) : []);
+        setHorror(Array.isArray(horrorData) ? horrorData.slice(0, 20) : []);
+        setSciFi(Array.isArray(sciFiData) ? sciFiData.slice(0, 20) : []);
+        setThriller(Array.isArray(thrillerData) ? thrillerData.slice(0, 20) : []);
+        setAnimation(Array.isArray(animationData) ? animationData.slice(0, 20) : []);
+        setTvShows(Array.isArray(tvData) ? tvData.slice(0, 20) : []);
+        setUpcoming(Array.isArray(upcomingData) ? upcomingData : []);
       } catch (error) {
         console.error('Error fetching movies:', error);
+        setError('Failed to load movies. Please refresh the page.');
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -70,12 +81,47 @@ const HomePage = () => {
     fetchWatchlist();
   }, [user]);
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-netflix-bg">
+        <LoadingSkeleton />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-netflix-bg flex items-center justify-center">
+        <div className="text-center p-8">
+          <h1 className="text-4xl font-bold text-white mb-4">Oops!</h1>
+          <p className="text-xl text-netflix-text-secondary mb-8">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="bg-netflix-red text-white px-8 py-3 rounded font-semibold hover:bg-red-700"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const hasAnyContent = [trending, popular, action, drama, comedy, horror, sciFi, thriller, animation, tvShows].some(arr => arr.length > 0);
+
   return (
     <div className="min-h-screen bg-netflix-bg">
       <Navbar />
       <HeroBanner />
       
       <div className="relative -mt-32 z-10 pb-8">
+        {upcoming.length > 0 && (
+          <MovieRow 
+            title="Upcoming Releases" 
+            movies={upcoming} 
+            onWatchlist={watchlist}
+          />
+        )}
+        
         <MovieRow 
           title="Trending Now" 
           movies={trending} 
@@ -144,6 +190,22 @@ const HomePage = () => {
           onWatchlist={watchlist}
         />
       </div>
+
+      {!hasAnyContent && (
+        <div className="flex flex-col items-center justify-center py-32 text-center px-4">
+          <div className="animate-pulse w-24 h-24 bg-netflix-bg-tertiary rounded-full mx-auto mb-8"></div>
+          <h2 className="text-3xl font-bold text-white mb-4">No movies available yet</h2>
+          <p className="text-xl text-netflix-text-secondary mb-8 max-w-md">
+            We're working on bringing you the best movies and shows. Check back soon!
+          </p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="bg-netflix-red text-white px-8 py-3 rounded font-semibold hover:bg-red-700"
+          >
+            Refresh
+          </button>
+        </div>
+      )}
       
       <footer className="py-8 px-12 text-netflix-text-secondary text-sm">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl">
@@ -176,3 +238,4 @@ const HomePage = () => {
 };
 
 export default HomePage;
+

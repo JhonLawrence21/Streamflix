@@ -84,7 +84,7 @@ const seedDatabase = async () => {
     if (existingMovies > 0 || existingCategories > 0) {
       console.log('Database already has data. Skipping seed to preserve existing movies.');
       console.log(`Movies: ${existingMovies}, Categories: ${existingCategories}`);
-      process.exit(0);
+      return;
     }
 
     console.log('Seeding categories...');
@@ -94,11 +94,10 @@ const seedDatabase = async () => {
     await Movie.bulkCreate(sampleMovies);
 
     console.log('Database seeded successfully!');
-    process.exit(0);
   } catch (error) {
     console.error('Error seeding database:', error);
-    process.exit(1);
+    throw error;
   }
 };
 
-seedDatabase();
+module.exports = seedDatabase;

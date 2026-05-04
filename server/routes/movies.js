@@ -7,8 +7,11 @@ const {
   watchMovie,
   getFeaturedMovie,
   getTrendingMovies,
+  getPopularMovies,
   getMoviesByCategory,
-  getSimilarMovies
+  getSimilarMovies,
+  getUpcomingReleases,
+  getReleasesByMonth
 } = require('../controllers/movieController');
 
 router.get('/test', async (req, res) => {
@@ -18,8 +21,11 @@ router.get('/test', async (req, res) => {
 
 router.get('/featured', getFeaturedMovie);
 router.get('/trending', getTrendingMovies);
+router.get('/popular', getPopularMovies);
 router.get('/category/:category', getMoviesByCategory);
 router.get('/similar/:id', getSimilarMovies);
+router.get('/upcoming', getUpcomingReleases);
+router.get('/releases/:year/:month', getReleasesByMonth);
 router.get('/watch/:id', watchMovie);
 router.get('/', getMovies);
 router.get('/:id', getMovie);

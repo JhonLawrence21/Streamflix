@@ -85,6 +85,11 @@ export const authService = {
 };
 
 export const movieService = {
+  getPopular: async () => {
+    const response = await api.get('/movies/popular');
+    return response.data;
+  },
+  
   getAll: async (params) => {
     const response = await api.get('/movies', { params });
     return response.data;
@@ -117,6 +122,16 @@ export const movieService = {
   
   getSimilar: async (id) => {
     const response = await api.get(`/movies/similar/${id}`);
+    return response.data;
+  },
+
+  getUpcoming: async () => {
+    const response = await api.get('/movies/upcoming');
+    return response.data;
+  },
+
+  getReleasesByMonth: async (year, month) => {
+    const response = await api.get(`/movies/releases/${year}/${month}`);
     return response.data;
   }
 };

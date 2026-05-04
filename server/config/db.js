@@ -79,20 +79,52 @@ const connectDB = async (retries = 3) => {
       await sequelize.sync({ force: false });
       console.log('[DB] Database synced (force: false)');
 
-      // Auto-migrate: add trending column if missing (safe for existing data)
+      // Auto-migrate: add trending column if missing
       try {
         const queryInterface = sequelize.getQueryInterface();
-        const tableInfo = await queryInterface.describeTable('movies');
-        if (!tableInfo.trending) {
-          console.log('[DB] Migrating: adding trending column to movies...');
-          await queryInterface.addColumn('movies', 'trending', {
-            type: Sequelize.BOOLEAN,
-            defaultValue: false,
-            allowNull: false
-          });
-          console.log('[DB] Migration complete: trending column added');
-        } else {
-          console.log('[DB] Migration check: trending column already exists');
+        let tableInfo = {};
+        try {
+          tableInfo = await queryInterface.describeTable('movies');
+        } catch (e) {
+          console.log('[DB] Movies table might not exist yet, will be created by sync');
+        }
+
+        if (tableInfo && Object.keys(tableInfo).length > 0) {
+          if (!tableInfo.trending) {
+            console.log('[DB] Migrating: adding trending column to movies...');
+            await queryInterface.addColumn('movies', 'trending', {
+              type: Sequelize.BOOLEAN,
+              defaultValue: false,
+              allowNull: false
+            });
+            console.log('[DB] Migration complete: trending column added');
+          } else {
+            console.log('[DB] Migration check: trending column already exists');
+          }
+
+          // Auto-migrate: add releaseDate column if missing
+          if (!tableInfo.releaseDate) {
+            console.log('[DB] Migrating: adding releaseDate column to movies...');
+            await queryInterface.addColumn('movies', 'releaseDate', {
+              type: Sequelize.DATE,
+              allowNull: true
+            });
+            console.log('[DB] Migration complete: releaseDate column added');
+          } else {
+            console.log('[DB] Migration check: releaseDate column already exists');
+          }
+
+          // Auto-migrate: add status column if missing
+          if (!tableInfo.status) {
+            console.log('[DB] Migrating: adding status column to movies...');
+            await queryInterface.addColumn('movies', 'status', {
+              type: Sequelize.ENUM('released', 'upcoming', 'in-production'),
+              defaultValue: 'released'
+            });
+            console.log('[DB] Migration complete: status column added');
+          } else {
+            console.log('[DB] Migration check: status column already exists');
+          }
         }
       } catch (migrateErr) {
         console.error('[DB] Migration warning (non-fatal):', migrateErr.message);

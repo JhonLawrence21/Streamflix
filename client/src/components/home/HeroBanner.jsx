@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Play, Info } from 'lucide-react';
 import { movieService } from '../../services/api';
-import { getThumbnailUrl, handleImageError } from '../../utils/imageUtils';
+import { getThumbnailUrl } from '../../utils/imageUtils';
 
 const HeroBanner = () => {
   const [movie, setMovie] = useState(null);
@@ -20,10 +19,21 @@ const HeroBanner = () => {
     fetchFeatured();
   }, []);
 
-  if (!movie) {
+if (!movie) {
     return (
       <div className="h-[85vh] bg-netflix-bg flex items-center justify-center">
-        <div className="animate-pulse w-20 h-20 bg-netflix-bg-tertiary rounded-full"></div>
+        <div className="text-center px-4">
+          <h2 className="text-4xl md:text-6xl font-bold text-white mb-4">Welcome to StreamFlix</h2>
+          <p className="text-xl text-netflix-text-secondary mb-8">Discover amazing movies and TV shows</p>
+          <div className="flex flex-wrap gap-4 justify-center">
+            <Link to="/search" className="bg-white text-black px-8 py-3 rounded font-semibold hover:bg-gray-200 transition-colors">
+              Browse Movies
+            </Link>
+            <Link to="/upcoming" className="bg-netflix-bg-tertiary/70 text-white px-8 py-3 rounded font-semibold hover:bg-netflix-bg-tertiary transition-colors">
+              Upcoming Releases
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }
@@ -64,12 +74,10 @@ const HeroBanner = () => {
 
           <div className="flex flex-wrap gap-4">
             <Link to={`/watch/${movie.id}`} className="flex items-center justify-center gap-2 bg-white text-black px-6 py-3 rounded font-semibold hover:bg-gray-200 transition-colors">
-              <Play size={20} />
-              Play
+▶ Play
             </Link>
             <Link to={`/movie/${movie.id}`} className="flex items-center justify-center gap-2 bg-netflix-bg-tertiary/70 text-white px-6 py-3 rounded font-semibold hover:bg-netflix-bg-tertiary transition-colors">
-              <Info size={20} />
-              More Info
+ℹ More Info
             </Link>
           </div>
         </div>

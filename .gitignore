@@ -9,4 +9,5 @@ client/.eslintcache
 **/.eslintcache
 server/database.sqlite
 client/node_modules/.cache/
+client/build/
 
