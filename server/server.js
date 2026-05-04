@@ -21,6 +21,9 @@ const movieRoutes = require('./routes/movies');
 const watchlistRoutes = require('./routes/watchlist');
 const adminRoutes = require('./routes/admin');
 
+// Preload email module to show diagnostics at startup
+require('./utils/email');
+
 const app = express();
 
 const allowedOrigins = process.env.CLIENT_URL 

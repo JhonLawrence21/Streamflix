@@ -5,13 +5,16 @@ try {
   console.warn('[Email] nodemailer not installed');
 }
 
-let transporter = null;
 const emailUser = (process.env.EMAIL_USER || '').trim();
-// Remove ALL spaces from app password - Gmail app passwords are 16 chars with no spaces
 const emailPass = (process.env.EMAIL_PASS || '').replace(/\s+/g, '').trim();
 
-if (nodemailer && emailUser && emailPass) {
-  // Use explicit SMTP config instead of service: 'gmail' for better reliability
+console.log('[Email] Starting email service...');
+console.log('[Email] EMAIL_USER set:', emailUser.length > 0 ? 'yes (' + emailUser + ')' : 'NO');
+console.log('[Email] EMAIL_PASS length:', emailPass.length > 0 ? emailPass.length + ' chars' : 'NOT SET');
+
+let transporter = null;
+
+if (nodemailer && emailUser && emailPass && emailPass.length === 16) {
   transporter = nodemailer.createTransporter({
     host: 'smtp.gmail.com',
     port: 465,
@@ -19,29 +22,23 @@ if (nodemailer && emailUser && emailPass) {
     auth: {
       user: emailUser,
       pass: emailPass
-    },
-    tls: {
-      rejectUnauthorized: false
     }
   });
 
   transporter.verify(function(error) {
     if (error) {
-      console.log('[Email] Gmail SMTP verification FAILED');
-      console.log('[Email] Error:', error.message);
+      console.log('[Email] Gmail SMTP verification failed:', error.message);
       console.log('[Email] Make sure:');
-      console.log('[Email]   1. 2-Step Verification is enabled on your Google account');
-      console.log('[Email]   2. You generated a valid App Password (not your regular password)');
-      console.log('[Email]   3. Generate at: https://myaccount.google.com/apppasswords');
-      console.log('[Email] OTP codes will appear in server logs below');
-      transporter = null;
+      console.log('[Email]   1. 2-Step Verification enabled on Google account');
+      console.log('[Email]   2. Valid App Password generated at: https://myaccount.google.com/apppasswords');
+      console.log('[Email]   3. App Password is for "Mail" service');
+      console.log('[Email] Emails may still be attempted on send...');
     } else {
-      console.log('[Email] Gmail SMTP connected! OTP emails are active.');
+      console.log('[Email] Gmail SMTP connected! OTP emails will be sent.');
     }
   });
 } else {
-  console.log('[Email] No valid email credentials. Set EMAIL_USER and EMAIL_PASS env vars.');
-  console.log('[Email] OTP codes will appear in server logs below.');
+  console.log('[Email] Invalid or missing credentials. OTP will show in server logs.');
 }
 
 const printOTP = (label, email, otp) => {
@@ -55,7 +52,10 @@ const printOTP = (label, email, otp) => {
 };
 
 const sendOTP = async (email, otp) => {
+  console.log(`[Email] sendOTP called for ${email}`);
+
   if (!transporter) {
+    console.log('[Email] No transporter available, showing OTP in logs');
     printOTP('Sign Up', email, otp);
     return;
   }
@@ -79,7 +79,7 @@ const sendOTP = async (email, otp) => {
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log('[Email] OTP sent to', email, '| Message ID:', info.messageId);
+    console.log('[Email] OTP sent successfully to', email, '| ID:', info.messageId);
   } catch (error) {
     console.error('[Email] Send failed:', error.message);
     console.error('[Email] Error code:', error.code);
@@ -88,7 +88,10 @@ const sendOTP = async (email, otp) => {
 };
 
 const sendResetOTP = async (email, otp) => {
+  console.log(`[Email] sendResetOTP called for ${email}`);
+
   if (!transporter) {
+    console.log('[Email] No transporter available, showing OTP in logs');
     printOTP('Password Reset', email, otp);
     return;
   }
@@ -111,7 +114,7 @@ const sendResetOTP = async (email, otp) => {
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log('[Email] Reset OTP sent to', email, '| Message ID:', info.messageId);
+    console.log('[Email] Reset OTP sent successfully to', email, '| ID:', info.messageId);
   } catch (error) {
     console.error('[Email] Send failed:', error.message);
     console.error('[Email] Error code:', error.code);
