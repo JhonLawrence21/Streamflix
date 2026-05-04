@@ -78,7 +78,6 @@ app.use(cors({
 app.use(express.json());
 
 // Serve static files from client/build
-const path = require('path');
 const fs = require('fs');
 
 const buildPath = path.join(__dirname, '../client/build');
