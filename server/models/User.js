@@ -43,6 +43,18 @@ const User = sequelize.define('User', {
   watchlist: {
     type: DataTypes.JSON,
     defaultValue: []
+  },
+  isVerified: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  },
+  otp: {
+    type: DataTypes.STRING,
+    defaultValue: null
+  },
+  otpExpiry: {
+    type: DataTypes.DATE,
+    defaultValue: null
   }
 }, {
   tableName: 'users',

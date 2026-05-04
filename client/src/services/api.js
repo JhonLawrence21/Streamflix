@@ -45,19 +45,34 @@ export const getMovieById = async (id) => {
 export const authService = {
   register: async (data) => {
     const response = await api.post('/auth/register', data);
+    return response.data; // No token until verified
+  },
+  
+  verifyOtp: async (data) => {
+    const response = await api.post('/auth/verify-otp', data);
     if (response.data.token) {
       localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data));
+      localStorage.setItem('user', JSON.stringify({ email: data.email, ...response.data }));
     }
     return response.data;
   },
-  
+
   login: async (data) => {
     const response = await api.post('/auth/login', data);
     if (response.data.token) {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data));
     }
+    return response.data;
+  },
+
+  forgotPassword: async (email) => {
+    const response = await api.post('/auth/forgot-password', { email });
+    return response.data;
+  },
+
+  resetPassword: async (data) => {
+    const response = await api.post('/auth/reset-password', data);
     return response.data;
   },
   

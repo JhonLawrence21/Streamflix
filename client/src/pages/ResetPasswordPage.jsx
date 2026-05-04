@@ -1,40 +1,55 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { User, Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate, Link } from 'react-router-dom';
+import { Mail, Lock, Key, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
-const RegisterPage = () => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+const ResetPasswordPage = () => {
+  const [otp, setOtp] = useState('');
+  const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { register } = useAuth();
+  const [email, setEmail] = useState('');
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { resetPassword } = useAuth();
+
+  useEffect(() => {
+    const emailParam = searchParams.get('email');
+    if (emailParam) {
+      setEmail(emailParam);
+    } else {
+      navigate('/forgot-password');
+    }
+  }, [searchParams, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    if (password !== confirmPassword) {
+    if (newPassword !== confirmPassword) {
       setError('Passwords do not match');
       return;
     }
 
-    if (password.length < 6) {
+    if (newPassword.length < 6) {
       setError('Password must be at least 6 characters');
+      return;
+    }
+
+    if (otp.length !== 6) {
+      setError('Enter valid 6-digit OTP');
       return;
     }
 
     setLoading(true);
 
     try {
-      await register(name, email, password);
-      navigate(`/verify-otp?email=${encodeURIComponent(email)}`);
+      await resetPassword(email, otp, newPassword);
+      navigate('/login');
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed');
+      setError(err.response?.data?.message || 'Reset failed');
     } finally {
       setLoading(false);
     }
@@ -43,12 +58,14 @@ const RegisterPage = () => {
   return (
     <div className="min-h-screen bg-netflix-bg flex items-center justify-center">
       <div className="w-full max-w-md p-8">
-        <Link to="/" className="block text-center text-netflix-red text-4xl font-bold tracking-tight mb-8">
-          STREAMFLIX
+        <Link to="/forgot-password" className="flex items-center text-netflix-text-secondary mb-4 hover:text-white">
+          <ArrowLeft size={20} className="mr-2" />
+          Back
         </Link>
-
+        
         <div className="bg-netflix-bg-secondary p-8 rounded-lg">
-          <h1 className="text-2xl font-bold text-white mb-6">Create Account</h1>
+          <h1 className="text-2xl font-bold text-white mb-6">Reset Password</h1>
+          <p className="text-netflix-text-secondary mb-6">Enter OTP and new password for <strong>{email}</strong></p>
 
           {error && (
             <div className="bg-red-900/50 border border-red-500 text-red-200 px-4 py-2 rounded mb-4">
@@ -58,24 +75,13 @@ const RegisterPage = () => {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="relative">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 text-netflix-text-muted" size={20} />
+              <Key className="absolute left-4 top-1/2 -translate-y-1/2 text-netflix-text-muted" size={20} />
               <input
                 type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Full name"
-                className="input-field pl-12"
-                required
-              />
-            </div>
-
-            <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-netflix-text-muted" size={20} />
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                placeholder="Enter OTP"
+                maxLength="6"
                 className="input-field pl-12"
                 required
               />
@@ -85,16 +91,16 @@ const RegisterPage = () => {
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-netflix-text-muted" size={20} />
               <input
                 type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="New Password"
                 className="input-field pl-12 pr-12"
                 required
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-netflix-text-muted"
+                className="absolute right-4 top-1/2 -translate-y-1/2"
               >
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
@@ -106,7 +112,7 @@ const RegisterPage = () => {
                 type={showPassword ? 'text' : 'password'}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirm password"
+                placeholder="Confirm New Password"
                 className="input-field pl-12"
                 required
               />
@@ -117,20 +123,14 @@ const RegisterPage = () => {
               disabled={loading}
               className="w-full btn-primary py-3 disabled:opacity-50"
             >
-              {loading ? 'Creating account...' : 'Create Account'}
+              {loading ? 'Resetting...' : 'Reset Password'}
             </button>
           </form>
-
-          <div className="mt-6 text-center text-netflix-text-secondary">
-            Already have an account?{' '}
-            <Link to="/login" className="text-white hover:underline">
-              Sign in
-            </Link>
-          </div>
         </div>
       </div>
     </div>
   );
 };
 
-export default RegisterPage;
+export default ResetPasswordPage;
+

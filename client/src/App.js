@@ -12,6 +12,9 @@ import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import AdminMoviesPage from './pages/admin/AdminMoviesPage';
 import AdminUsersPage from './pages/admin/AdminUsersPage';
 import ProfilePage from './pages/ProfilePage';
+import VerifyOTPPage from './pages/VerifyOTPPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 
 function App() {
   return (
@@ -25,6 +28,9 @@ function App() {
           <Route path="/watchlist" element={<WatchlistPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/verify-otp" element={<VerifyOTPPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           
           <Route path="/admin" element={<AdminLayout />}>
