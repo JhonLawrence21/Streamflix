@@ -103,12 +103,6 @@ const LoginPage = () => {
             </button>
           </form>
 
-          <div className="mt-4 text-center">
-            <Link to="/forgot-password" className="text-netflix-text-secondary hover:text-white text-sm">
-              Forgot password?
-            </Link>
-          </div>
-
           <div className="mt-6 text-center text-netflix-text-secondary">
             Don't have an account?{' '}
             <Link to="/register" className="text-white hover:underline">
