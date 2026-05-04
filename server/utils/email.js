@@ -6,7 +6,9 @@ try {
 }
 
 let transporter = null;
-if (nodemailer) {
+let emailConfigured = false;
+
+if (nodemailer && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
   transporter = nodemailer.createTransporter({
     service: 'gmail',
     auth: {
@@ -14,11 +16,32 @@ if (nodemailer) {
       pass: process.env.EMAIL_PASS
     }
   });
+
+  transporter.verify(function(error, success) {
+    if (error) {
+      console.log('[Email] Gmail auth failed, OTP will show in server logs');
+      console.log('[Email] Error:', error.message);
+      transporter = null;
+    } else {
+      console.log('[Email] Gmail configured, OTP emails enabled');
+      emailConfigured = true;
+    }
+  });
+} else if (nodemailer) {
+  console.warn('[Email] EMAIL_USER or EMAIL_PASS not set, OTP will show in server logs');
 }
+
+const printOTP = (label, email, otp) => {
+  console.log('========================================');
+  console.log(`[OTP] ${label}`);
+  console.log(`[OTP] Email: ${email}`);
+  console.log(`[OTP] Code: ${otp}`);
+  console.log('========================================');
+};
 
 const sendOTP = async (email, otp) => {
   if (!transporter) {
-    console.log(`[DEV] OTP for ${email}: ${otp} (nodemailer not installed)`);
+    printOTP('Sign Up OTP', email, otp);
     return;
   }
 
@@ -36,16 +59,16 @@ const sendOTP = async (email, otp) => {
 
   try {
     await transporter.sendMail(mailOptions);
-    console.log('OTP email sent to', email);
+    console.log('[Email] OTP sent to', email);
   } catch (error) {
-    console.error('Email error:', error);
-    console.log(`[DEV] OTP for ${email}: ${otp}`);
+    console.error('[Email] Send failed:', error.message);
+    printOTP('Sign Up OTP (email failed)', email, otp);
   }
 };
 
 const sendResetOTP = async (email, otp) => {
   if (!transporter) {
-    console.log(`[DEV] Reset OTP for ${email}: ${otp} (nodemailer not installed)`);
+    printOTP('Password Reset OTP', email, otp);
     return;
   }
 
@@ -62,8 +85,10 @@ const sendResetOTP = async (email, otp) => {
 
   try {
     await transporter.sendMail(mailOptions);
+    console.log('[Email] Reset OTP sent to', email);
   } catch (error) {
-    console.log(`[DEV] Reset OTP for ${email}: ${otp}`);
+    console.error('[Email] Send failed:', error.message);
+    printOTP('Password Reset OTP (email failed)', email, otp);
   }
 };
 
