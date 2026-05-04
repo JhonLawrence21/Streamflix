@@ -1,33 +1,9 @@
-# StreamFlix Black Screen Fix - TODO
+# Fix Duplicate 'path' Declaration & Render Deploy Error
 
-## Plan Breakdown & Progress
-
-### 1. Create TODO.md [✅ COMPLETED]
-
-### 2. Add loading & empty states to HomePage.jsx [✅ HomePage.jsx + LoadingSkeleton.jsx created]
-### 3. Fix HeroBanner loading & fallback [✅ HeroBanner.jsx updated]
-### 4. Minor MovieRow empty handling [✅ MovieRow.jsx updated]
-
-### 5. Backend: Add getPopular endpoint [✅ Controller + routes/movies.js + api.js + HomePage.jsx updated]
-
-### 6. Server: Add auto-seed fallback if low data [✅ server.js updated]
-
-### 7. Test locally
-```
-[ ] Run dev server
-[ ] Check http://localhost:3000
-```
-
-### 8. Deploy & verify
-```
-[ ] Push to Render
-[ ] Check live site
-```
-
-**Next step: Edit HomePage.jsx**
-</xai:function_call > 
-
-Now implementing step 2: Update HomePage.jsx with loading states, empty fallbacks, and better error handling. Reading full file first for precise edits.
-
-<xai:function_call name="read_file">
-<parameter name="path">client/src/pages/HomePage.jsx
+## [x] Step 1: Confirmed git status - server/server.js modified (contains the fix)
+## [x] Step 2: Add, commit, and push changes ✅ (server/server.js committed/pushed)
+## [x] Step 3: Test locally with `node server/server.js` ✅ (Server starts successfully, no SyntaxError, DB connected)
+## [x] Step 4: Fix Render client build issue - Updated render.yaml buildCommand to explicit client npm run build
+## [ ] Step 5: Git add/commit/push render.yaml + package.json
+## [ ] Step 6: Verify Render build creates client/build, site loads
+## [ ] Step 7: Complete
