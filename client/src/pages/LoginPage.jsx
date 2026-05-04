@@ -69,10 +69,6 @@ const LoginPage = () => {
               />
             </div>
 
-            <Link to="/forgot-password" className="block text-right text-sm text-netflix-text-secondary hover:text-white">
-              Forgot password?
-            </Link>
-
             <div className="relative">
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-netflix-text-muted" size={20} />
               <input
@@ -80,7 +76,7 @@ const LoginPage = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Password"
-                className="input-field pl-12 pr-12"
+                className="input-field pl-12"
                 autoComplete="off"
                 readOnly={readOnly}
                 required

@@ -24,23 +24,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (name, email, password) => {
-    return authService.register({ name, email, password });
-  };
-
-  const verifyOtp = async (email, otp) => {
-    const data = await authService.verifyOtp({ email, otp });
-    // User data set in api service
-    const freshUser = await authService.getCurrentUser();
-    setUser(freshUser);
-    return data;
-  };
-
-  const forgotPassword = async (email) => {
-    return authService.forgotPassword(email);
-  };
-
-  const resetPassword = async (email, otp, newPassword) => {
-    return authService.resetPassword({ email, otp, newPassword });
+    const userData = await authService.register({ name, email, password });
+    setUser(userData);
+    return userData;
   };
 
   const logout = () => {
@@ -54,7 +40,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, verifyOtp, forgotPassword, resetPassword, logout, updateUser, loading }}>
+    <AuthContext.Provider value={{ user, login, register, logout, updateUser, loading }}>
       {children}
     </AuthContext.Provider>
   );
