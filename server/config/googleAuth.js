@@ -10,7 +10,7 @@ const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
 passport.use(new GoogleStrategy({
   clientID: GOOGLE_CLIENT_ID,
   clientSecret: GOOGLE_CLIENT_SECRET,
-  callbackURL: '/auth/google/callback'
+  callbackURL: `${CLIENT_URL}/api/auth/google/callback`
 }, async (accessToken, refreshToken, profile, done) => {
   try {
     const email = profile.emails[0].value;
