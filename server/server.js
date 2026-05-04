@@ -129,7 +129,12 @@ app.get('/api/health', async (req, res) => {
 
 // Serve React app for all other routes
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../client/build/index.html'));
+  const indexPath = path.join(__dirname, '../client/build/index.html');
+  if (require('fs').existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(503).send('Service temporarily unavailable - build in progress');
+  }
 });
 
 const PORT = process.env.PORT || 10000;
