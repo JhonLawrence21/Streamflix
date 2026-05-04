@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Play, Info } from 'lucide-react';
 import { movieService } from '../../services/api';
 import { getThumbnailUrl, handleImageError } from '../../utils/imageUtils';
 
@@ -70,12 +69,10 @@ if (!movie) {
 
           <div className="flex flex-wrap gap-4">
             <Link to={`/watch/${movie.id}`} className="flex items-center justify-center gap-2 bg-white text-black px-6 py-3 rounded font-semibold hover:bg-gray-200 transition-colors">
-              <Play size={20} />
-              Play
+▶ Play
             </Link>
             <Link to={`/movie/${movie.id}`} className="flex items-center justify-center gap-2 bg-netflix-bg-tertiary/70 text-white px-6 py-3 rounded font-semibold hover:bg-netflix-bg-tertiary transition-colors">
-              <Info size={20} />
-              More Info
+ℹ More Info
             </Link>
           </div>
         </div>
