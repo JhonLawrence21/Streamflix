@@ -37,7 +37,8 @@ const createDefaultAdmin = async () => {
         name: 'Admin',
         email: process.env.ADMIN_EMAIL,
         password: process.env.ADMIN_PASSWORD,
-        role: 'admin'
+        role: 'admin',
+        isVerified: true
       });
       console.log(`Admin created: ${process.env.ADMIN_EMAIL}`);
     }
