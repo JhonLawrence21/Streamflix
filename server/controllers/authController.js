@@ -41,7 +41,7 @@ const registerUser = async (req, res) => {
     await user.save();
 
     const { sendOTP } = require('../utils/email');
-    await sendOTP(email, otp);
+    sendOTP(email, otp);
 
     res.status(201).json({
       message: 'User created. Check email for OTP.',
@@ -73,7 +73,7 @@ exports.loginUser = async (req, res) => {
 
       try {
         const { sendOTP } = require('../utils/email');
-        await sendOTP(user.email, otp);
+        sendOTP(user.email, otp);
       } catch (e) {}
 
       return res.status(401).json({
@@ -161,7 +161,7 @@ exports.forgotPassword = async (req, res) => {
     await user.save();
 
     const { sendResetOTP } = require('../utils/email');
-    await sendResetOTP(email, otp);
+    sendResetOTP(email, otp);
 
     res.json({ message: 'Reset OTP sent to email' });
   } catch (error) {
@@ -252,7 +252,7 @@ exports.resendOTP = async (req, res) => {
     await user.save();
 
     const { sendOTP } = require('../utils/email');
-    await sendOTP(email, otp);
+    sendOTP(email, otp);
 
     res.json({ message: 'New OTP sent to email' });
   } catch (error) {
