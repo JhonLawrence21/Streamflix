@@ -85,7 +85,7 @@ app.use('/api/watchlist', generalLimiter, watchlistRoutes);
 app.use('/api/admin', generalLimiter, adminRoutes);
 
 // Frontend static serve
-const buildPath = path.join(__dirname, '..', 'public');
+const buildPath = path.join(__dirname, '..', 'client', 'build');
 console.log(`Frontend build path: ${buildPath}`);
 console.log(`__dirname: ${__dirname}`);
 console.log(`cwd: ${process.cwd()}`);
