@@ -85,7 +85,7 @@ app.use('/api/watchlist', generalLimiter, watchlistRoutes);
 app.use('/api/admin', generalLimiter, adminRoutes);
 
 // Frontend static serve
-const buildPath = path.join(__dirname, '..', 'build');
+const buildPath = path.join(__dirname, '..', 'client', 'build');
 console.log(`Frontend build path: ${buildPath}`);
 console.log(`Build exists: ${fs.existsSync(buildPath)}`);
 if (fs.existsSync(buildPath)) {
