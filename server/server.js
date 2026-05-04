@@ -95,6 +95,11 @@ if (fs.existsSync(buildPath)) {
   console.log(`Contents: ${contents.slice(0, 5).join(', ')}${contents.length > 5 ? '...' : ''}`);
 } else {
   console.log(`WARNING: Build directory not found at ${buildPath}`);
+  // Try alternative paths
+  const altPath1 = path.join(process.cwd(), 'client', 'build');
+  const altPath2 = '/opt/render/project/src/client/build';
+  console.log(`Alt path 1 (cwd): ${altPath1}, exists: ${fs.existsSync(altPath1)}`);
+  console.log(`Alt path 2 (absolute): ${altPath2}, exists: ${fs.existsSync(altPath2)}`);
 }
 
 app.use(express.static(buildPath, {
