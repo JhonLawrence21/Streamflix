@@ -20,10 +20,16 @@ const HeroBanner = () => {
     fetchFeatured();
   }, []);
 
-  if (!movie) {
+if (!movie) {
     return (
       <div className="h-[85vh] bg-netflix-bg flex items-center justify-center">
-        <div className="animate-pulse w-20 h-20 bg-netflix-bg-tertiary rounded-full"></div>
+        <div className="space-y-8">
+          <div className="animate-pulse w-24 h-24 bg-netflix-bg-tertiary rounded-full mx-auto"></div>
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-white mb-2">Loading Featured Movie...</h2>
+            <p className="text-netflix-text-secondary">Discover today's top pick</p>
+          </div>
+        </div>
       </div>
     );
   }

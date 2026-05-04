@@ -74,7 +74,19 @@ const MovieRow = ({ title, movies, onWatchlist = [] }) => {
     navigate(`/watch/${movieId}`);
   };
 
-  if (!movies || movies.length === 0) return null;
+if (!movies || movies.length === 0) {
+  return (
+    <div className="py-8 px-4 md:px-12">
+      <h2 className="text-xl md:text-2xl font-semibold text-white mb-4">{title}</h2>
+      <div className="flex items-center justify-center py-16">
+        <div className="text-center">
+          <div className="animate-pulse w-16 h-16 bg-netflix-bg-tertiary rounded-full mx-auto mb-4"></div>
+          <p className="text-lg text-netflix-text-secondary">No {title.toLowerCase()} movies available</p>
+        </div>
+      </div>
+    </div>
+  );
+};
 
   return (
     <div

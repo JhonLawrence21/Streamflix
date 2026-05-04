@@ -85,6 +85,11 @@ export const authService = {
 };
 
 export const movieService = {
+  getPopular: async () => {
+    const response = await api.get('/movies/popular');
+    return response.data;
+  },
+  
   getAll: async (params) => {
     const response = await api.get('/movies', { params });
     return response.data;
