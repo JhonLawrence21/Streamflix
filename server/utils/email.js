@@ -1,6 +1,5 @@
 const nodemailer = require("nodemailer");
 
-// Preload config
 const emailUser = process.env.EMAIL_USER || "";
 const emailPass = (process.env.EMAIL_PASS || "").replace(/\s+/g, "");
 
@@ -12,7 +11,9 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: emailUser,
     pass: emailPass
-  }
+  },
+  connectionTimeout: 5000,
+  socketTimeout: 5000
 });
 
 const printOTP = (label, email, otp) => {
@@ -27,52 +28,36 @@ const printOTP = (label, email, otp) => {
 
 const sendOTP = async (email, otp) => {
   console.log(`[Email] Sending signup OTP to ${email}`);
+  printOTP("Signup OTP", email, otp);
 
-  try {
-    let info = await transporter.sendMail({
-      from: `"StreamFlix" <${emailUser}>`,
-      to: email,
-      subject: "Your OTP Code",
-      text: `Your OTP is ${otp}. It will expire in 10 minutes.`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 400px; margin: 0 auto; padding: 20px;">
-          <h2 style="color: #E50914;">Your OTP Code</h2>
-          <p style="font-size: 28px; letter-spacing: 8px; font-weight: bold;">${otp}</p>
-          <p>This code will expire in 10 minutes.</p>
-        </div>
-      `
-    });
-
-    console.log("[Email] Message sent:", info.messageId);
-  } catch (error) {
-    console.error("[Email] Send failed:", error.message);
-    printOTP("Signup (use this code)", email, otp);
-  }
+  transporter.sendMail({
+    from: `"StreamFlix" <${emailUser}>`,
+    to: email,
+    subject: "Your OTP Code",
+    text: `Your OTP is ${otp}. It will expire in 10 minutes.`,
+    html: `<p>Your OTP is <b>${otp}</b>. Valid for 10 minutes.</p>`
+  }).then(info => {
+    console.log("[Email] Sent:", info.messageId);
+  }).catch(err => {
+    console.log("[Email] Send failed (OTP shown above):", err.message);
+  });
 };
 
 const sendResetOTP = async (email, otp) => {
   console.log(`[Email] Sending reset OTP to ${email}`);
+  printOTP("Reset OTP", email, otp);
 
-  try {
-    let info = await transporter.sendMail({
-      from: `"StreamFlix" <${emailUser}>`,
-      to: email,
-      subject: "Password Reset OTP",
-      text: `Your password reset OTP is ${otp}. It will expire in 10 minutes.`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 400px; margin: 0 auto; padding: 20px;">
-          <h2 style="color: #E50914;">Password Reset OTP</h2>
-          <p style="font-size: 28px; letter-spacing: 8px; font-weight: bold;">${otp}</p>
-          <p>This code will expire in 10 minutes.</p>
-        </div>
-      `
-    });
-
-    console.log("[Email] Message sent:", info.messageId);
-  } catch (error) {
-    console.error("[Email] Send failed:", error.message);
-    printOTP("Password Reset (use this code)", email, otp);
-  }
+  transporter.sendMail({
+    from: `"StreamFlix" <${emailUser}>`,
+    to: email,
+    subject: "Password Reset OTP",
+    text: `Your password reset OTP is ${otp}. Valid for 10 minutes.`,
+    html: `<p>Your reset OTP is <b>${otp}</b>. Valid for 10 minutes.</p>`
+  }).then(info => {
+    console.log("[Email] Sent:", info.messageId);
+  }).catch(err => {
+    console.log("[Email] Send failed (OTP shown above):", err.message);
+  });
 };
 
 module.exports = { sendOTP, sendResetOTP };
