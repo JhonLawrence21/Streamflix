@@ -42,8 +42,6 @@ const RegisterPage = () => {
     }
   };
 
-  const navigate = useNavigate();
-
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
       const { credential } = credentialResponse;

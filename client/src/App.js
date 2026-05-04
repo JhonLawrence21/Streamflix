@@ -13,7 +13,6 @@ import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import AdminMoviesPage from './pages/admin/AdminMoviesPage';
 import AdminUsersPage from './pages/admin/AdminUsersPage';
 import ProfilePage from './pages/ProfilePage';
-import AuthCallbackPage from './pages/AuthCallbackPage';
 
 function App() {
   const googleClientId = process.env.REACT_APP_GOOGLE_CLIENT_ID || '';
