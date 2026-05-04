@@ -41,6 +41,11 @@ const createDefaultAdmin = async () => {
         isVerified: true
       });
       console.log(`Admin created: ${process.env.ADMIN_EMAIL}`);
+    } else if (!adminExists.isVerified) {
+      adminExists.isVerified = true;
+      adminExists.role = 'admin';
+      await adminExists.save();
+      console.log(`Admin verified: ${process.env.ADMIN_EMAIL}`);
     }
   } catch (error) {
     console.error('Error creating admin:', error);
