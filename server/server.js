@@ -84,13 +84,10 @@ app.use('/api/movies', generalLimiter, movieRoutes);
 app.use('/api/watchlist', generalLimiter, watchlistRoutes);
 app.use('/api/admin', generalLimiter, adminRoutes);
 
-// Frontend static serve - try client/build first (Render default), then public/
-let buildPath = path.join(process.cwd(), 'client', 'build');
-if (!fs.existsSync(buildPath)) {
-  buildPath = path.join(process.cwd(), 'public');
-}
-console.log(`Frontend path: ${buildPath}`);
-console.log(`Exists: ${fs.existsSync(buildPath)}`);
+// Frontend static serve
+const buildPath = path.join(__dirname, '..', 'client', 'build');
+console.log(`Frontend build path: ${buildPath}`);
+console.log(`Build exists: ${fs.existsSync(buildPath)}`);
 if (fs.existsSync(buildPath)) {
   const contents = fs.readdirSync(buildPath);
   console.log(`Contents: ${contents.slice(0, 5).join(', ')}${contents.length > 5 ? '...' : ''}`);
