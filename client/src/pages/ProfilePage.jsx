@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, Save } from 'lucide-react';
+import { User, Mail, Save, Camera } from 'lucide-react';
 import Navbar from '../components/layout/Navbar';
 import { authService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -16,6 +16,7 @@ const ProfilePage = () => {
   const [isSuccess, setIsSuccess] = useState(false);
   const { user, updateUser } = useAuth();
   const navigate = useNavigate();
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (user) {
@@ -26,6 +27,32 @@ const ProfilePage = () => {
       });
     }
   }, [user]);
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setMessage('Image must be less than 5MB');
+        setIsSuccess(false);
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData({ ...formData, profileImage: reader.result });
+        setMessage('');
+      };
+      reader.onerror = () => {
+        setMessage('Failed to read file');
+        setIsSuccess(false);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setFormData({ ...formData, profileImage: '' });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -70,12 +97,39 @@ const ProfilePage = () => {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="flex justify-center mb-6">
-            <div className="w-24 h-24 rounded-full bg-netflix-red flex items-center justify-center overflow-hidden">
-              {formData.profileImage ? (
-                <img src={formData.profileImage} alt={formData.name} className="w-full h-full object-cover" />
-              ) : (
-                <User size={40} className="text-white" />
+            <div className="relative">
+              <div className="w-24 h-24 rounded-full bg-netflix-red flex items-center justify-center overflow-hidden">
+                {formData.profileImage && formData.profileImage.startsWith('data:image') ? (
+                  <img src={formData.profileImage} alt={formData.name} className="w-full h-full object-cover" />
+                ) : formData.profileImage ? (
+                  <img src={formData.profileImage} alt={formData.name} className="w-full h-full object-cover" />
+                ) : (
+                  <User size={40} className="text-white" />
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="absolute bottom-0 right-0 bg-netflix-red p-2 rounded-full hover:bg-red-700 transition-colors"
+              >
+                <Camera size={16} className="text-white" />
+              </button>
+              {formData.profileImage && (
+                <button
+                  type="button"
+                  onClick={handleRemoveImage}
+                  className="absolute top-0 right-0 bg-gray-600 p-1 rounded-full hover:bg-gray-700 transition-colors text-xs"
+                >
+                  ✕
+                </button>
               )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
             </div>
           </div>
 
@@ -108,14 +162,19 @@ const ProfilePage = () => {
           </div>
 
           <div>
-            <label className="block text-netflix-text-secondary text-sm mb-2">Profile Image URL</label>
+            <label className="block text-netflix-text-secondary text-sm mb-2">Profile Image</label>
+            <p className="text-xs text-netflix-text-muted mb-2">Click the camera icon above to upload a file, or paste a URL below:</p>
             <input
               type="url"
-              value={formData.profileImage}
+              value={formData.profileImage && formData.profileImage.startsWith('data:') ? '' : formData.profileImage}
               onChange={(e) => setFormData({ ...formData, profileImage: e.target.value })}
               className="input-field"
               placeholder="https://example.com/image.jpg"
+              disabled={formData.profileImage && formData.profileImage.startsWith('data:image')}
             />
+            {formData.profileImage && formData.profileImage.startsWith('data:image') && (
+              <p className="text-xs text-green-500 mt-1">✓ Image uploaded (file)</p>
+            )}
           </div>
 
           {message && (
