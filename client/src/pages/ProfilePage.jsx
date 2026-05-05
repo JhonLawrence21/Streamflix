@@ -31,8 +31,8 @@ const ProfilePage = () => {
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        setMessage('Image must be less than 5MB');
+      if (file.size > 2 * 1024 * 1024) {
+        setMessage('Image must be less than 2MB');
         setIsSuccess(false);
         return;
       }
