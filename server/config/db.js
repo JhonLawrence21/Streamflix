@@ -97,10 +97,11 @@ const connectDB = async (retries = 5, delay = 3000) => {
         }
 
         if (tableInfo && Object.keys(tableInfo).length > 0) {
-          // Migrate users table profileImage to TEXT
+          // Migrate users table profileImage to TEXT and add reset columns
           try {
             const userTableInfo = await queryInterface.describeTable('users');
             console.log('[DB] Users table columns:', Object.keys(userTableInfo));
+            
             if (userTableInfo && userTableInfo.profileImage) {
               const colType = userTableInfo.profileImage.type;
               console.log('[DB] Found column: profileImage type:', colType);
@@ -115,6 +116,30 @@ const connectDB = async (retries = 5, delay = 3000) => {
                 await sequelize.query('ALTER TABLE users ALTER COLUMN "profileImage" TYPE TEXT');
                 console.log('[DB] Migration complete (alt): profileImage changed to TEXT');
               }
+            }
+            
+            // Add resetToken column if missing
+            if (!userTableInfo.resetToken) {
+              console.log('[DB] Migrating: adding resetToken column to users...');
+              await queryInterface.addColumn('users', 'resetToken', {
+                type: Sequelize.STRING,
+                allowNull: true
+              });
+              console.log('[DB] Migration complete: resetToken column added');
+            } else {
+              console.log('[DB] Migration check: resetToken column already exists');
+            }
+            
+            // Add resetTokenExpiry column if missing
+            if (!userTableInfo.resetTokenExpiry) {
+              console.log('[DB] Migrating: adding resetTokenExpiry column to users...');
+              await queryInterface.addColumn('users', 'resetTokenExpiry', {
+                type: Sequelize.DATE,
+                allowNull: true
+              });
+              console.log('[DB] Migration complete: resetTokenExpiry column added');
+            } else {
+              console.log('[DB] Migration check: resetTokenExpiry column already exists');
             }
           } catch (e) {
             console.log('[DB] Users table migration error:', e.message);

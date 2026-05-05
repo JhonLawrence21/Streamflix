@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const { Op } = require('sequelize');
 const User = require('../models/User');
 
 const generateResetToken = () => crypto.randomBytes(32).toString('hex');
@@ -163,7 +164,7 @@ exports.resetPassword = async (req, res) => {
     const user = await User.findOne({ 
       where: { 
         resetToken: resetCode,
-        resetTokenExpiry: { [require('sequelize').Op.gt]: new Date() }
+        resetTokenExpiry: { [Op.gt]: new Date() }
       }
     });
 
