@@ -29,7 +29,7 @@ exports.getWatchlist = async (req, res) => {
       where: { id: watchlistIds }
     });
 
-    res.json(movies);
+    res.json(movies.map(m => m.get({ plain: true })));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

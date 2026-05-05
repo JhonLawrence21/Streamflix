@@ -70,8 +70,10 @@ const HomePage = () => {
       if (user) {
         try {
           const data = await watchlistService.get();
-          setWatchlist(data.map(m => m.id));
-          setMyList(data.slice(0, 10));
+          if (Array.isArray(data)) {
+            setWatchlist(data.map(m => m.id));
+            setMyList(data.slice(0, 10));
+          }
         } catch (error) {
           console.error('Error fetching watchlist:', error);
         }
