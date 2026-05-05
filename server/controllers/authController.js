@@ -90,6 +90,8 @@ exports.getMe = async (req, res) => {
 exports.updateProfile = async (req, res) => {
   try {
     const { name, email, profileImage } = req.body;
+    
+    console.log('[Profile] Updating profile, image length:', profileImage ? profileImage.length : 0);
 
     const user = await User.findByPk(req.user.id);
     if (!user) {
@@ -110,6 +112,8 @@ exports.updateProfile = async (req, res) => {
     }
 
     await user.save();
+    
+    console.log('[Profile] Profile updated successfully');
 
     const freshUser = await User.findByPk(user.id);
     res.json({
@@ -121,6 +125,7 @@ exports.updateProfile = async (req, res) => {
       watchlist: freshUser.watchlist || []
     });
   } catch (error) {
+    console.error('[Profile] Error updating profile:', error.message);
     res.status(500).json({ message: error.message });
   }
 };
