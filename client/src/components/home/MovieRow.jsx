@@ -102,12 +102,12 @@ const MovieRow = ({ title, movies, onWatchlist = [] }) => {
           </>
         )}
 
-        <div ref={rowRef} className="flex gap-3 overflow-x-auto scrollbar-hide pb-4">
+        <div ref={rowRef} className="flex gap-2 md:gap-3 overflow-x-auto scrollbar-hide pb-4">
           {movies.map((movie, index) => (
             <div
               key={movie.id}
               onClick={() => handleCardClick(movie.id)}
-              className="flex-shrink-0 w-36 sm:w-40 md:w-48 group/card relative cursor-pointer animate-card-entrance"
+              className="flex-shrink-0 w-24 sm:w-28 md:w-36 lg:w-48 group/card relative cursor-pointer animate-card-entrance"
               style={{ animationDelay: `${index * 80}ms` }}
             >
               <div className="transition-all duration-300 ease-out hover:-translate-y-2 hover:shadow-2xl hover:shadow-black/50 rounded overflow-hidden">

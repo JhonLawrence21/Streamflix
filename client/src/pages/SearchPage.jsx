@@ -63,27 +63,27 @@ const SearchPage = () => {
       
       <div className="pt-24 px-4 md:px-12 pb-8">
         <form onSubmit={handleSearch} className="mb-8">
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1 relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-netflix-text-muted" size={20} />
               <input
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search for movies, TV shows and more..."
-                className="input-field pl-12"
+                placeholder="Search movies..."
+                className="input-field pl-12 w-full"
               />
             </div>
-            <button type="submit" className="btn-primary px-6">
+            <button type="submit" className="btn-primary px-6 py-3 sm:py-2">
               Search
             </button>
           </div>
         </form>
 
-        <div className="flex flex-wrap gap-2 mb-8">
+        <div className="flex gap-2 mb-8 overflow-x-auto pb-2 scrollbar-hide">
           <button
             onClick={() => { setCategory(''); setSearchParams(query ? { q: query } : {}); }}
-            className={`px-4 py-2 rounded-full text-sm transition-colors ${!category ? 'bg-netflix-red text-white' : 'bg-netflix-bg-tertiary text-netflix-text-secondary hover:text-white'}`}
+            className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${!category ? 'bg-netflix-red text-white' : 'bg-netflix-bg-tertiary text-netflix-text-secondary hover:text-white'}`}
           >
             All
           </button>
@@ -91,7 +91,7 @@ const SearchPage = () => {
             <button
               key={cat}
               onClick={() => { setCategory(cat); setSearchParams(query ? { q: query, category: cat } : { category: cat }); }}
-              className={`px-4 py-2 rounded-full text-sm transition-colors ${category === cat ? 'bg-netflix-red text-white' : 'bg-netflix-bg-tertiary text-netflix-text-secondary hover:text-white'}`}
+              className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${category === cat ? 'bg-netflix-red text-white' : 'bg-netflix-bg-tertiary text-netflix-text-secondary hover:text-white'}`}
             >
               {cat}
             </button>

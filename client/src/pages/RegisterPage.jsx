@@ -41,13 +41,13 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-netflix-bg flex items-center justify-center">
-      <div className="w-full max-w-md p-8">
-        <Link to="/" className="block text-center text-netflix-red text-4xl font-bold tracking-tight mb-8">
+    <div className="min-h-screen bg-netflix-bg flex items-center justify-center px-4">
+      <div className="w-full max-w-md">
+        <Link to="/" className="block text-center text-netflix-red text-3xl md:text-4xl font-bold tracking-tight mb-6 md:mb-8">
           STREAMFLIX
         </Link>
 
-        <div className="bg-netflix-bg-secondary p-8 rounded-lg">
+        <div className="bg-netflix-bg-secondary p-6 md:p-8 rounded-lg">
           <h1 className="text-2xl font-bold text-white mb-6">Create Account</h1>
 
           {error && (

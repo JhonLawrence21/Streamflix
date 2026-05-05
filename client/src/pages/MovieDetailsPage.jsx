@@ -117,13 +117,13 @@ const MovieDetailsPage = () => {
         <img
           src={bgError ? getThumbnailUrl(null, 'hero') : getThumbnailUrl(movie.thumbnail, 'hero')}
           alt={movie.title}
-          className="absolute inset-0 w-full h-[60vh] object-cover"
+          className="absolute inset-0 w-full h-[40vh] md:h-[60vh] object-cover"
           onError={() => setBgError(true)}
         />
-        <div className="absolute inset-0 h-[60vh] bg-gradient-to-r from-netflix-bg via-netflix-bg/80 to-transparent"></div>
-        <div className="absolute inset-0 h-[60vh] bg-gradient-to-t from-netflix-bg via-transparent to-netflix-bg"></div>
+        <div className="absolute inset-0 h-[40vh] md:h-[60vh] bg-gradient-to-r from-netflix-bg via-netflix-bg/80 to-transparent"></div>
+        <div className="absolute inset-0 h-[40vh] md:h-[60vh] bg-gradient-to-t from-netflix-bg via-transparent to-netflix-bg"></div>
 
-        <div className="relative pt-[40vh] px-4 md:px-12 pb-8">
+        <div className="relative pt-[30vh] md:pt-[40vh] px-4 md:px-12 pb-8">
           <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-netflix-text-secondary hover:text-white mb-4 transition-colors">
             <ArrowLeft size={20} />
             Back

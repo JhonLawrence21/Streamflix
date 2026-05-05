@@ -40,8 +40,8 @@ const Navbar = () => {
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-netflix-bg' : 'bg-gradient-to-b from-black/80 to-transparent'}`}>
       <div className="flex items-center justify-between px-4 md:px-8 py-4">
-        <div className="flex items-center gap-8">
-          <Link to="/" className="text-netflix-red text-3xl font-bold tracking-tight">
+        <div className="flex items-center gap-4 md:gap-8">
+          <Link to="/" className="text-netflix-red text-xl md:text-3xl font-bold tracking-tight">
             STREAMFLIX
           </Link>
           
@@ -58,17 +58,17 @@ const Navbar = () => {
 
         <div className="flex items-center gap-4">
           {searchOpen ? (
-            <form onSubmit={handleSearch} className="flex items-center">
+            <form onSubmit={handleSearch} className="flex items-center flex-1 max-w-xs md:max-w-md">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search movies..."
-                className="bg-netflix-bg-tertiary border border-netflix-text-muted rounded px-4 py-2 text-white placeholder-netflix-text-muted focus:outline-none focus:border-netflix-red"
+                placeholder="Search..."
+                className="w-full bg-netflix-bg-tertiary border border-netflix-text-muted rounded px-3 py-1.5 md:px-4 md:py-2 text-sm md:text-base text-white placeholder-netflix-text-muted focus:outline-none focus:border-netflix-red"
                 autoFocus
               />
-              <button type="button" onClick={() => setSearchOpen(false)} className="ml-2 text-netflix-text-secondary">
-                <X size={20} />
+              <button type="button" onClick={() => setSearchOpen(false)} className="ml-1 md:ml-2 text-netflix-text-secondary hover:text-white">
+                <X size={18} />
               </button>
             </form>
           ) : (
@@ -84,7 +84,7 @@ const Navbar = () => {
               )}
               
               {!user ? (
-                <Link to="/login" className="bg-[#E50914] hover:bg-[#b20710] text-white px-6 py-2 rounded font-semibold text-sm">Sign In</Link>
+                <Link to="/login" className="text-xs md:text-sm text-white hover:text-netflix-text-secondary">Sign In</Link>
               ) : (
                 <div className="relative">
                   <button onClick={() => setProfileOpen(!profileOpen)} className="flex items-center gap-2 text-netflix-text hover:text-netflix-text-secondary">

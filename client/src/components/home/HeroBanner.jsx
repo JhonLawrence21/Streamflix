@@ -25,11 +25,11 @@ if (!movie) {
         <div className="text-center px-4">
           <h2 className="text-4xl md:text-6xl font-bold text-white mb-4">Welcome to StreamFlix</h2>
           <p className="text-xl text-netflix-text-secondary mb-8">Discover amazing movies and TV shows</p>
-          <div className="flex flex-wrap gap-4 justify-center">
-            <Link to="/search" className="bg-white text-black px-8 py-3 rounded font-semibold hover:bg-gray-200 transition-colors">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link to="/search" className="bg-white text-black px-6 md:px-8 py-2.5 md:py-3 rounded font-semibold hover:bg-gray-200 transition-colors text-sm md:text-base">
               Browse Movies
             </Link>
-            <Link to="/upcoming" className="bg-netflix-bg-tertiary/70 text-white px-8 py-3 rounded font-semibold hover:bg-netflix-bg-tertiary transition-colors">
+            <Link to="/upcoming" className="bg-netflix-bg-tertiary/70 text-white px-6 md:px-8 py-2.5 md:py-3 rounded font-semibold hover:bg-netflix-bg-tertiary transition-colors text-sm md:text-base">
               Upcoming Releases
             </Link>
           </div>
@@ -72,12 +72,12 @@ if (!movie) {
 
           <p className="text-netflix-text mb-6 line-clamp-3">{movie.description}</p>
 
-          <div className="flex flex-wrap gap-4">
-            <Link to={`/watch/${movie.id}`} className="flex items-center justify-center gap-2 bg-white text-black px-6 py-3 rounded font-semibold hover:bg-gray-200 transition-colors">
-▶ Play
+<div className="flex flex-col sm:flex-row gap-3">
+            <Link to={`/watch/${movie.id}`} className="flex items-center justify-center gap-2 bg-white text-black px-4 md:px-6 py-2.5 md:py-3 rounded font-semibold hover:bg-gray-200 transition-colors text-sm md:text-base">
+ ▶ Play
             </Link>
-            <Link to={`/movie/${movie.id}`} className="flex items-center justify-center gap-2 bg-netflix-bg-tertiary/70 text-white px-6 py-3 rounded font-semibold hover:bg-netflix-bg-tertiary transition-colors">
-ℹ More Info
+            <Link to={`/movie/${movie.id}`} className="flex items-center justify-center gap-2 bg-netflix-bg-tertiary/70 text-white px-4 md:px-6 py-2.5 md:py-3 rounded font-semibold hover:bg-netflix-bg-tertiary transition-colors text-sm md:text-base">
+ ℹ More Info
             </Link>
           </div>
         </div>
