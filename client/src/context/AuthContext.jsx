@@ -8,19 +8,38 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
+    const loadUser = async () => {
+      const token = localStorage.getItem('token');
+      const storedUser = localStorage.getItem('user');
+      
+      if (token && storedUser) {
+        try {
+          const parsed = JSON.parse(storedUser);
+          setUser(parsed);
+          
+          try {
+            const freshUser = await authService.getCurrentUser();
+            setUser(freshUser);
+            localStorage.setItem('user', JSON.stringify(freshUser));
+          } catch (e) {
+            console.warn('Could not refresh user, using stored data');
+          }
+        } catch (e) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+        }
+      }
+      setLoading(false);
+    };
     
-    if (token && storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
+    loadUser();
   }, []);
 
   const login = async (email, password) => {
-    await authService.login({ email, password });
+    const result = await authService.login({ email, password });
     const freshUser = await authService.getCurrentUser();
     setUser(freshUser);
+    localStorage.setItem('user', JSON.stringify(freshUser));
     return freshUser;
   };
 
@@ -28,6 +47,7 @@ export const AuthProvider = ({ children }) => {
     await authService.register({ name, email, password });
     const freshUser = await authService.getCurrentUser();
     setUser(freshUser);
+    localStorage.setItem('user', JSON.stringify(freshUser));
     return freshUser;
   };
 

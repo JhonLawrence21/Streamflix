@@ -5,15 +5,15 @@ import { useAuth } from '../../context/AuthContext';
 
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { user, logout } = useAuth();
+  const { user, logout, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    if (!user || user.role !== 'admin') {
-      navigate('/login');
+    if (!loading && (!user || user.role !== 'admin')) {
+      navigate('/login', { state: { from: location.pathname } });
     }
-  }, [user, navigate]);
+  }, [user, loading, navigate, location]);
 
   const menuItems = [
     { path: '/admin', icon: BarChart3, label: 'Dashboard' },
@@ -25,6 +25,14 @@ const AdminLayout = () => {
     logout();
     navigate('/');
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-netflix-bg flex items-center justify-center">
+        <div className="text-white text-xl">Loading...</div>
+      </div>
+    );
+  }
 
   if (!user || user.role !== 'admin') {
     return null;
