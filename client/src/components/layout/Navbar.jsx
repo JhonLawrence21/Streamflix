@@ -88,8 +88,16 @@ const Navbar = () => {
               ) : (
                 <div className="relative">
                   <button onClick={() => setProfileOpen(!profileOpen)} className="flex items-center gap-2 text-netflix-text hover:text-netflix-text-secondary">
-                    <div className="w-8 h-8 bg-netflix-red rounded-full flex items-center justify-center">
-                      <User size={16} className="text-white" />
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden bg-netflix-red">
+                      {user.profileImage ? (
+                        <img 
+                          src={user.profileImage} 
+                          alt={user.name} 
+                          className="w-full h-full object-cover" 
+                        />
+                      ) : (
+                        <User size={16} className="text-white" />
+                      )}
                     </div>
                   </button>
                   
