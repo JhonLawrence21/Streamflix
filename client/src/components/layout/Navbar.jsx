@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Bell, Menu, X } from 'lucide-react';
+import { Search, Bell, Menu, X, User, LogOut, Settings } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const Navbar = () => {
@@ -8,7 +8,8 @@ const Navbar = () => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { user } = useAuth();
+  const [profileOpen, setProfileOpen] = useState(false);
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -28,6 +29,14 @@ const Navbar = () => {
     }
   };
 
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+    setProfileOpen(false);
+  };
+
+  const isAdmin = user && user.role === 'admin';
+
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-netflix-bg' : 'bg-gradient-to-b from-black/80 to-transparent'}`}>
       <div className="flex items-center justify-between px-4 md:px-8 py-4">
@@ -41,7 +50,9 @@ const Navbar = () => {
             <Link to="/search?category=Action" className="text-netflix-text-secondary text-sm hover:text-white transition-colors">Action</Link>
             <Link to="/search?category=Drama" className="text-netflix-text-secondary text-sm hover:text-white transition-colors">Drama</Link>
             <Link to="/upcoming" className="text-netflix-text-secondary text-sm hover:text-white transition-colors">Upcoming</Link>
-            <Link to="/watchlist" className="text-netflix-text-secondary text-sm hover:text-white transition-colors">My List</Link>
+            {user && (
+              <Link to="/watchlist" className="text-netflix-text-secondary text-sm hover:text-white transition-colors">My List</Link>
+            )}
           </div>
         </div>
 
@@ -66,17 +77,44 @@ const Navbar = () => {
                 <Search size={24} />
               </button>
               
-<Link to="/watchlist" className="text-gray-300 hover:text-white">
+              {user && (
+                <Link to="/watchlist" className="text-gray-300 hover:text-white">
                   <div style={{width: '24px', height: '24px'}}>+</div>
                 </Link>
+              )}
               
-              <div className="relative group">
-                <button className="text-netflix-text hover:text-netflix-text-secondary transition-colors">
-                  <Bell size={24} />
-                </button>
-              </div>
-              
-<Link to="/login" className="bg-[#E50914] hover:bg-[#b20710] text-white px-6 py-2 rounded font-semibold text-sm">Sign In</Link>
+              {!user ? (
+                <Link to="/login" className="bg-[#E50914] hover:bg-[#b20710] text-white px-6 py-2 rounded font-semibold text-sm">Sign In</Link>
+              ) : (
+                <div className="relative">
+                  <button onClick={() => setProfileOpen(!profileOpen)} className="flex items-center gap-2 text-netflix-text hover:text-netflix-text-secondary">
+                    <div className="w-8 h-8 bg-netflix-red rounded-full flex items-center justify-center">
+                      <User size={16} className="text-white" />
+                    </div>
+                  </button>
+                  
+                  {profileOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-netflix-bg-secondary rounded shadow-lg py-2">
+                      <div className="px-4 py-2 border-b border-netflix-bg-tertiary">
+                        <p className="text-white font-semibold">{user.name}</p>
+                        <p className="text-netflix-text-secondary text-sm">{user.email}</p>
+                        {isAdmin && <span className="text-netflix-red text-xs">Admin</span>}
+                      </div>
+                      {isAdmin && (
+                        <Link to="/admin" className="flex items-center gap-2 px-4 py-2 text-netflix-text hover:text-white hover:bg-netflix-bg-tertiary" onClick={() => setProfileOpen(false)}>
+                          <Settings size={16} /> Admin Dashboard
+                        </Link>
+                      )}
+                      <Link to="/profile" className="flex items-center gap-2 px-4 py-2 text-netflix-text hover:text-white hover:bg-netflix-bg-tertiary" onClick={() => setProfileOpen(false)}>
+                        <User size={16} /> Profile
+                      </Link>
+                      <button onClick={handleLogout} className="flex items-center gap-2 w-full px-4 py-2 text-netflix-text hover:text-white hover:bg-netflix-bg-tertiary">
+                        <LogOut size={16} /> Sign Out
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </>
           )}
           
@@ -94,7 +132,16 @@ const Navbar = () => {
             <Link to="/search?category=Drama" className="text-netflix-text-secondary py-2" onClick={() => setMobileMenuOpen(false)}>Drama</Link>
             <Link to="/upcoming" className="text-netflix-text-secondary py-2" onClick={() => setMobileMenuOpen(false)}>Upcoming</Link>
             {user && (
-              <Link to="/watchlist" className="text-netflix-text-secondary py-2" onClick={() => setMobileMenuOpen(false)}>My List</Link>
+              <>
+                <Link to="/watchlist" className="text-netflix-text-secondary py-2" onClick={() => setMobileMenuOpen(false)}>My List</Link>
+                {isAdmin && (
+                  <Link to="/admin" className="text-netflix-red py-2" onClick={() => setMobileMenuOpen(false)}>Admin Dashboard</Link>
+                )}
+                <button onClick={() => { handleLogout(); setMobileMenuOpen(false); }} className="text-netflix-text-secondary py-2 text-left">Sign Out</button>
+              </>
+            )}
+            {!user && (
+              <Link to="/login" className="text-netflix-text-secondary py-2" onClick={() => setMobileMenuOpen(false)}>Sign In</Link>
             )}
           </div>
         </div>

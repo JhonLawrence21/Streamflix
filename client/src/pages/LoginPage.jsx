@@ -10,7 +10,7 @@ const LoginPage = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [readOnly, setReadOnly] = useState(true);
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -18,14 +18,26 @@ const LoginPage = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    if (user && user.role === 'admin') {
+      navigate('/admin');
+    } else if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
     try {
-      await login(email, password);
-      navigate('/');
+      const user = await login(email, password);
+      if (user && user.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/');
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed');
     } finally {
