@@ -100,15 +100,23 @@ const connectDB = async (retries = 5, delay = 3000) => {
           // Migrate users table profileImage to TEXT
           try {
             const userTableInfo = await queryInterface.describeTable('users');
-            if (userTableInfo && userTableInfo.profileimage) {
-              if (userTableInfo.profileimage.type === 'STRING' || userTableInfo.profileimage.type === 'VARCHAR(255)') {
-                console.log('[DB] Migrating: changing users.profileImage to TEXT...');
-                await sequelize.query('ALTER TABLE users ALTER COLUMN "profileImage" TYPE TEXT');
-                console.log('[DB] Migration complete: users.profileImage changed to TEXT');
+            console.log('[DB] Users table columns:', Object.keys(userTableInfo));
+            if (userTableInfo) {
+              const colNames = Object.keys(userTableInfo);
+              for (const colName of colNames) {
+                if (colName.toLowerCase().includes('profile') || colName.toLowerCase().includes('image')) {
+                  console.log('[DB] Found column:', colName, 'type:', userTableInfo[colName].type);
+                  const colType = userTableInfo[colName].type;
+                  if (colType && (colType.includes('varchar') || colType.includes('character varying'))) {
+                    console.log('[DB] Migrating: changing', colName, 'to TEXT...');
+                    await sequelize.query(`ALTER TABLE users ALTER COLUMN "${colName}" TYPE TEXT`);
+                    console.log('[DB] Migration complete:', colName, 'changed to TEXT');
+                  }
+                }
               }
             }
           } catch (e) {
-            console.log('[DB] Users table migration skipped:', e.message);
+            console.log('[DB] Users table migration info:', e.message);
           }
 
           if (!tableInfo.trending) {
