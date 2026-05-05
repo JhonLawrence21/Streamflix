@@ -13,10 +13,11 @@ const UpcomingReleasesPage = () => {
   const navigate = useNavigate();
   const currentDate = new Date();
   const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
-  const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth() + 1);
+  const [selectedMonth, setSelectedMonth] = useState(null);
   const [releases, setReleases] = useState([]);
   const [upcoming, setUpcoming] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [hasSelected, setHasSelected] = useState(false);
 
   const years = Array.from({ length: 5 }, (_, i) => currentDate.getFullYear() - 1 + i);
 
@@ -24,7 +25,7 @@ const UpcomingReleasesPage = () => {
     setLoading(true);
     try {
       const [releasesData, upcomingData] = await Promise.all([
-        movieService.getReleasesByMonth(selectedYear, selectedMonth),
+        selectedMonth ? movieService.getReleasesByMonth(selectedYear, selectedMonth) : Promise.resolve([]),
         movieService.getUpcoming()
       ]);
       setReleases(releasesData);
@@ -41,19 +42,26 @@ const UpcomingReleasesPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedYear, selectedMonth]);
 
+  
+
   return (
     <div className="min-h-screen bg-netflix-bg">
       <Navbar />
 
       <div className="px-12 pt-24 pb-8">
-        <h1 className="text-4xl font-bold text-white mb-8">Releases by Month</h1>
+        <h1 className="text-4xl font-bold text-white mb-8">Upcoming Releases</h1>
 
         <div className="flex gap-4 mb-8">
           <select
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+            value={selectedMonth || 0}
+            onChange={(e) => {
+              const val = parseInt(e.target.value);
+              setSelectedMonth(val === 0 ? null : val);
+              setHasSelected(true);
+            }}
             className="bg-netflix-card text-white px-4 py-2 rounded border border-gray-600 focus:outline-none focus:border-netflix-red"
           >
+            <option value={0}>-- Select Month --</option>
             {MONTHS.map((month, index) => (
               <option key={index} value={index + 1}>{month}</option>
             ))}
@@ -61,7 +69,10 @@ const UpcomingReleasesPage = () => {
 
           <select
             value={selectedYear}
-            onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+            onChange={(e) => {
+              setSelectedYear(parseInt(e.target.value));
+              setHasSelected(true);
+            }}
             className="bg-netflix-card text-white px-4 py-2 rounded border border-gray-600 focus:outline-none focus:border-netflix-red"
           >
             {years.map(year => (
@@ -74,27 +85,29 @@ const UpcomingReleasesPage = () => {
           <div className="text-white text-center py-12">Loading...</div>
         ) : (
           <>
-            <section className="mb-12">
-              <h2 className="text-2xl font-semibold text-white mb-4">
-                {MONTHS[selectedMonth - 1]} {selectedYear} Releases
-              </h2>
-              {releases.length === 0 ? (
-                <p className="text-netflix-text-secondary">No releases this month</p>
-              ) : (
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                  {releases.map(movie => (
-                    <MovieCard
-                      key={movie.id}
-                      movie={movie}
-                      onClick={() => navigate(`/movie/${movie.id}`)}
-                    />
-                  ))}
-                </div>
-              )}
-            </section>
+            {selectedMonth && hasSelected && (
+              <section className="mb-12">
+                <h2 className="text-2xl font-semibold text-white mb-4">
+                  {MONTHS[selectedMonth - 1]} {selectedYear} Releases
+                </h2>
+                {releases.length === 0 ? (
+                  <p className="text-netflix-text-secondary">No releases found for this month</p>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    {releases.map(movie => (
+                      <MovieCard
+                        key={movie.id}
+                        movie={movie}
+                        onClick={() => navigate(`/movie/${movie.id}`)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </section>
+            )}
 
             <section>
-              <h2 className="text-2xl font-semibold text-white mb-4">Upcoming Releases</h2>
+              <h2 className="text-2xl font-semibold text-white mb-4">All Upcoming</h2>
               {upcoming.length === 0 ? (
                 <p className="text-netflix-text-secondary">No upcoming releases</p>
               ) : (
