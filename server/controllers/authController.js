@@ -118,15 +118,11 @@ exports.updateProfile = async (req, res) => {
     
     console.log('[Profile] Profile updated successfully');
 
-    const freshUser = await User.findByPk(user.id);
-    res.json({
-      id: freshUser.id,
-      name: freshUser.name,
-      email: freshUser.email,
-      role: freshUser.role,
-      profileImage: freshUser.profileImage,
-      watchlist: freshUser.watchlist || []
-    });
+    const freshUser = await User.findByPk(user.id, { raw: true });
+    delete freshUser.password;
+    delete freshUser.otp;
+    delete freshUser.otpExpiry;
+    res.json(freshUser);
   } catch (error) {
     console.error('[Profile] Error updating profile:', error.message);
     res.status(500).json({ message: error.message });
