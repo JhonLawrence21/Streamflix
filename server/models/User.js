@@ -33,7 +33,7 @@ const User = sequelize.define('User', {
     }
   },
   profileImage: {
-    type: DataTypes.STRING,
+    type: DataTypes.TEXT,
     defaultValue: ''
   },
   role: {
