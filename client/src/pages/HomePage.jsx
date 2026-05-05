@@ -19,7 +19,6 @@ const HomePage = () => {
   const [tvShows, setTvShows] = useState([]);
   const [myList, setMyList] = useState([]);
   const [watchlist, setWatchlist] = useState([]);
-  const [upcoming, setUpcoming] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { user } = useAuth();
@@ -29,7 +28,7 @@ const HomePage = () => {
       setLoading(true);
       setError(null);
       try {
-        const [trendingData, popularData, actionData, dramaData, comedyData, horrorData, sciFiData, thrillerData, animationData, tvData, upcomingData] = await Promise.all([
+        const [trendingData, popularData, actionData, dramaData, comedyData, horrorData, sciFiData, thrillerData, animationData, tvData] = await Promise.all([
           movieService.getTrending().catch(() => []),
           movieService.getPopular().catch(() => []),
           movieService.getByCategory('Action').catch(() => []),
@@ -39,8 +38,7 @@ const HomePage = () => {
           movieService.getByCategory('Sci-Fi').catch(() => []),
           movieService.getByCategory('Thriller').catch(() => []),
           movieService.getByCategory('Animation').catch(() => []),
-          movieService.getByCategory('TV Shows').catch(() => []),
-          movieService.getUpcoming().catch(() => [])
+          movieService.getByCategory('TV Shows').catch(() => [])
         ]);
         
         setTrending(Array.isArray(trendingData) ? trendingData.slice(0, 20) : []);
@@ -53,7 +51,6 @@ const HomePage = () => {
         setThriller(Array.isArray(thrillerData) ? thrillerData.slice(0, 20) : []);
         setAnimation(Array.isArray(animationData) ? animationData.slice(0, 20) : []);
         setTvShows(Array.isArray(tvData) ? tvData.slice(0, 20) : []);
-        setUpcoming(Array.isArray(upcomingData) ? upcomingData : []);
       } catch (error) {
         console.error('Error fetching movies:', error);
         setError('Failed to load movies. Please refresh the page.');
@@ -116,14 +113,6 @@ const HomePage = () => {
       <HeroBanner />
       
       <div className="relative -mt-32 z-10 pb-8">
-        {upcoming.length > 0 && (
-          <MovieRow 
-            title="Upcoming Releases" 
-            movies={upcoming} 
-            onWatchlist={watchlist}
-          />
-        )}
-        
         <MovieRow 
           title="Trending Now" 
           movies={trending} 
