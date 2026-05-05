@@ -25,8 +25,10 @@ const adminRoutes = require('./routes/admin');
 const app = express();
 
 const allowedOrigins = process.env.CLIENT_URL 
-  ? [process.env.CLIENT_URL, 'http://localhost:3000', 'http://localhost:5000']
+  ? [process.env.CLIENT_URL, 'http://localhost:3000', 'http://localhost:5000', 'https://streamflix-1-4gr5.onrender.com']
   : ['http://localhost:3000', 'http://localhost:5000'];
+
+console.log('[CORS] Allowed origins:', allowedOrigins);
 
 const createDefaultAdmin = async () => {
   if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD) return;
@@ -154,16 +156,20 @@ app.listen(PORT, '0.0.0.0', () => {
 
 connectDB()
   .then(async () => {
-    console.log('DB connected');
+    console.log('✓ DB connected successfully');
     await createDefaultAdmin();
     
     const movieCount = await Movie.count();
+    console.log(`✓ Current movies in DB: ${movieCount}`);
     if (movieCount === 0) {
-      console.log('Seeding data...');
+      console.log('Seeding initial data...');
       await seedInitialData();
     }
   })
-  .catch(console.error);
+  .catch(err => {
+    console.error('✗ Database connection failed:', err.message);
+    console.log('Continuing without database...');
+  });
 
 // seedInitialData function here (same as before)
 async function seedInitialData() {

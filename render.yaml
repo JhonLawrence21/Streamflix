@@ -13,7 +13,7 @@ services:
       - key: JWT_SECRET
         value: streamflix_jwt_secret_key_2024_prod
       - key: CLIENT_URL
-        value: https://streamflix-1fdz.onrender.com
+        value: https://streamflix-1-4gr5.onrender.com
       - key: DATABASE_URL
         value: postgresql://streamflix_db_94tw_user:racco3hBntmpD7MIuK4FTiVDuin50bDW@dpg-d7mocj8sfn5c73dleqmg-a/streamflix_db_94tw
       - key: ADMIN_EMAIL

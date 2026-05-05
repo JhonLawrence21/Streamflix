@@ -2,11 +2,17 @@ const { Sequelize } = require('sequelize');
 
 let sequelize;
 
+console.log('[DB] Checking DATABASE_URL...');
+console.log('[DB] DATABASE_URL present:', !!process.env.DATABASE_URL);
 if (process.env.DATABASE_URL) {
-  const isPostgres = process.env.DATABASE_URL.startsWith('postgres://') || process.env.DATABASE_URL.startsWith('postgresql://');
+  const dbUrl = process.env.DATABASE_URL;
+  console.log('[DB] DATABASE_URL:', dbUrl.substring(0, 30) + '...');
+  
+  const isPostgres = dbUrl.startsWith('postgres://') || dbUrl.startsWith('postgresql://');
   
   if (isPostgres) {
-    sequelize = new Sequelize(process.env.DATABASE_URL, {
+    console.log('[DB] Using PostgreSQL dialect');
+    sequelize = new Sequelize(dbUrl, {
       dialect: 'postgres',
       protocol: 'postgres',
       logging: false,
@@ -18,7 +24,8 @@ if (process.env.DATABASE_URL) {
       }
     });
   } else {
-    sequelize = new Sequelize(process.env.DATABASE_URL, {
+    console.log('[DB] Using generic sequelize for:', dbUrl.split('://')[0]);
+    sequelize = new Sequelize(dbUrl, {
       logging: false
     });
   }
@@ -64,20 +71,20 @@ if (process.env.DATABASE_URL) {
   });
 }
 
-const connectDB = async (retries = 3) => {
+const connectDB = async (retries = 5, delay = 3000) => {
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       const dbType = process.env.DATABASE_URL ? 'postgresql' : (process.env.MYSQL_HOST ? 'mysql' : (process.env.PGHOST ? 'postgres' : 'sqlite'));
       console.log(`[DB] Attempt ${attempt}/${retries}: Connecting to ${dbType}...`);
       if (process.env.DATABASE_URL) {
-        console.log(`[DB] DATABASE_URL is set`);
+        console.log(`[DB] DATABASE_URL is set (length: ${process.env.DATABASE_URL.length})`);
       } else {
         console.log(`[DB] DATABASE_URL is NOT set — using ${dbType}`);
       }
       await sequelize.authenticate();
-      console.log('[DB] Database Connected successfully');
+      console.log('[DB] ✓ Database Connected successfully');
       await sequelize.sync({ force: false });
-      console.log('[DB] Database synced (force: false)');
+      console.log('[DB] ✓ Database synced (force: false)');
 
       // Auto-migrate: add trending column if missing
       try {
