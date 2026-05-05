@@ -142,6 +142,17 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
+// Debug endpoint to test movie queries
+app.get('/api/debug/movies', async (req, res) => {
+  try {
+    const movies = await Movie.findAll({ limit: 5 });
+    const plain = movies.map(m => m.get({ plain: true }));
+    res.json({ count: movies.length, movies: plain });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // SPA fallback
 app.get('*', (req, res) => {
   if (staticPath) {
