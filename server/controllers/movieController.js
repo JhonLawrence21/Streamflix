@@ -203,16 +203,43 @@ exports.getSimilarMovies = async (req, res) => {
 
 exports.getUpcomingReleases = async (req, res) => {
   try {
-    const movies = await Movie.findAll({
+    const now = new Date();
+    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 2, 0);
+    
+    let movies = await Movie.findAll({
       where: {
-        status: 'upcoming',
-        releaseDate: { [Op.gte]: new Date() }
+        [Op.or]: [
+          { status: 'upcoming' },
+          {
+            status: 'released',
+            releaseDate: { [Op.gte]: now }
+          }
+        ]
       },
-      order: [['releaseDate', 'ASC']]
+      order: [['releaseDate', 'ASC'], ['createdAt', 'DESC']]
     });
+
+    if (movies.length === 0) {
+      movies = await Movie.findAll({
+        where: {
+          [Op.or]: [
+            { releaseYear: { [Op.gte]: now.getFullYear() } },
+            { releaseDate: { [Op.gte]: now } }
+          ]
+        },
+        order: [['releaseYear', 'ASC'], ['createdAt', 'DESC']],
+        limit: 20
+      });
+    }
+
     res.json(movies.map(m => m.get({ plain: true })));
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error fetching upcoming:', error);
+    const allMovies = await Movie.findAll({
+      order: [['createdAt', 'DESC']],
+      limit: 10
+    });
+    res.json(allMovies.map(m => m.get({ plain: true })));
   }
 };
 
@@ -222,15 +249,24 @@ exports.getReleasesByMonth = async (req, res) => {
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0);
 
-    const movies = await Movie.findAll({
+    let movies = await Movie.findAll({
       where: {
         releaseDate: {
           [Op.between]: [startDate, endDate]
-        },
-        status: 'released'
+        }
       },
       order: [['releaseDate', 'ASC']]
     });
+
+    if (movies.length === 0) {
+      movies = await Movie.findAll({
+        where: {
+          releaseYear: parseInt(year)
+        },
+        order: [['releaseDate', 'ASC']]
+      });
+    }
+
     res.json(movies.map(m => m.get({ plain: true })));
   } catch (error) {
     res.status(500).json({ message: error.message });

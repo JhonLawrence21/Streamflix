@@ -114,7 +114,9 @@ const AdminMoviesPage = () => {
       rating: movie.rating?.toString() || '',
       duration: movie.duration || '',
       releaseYear: movie.releaseYear?.toString() || '',
+      releaseDate: movie.releaseDate ? movie.releaseDate.split('T')[0] : '',
       director: movie.director || '',
+      status: movie.status || 'released',
       featured: !!movie.featured,
       trending: !!movie.trending
     });
@@ -147,7 +149,9 @@ const AdminMoviesPage = () => {
       rating: '',
       duration: '',
       releaseYear: '',
+      releaseDate: '',
       director: '',
+      status: 'released',
       featured: false,
       trending: false
     });
