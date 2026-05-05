@@ -30,15 +30,12 @@ const registerUser = async (req, res) => {
       email,
       password
     });
-
+    const userData = user.toJSON();
+    delete userData.password;
     res.status(201).json({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      profileImage: user.profileImage,
-      watchlist: user.watchlist || [],
-      token: generateToken(user.id)
+      ...userData,
+      watchlist: [],
+      token: generateToken(userData.id)
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -50,12 +47,13 @@ exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ where: { email } });
-    if (!user) {
+    const userInstance = await User.findOne({ where: { email } });
+    if (!userInstance) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
-    const isMatch = await user.matchPassword(password);
+    const isMatch = await userInstance.matchPassword(password);
+    const user = userInstance.toJSON();
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
