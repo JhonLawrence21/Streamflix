@@ -3,6 +3,18 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
+const ForgotPasswordLink = () => {
+  const navigate = useNavigate();
+  return (
+    <button 
+      onClick={() => navigate('/forgot-password')}
+      className="text-netflix-text-secondary hover:text-white text-sm"
+    >
+      Forgot Password?
+    </button>
+  );
+};
+
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -107,9 +119,7 @@ const LoginPage = () => {
           </form>
 
           <div className="mt-4 text-center">
-            <Link to="/forgot-password" className="text-netflix-text-secondary hover:text-white text-sm">
-              Forgot Password?
-            </Link>
+            <ForgotPasswordLink />
           </div>
 
           <div className="mt-6 text-center text-netflix-text-secondary">
