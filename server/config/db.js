@@ -101,25 +101,23 @@ const connectDB = async (retries = 5, delay = 3000) => {
           try {
             const userTableInfo = await queryInterface.describeTable('users');
             console.log('[DB] Users table columns:', Object.keys(userTableInfo));
-            if (userTableInfo) {
-              const colNames = Object.keys(userTableInfo);
-              for (const colName of colNames) {
-                if (colName.toLowerCase().includes('profile') || colName.toLowerCase().includes('image')) {
-                  console.log('[DB] Found column:', colName, 'type:', userTableInfo[colName].type);
-                  console.log('[DB] Attempting to change', colName, 'to TEXT...');
-                  try {
-                    await sequelize.query(`ALTER TABLE users ALTER COLUMN "${colName}" SET DATA TYPE TEXT`);
-                    console.log('[DB] Migration complete:', colName, 'changed to TEXT');
-                  } catch (alterErr) {
-                    console.log('[DB] Trying alternate method for', colName);
-                    await sequelize.query(`ALTER TABLE users ALTER COLUMN "${colName}" TYPE TEXT`);
-                    console.log('[DB] Migration complete (alt):', colName, 'changed to TEXT');
-                  }
-                }
+            if (userTableInfo && userTableInfo.profileImage) {
+              const colType = userTableInfo.profileImage.type;
+              console.log('[DB] Found column: profileImage type:', colType);
+              
+              console.log('[DB] Attempting to change profileImage to TEXT...');
+              try {
+                await sequelize.query('ALTER TABLE users ALTER COLUMN "profileImage" SET DATA TYPE TEXT');
+                console.log('[DB] Migration complete: profileImage changed to TEXT');
+              } catch (alterErr) {
+                console.log('[DB] Error:', alterErr.message);
+                console.log('[DB] Trying alternate method...');
+                await sequelize.query('ALTER TABLE users ALTER COLUMN "profileImage" TYPE TEXT');
+                console.log('[DB] Migration complete (alt): profileImage changed to TEXT');
               }
             }
           } catch (e) {
-            console.log('[DB] Users table migration info:', e.message);
+            console.log('[DB] Users table migration error:', e.message);
           }
 
           if (!tableInfo.trending) {
