@@ -17,6 +17,8 @@ services:
       - key: DATABASE_URL
         value: postgresql://streamflix_db_94tw_user:racco3hBntmpD7MIuK4FTiVDuin50bDW@dpg-d7mocj8sfn5c73dleqmg-a/streamflix_db_94tw
       - key: ADMIN_EMAIL
-        value: admin@streamflix.com
+        value: caracoljl81@gmail.com
       - key: ADMIN_PASSWORD
-        value: admin123
+        value: Admin@123456
+      - key: REACT_APP_API_URL
+        value: https://streamflix-1-4gr5.onrender.com
