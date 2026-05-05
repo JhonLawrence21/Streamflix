@@ -163,18 +163,7 @@ const ProfilePage = () => {
 
           <div>
             <label className="block text-netflix-text-secondary text-sm mb-2">Profile Image</label>
-            <p className="text-xs text-netflix-text-muted mb-2">Click the camera icon above to upload a file, or paste a URL below:</p>
-            <input
-              type="url"
-              value={formData.profileImage && formData.profileImage.startsWith('data:') ? '' : formData.profileImage}
-              onChange={(e) => setFormData({ ...formData, profileImage: e.target.value })}
-              className="input-field"
-              placeholder="https://example.com/image.jpg"
-              disabled={formData.profileImage && formData.profileImage.startsWith('data:image')}
-            />
-            {formData.profileImage && formData.profileImage.startsWith('data:image') && (
-              <p className="text-xs text-green-500 mt-1">✓ Image uploaded (file)</p>
-            )}
+            <p className="text-xs text-netflix-text-muted mb-2">Click the camera icon above to upload an image:</p>
           </div>
 
           {message && (
