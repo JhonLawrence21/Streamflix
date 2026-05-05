@@ -97,6 +97,20 @@ const connectDB = async (retries = 5, delay = 3000) => {
         }
 
         if (tableInfo && Object.keys(tableInfo).length > 0) {
+          // Migrate users table profileImage to TEXT
+          try {
+            const userTableInfo = await queryInterface.describeTable('users');
+            if (userTableInfo && userTableInfo.profileimage) {
+              if (userTableInfo.profileimage.type === 'STRING' || userTableInfo.profileimage.type === 'VARCHAR(255)') {
+                console.log('[DB] Migrating: changing users.profileImage to TEXT...');
+                await sequelize.query('ALTER TABLE users ALTER COLUMN "profileImage" TYPE TEXT');
+                console.log('[DB] Migration complete: users.profileImage changed to TEXT');
+              }
+            }
+          } catch (e) {
+            console.log('[DB] Users table migration skipped:', e.message);
+          }
+
           if (!tableInfo.trending) {
             console.log('[DB] Migrating: adding trending column to movies...');
             await queryInterface.addColumn('movies', 'trending', {

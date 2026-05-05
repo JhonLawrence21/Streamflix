@@ -108,6 +108,9 @@ exports.updateProfile = async (req, res) => {
     if (name) user.name = name;
     if (email) user.email = email;
     if (profileImage !== undefined) {
+      if (profileImage.length > 10000) {
+        return res.status(400).json({ message: 'Image too large. Please use a smaller image (max 10KB when base64)' });
+      }
       user.profileImage = profileImage;
     }
 
