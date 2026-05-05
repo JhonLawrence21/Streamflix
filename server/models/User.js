@@ -43,6 +43,14 @@ const User = sequelize.define('User', {
   watchlist: {
     type: DataTypes.JSON,
     defaultValue: []
+  },
+  resetToken: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  resetTokenExpiry: {
+    type: DataTypes.DATE,
+    allowNull: true
   }
 }, {
   tableName: 'users',

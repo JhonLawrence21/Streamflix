@@ -5,6 +5,7 @@ import MovieDetailsPage from './pages/MovieDetailsPage';
 import WatchPage from './pages/WatchPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import SearchPage from './pages/SearchPage';
 import WatchlistPage from './pages/WatchlistPage';
 import AdminLayout from './pages/admin/AdminLayout';
@@ -26,6 +27,7 @@ function App() {
           <Route path="/watchlist" element={<WatchlistPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/upcoming" element={<UpcomingReleasesPage />} />
            

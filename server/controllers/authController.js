@@ -1,5 +1,8 @@
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const User = require('../models/User');
+
+const generateResetToken = () => crypto.randomBytes(32).toString('hex');
 
 const generateToken = (id) => {
   const secret = process.env.JWT_SECRET;
@@ -123,6 +126,58 @@ exports.updateProfile = async (req, res) => {
     res.json(freshUser);
   } catch (error) {
     console.error('[Profile] Error updating profile:', error.message);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      return res.status(404).json({ message: 'No account with this email exists' });
+    }
+
+    const resetToken = generateResetToken();
+    user.resetToken = resetToken;
+    user.resetTokenExpiry = new Date(Date.now() + 30 * 60 * 1000);
+    await user.save();
+
+    console.log('[Forgot Password] Reset token for', email, ':', resetToken);
+    
+    res.json({ 
+      message: 'Reset code sent',
+      resetCode: resetToken,
+      note: 'For demo: Use this code to reset password'
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  try {
+    const { resetCode, newPassword } = req.body;
+    
+    const user = await User.findOne({ 
+      where: { 
+        resetToken: resetCode,
+        resetTokenExpiry: { [require('sequelize').Op.gt]: new Date() }
+      }
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid or expired reset code' });
+    }
+
+    user.password = newPassword;
+    user.resetToken = null;
+    user.resetTokenExpiry = null;
+    await user.save();
+
+    res.json({ message: 'Password reset successful! You can now login with your new password.' });
+  } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };

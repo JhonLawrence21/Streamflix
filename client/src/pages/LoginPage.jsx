@@ -108,7 +108,7 @@ const LoginPage = () => {
 
           <div className="mt-4 text-center">
             <Link to="/forgot-password" className="text-netflix-text-secondary hover:text-white text-sm">
-              Forgot password?
+              Forgot Password?
             </Link>
           </div>
 
