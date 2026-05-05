@@ -84,32 +84,40 @@ app.use('/api/movies', generalLimiter, movieRoutes);
 app.use('/api/watchlist', generalLimiter, watchlistRoutes);
 app.use('/api/admin', generalLimiter, adminRoutes);
 
-// Frontend static serve
-const buildPath = path.join(__dirname, '..', 'client', 'build');
-console.log(`Frontend build path: ${buildPath}`);
+// Frontend static serve with fallbacks
+const possiblePaths = [
+  path.join(__dirname, '..', 'public'),
+  path.join(process.cwd(), 'public'),
+  path.join(__dirname, '..', '..', 'client', 'build'),
+  path.join(process.cwd(), 'client', 'build')
+];
+let staticPath = null;
+for (const p of possiblePaths) {
+  if (fs.existsSync(p) && fs.existsSync(path.join(p, 'index.html'))) {
+    staticPath = p;
+    break;
+  }
+}
+console.log(`Frontend build paths checked, using: ${staticPath || 'NONE'}`);
 console.log(`__dirname: ${__dirname}`);
 console.log(`cwd: ${process.cwd()}`);
-console.log(`Build exists: ${fs.existsSync(buildPath)}`);
-if (fs.existsSync(buildPath)) {
-  const contents = fs.readdirSync(buildPath);
+if (staticPath) {
+  const contents = fs.readdirSync(staticPath);
   console.log(`Contents: ${contents.slice(0, 5).join(', ')}${contents.length > 5 ? '...' : ''}`);
-} else {
-  console.log(`WARNING: Build directory not found at ${buildPath}`);
-  // Try alternative paths
-  const altPath1 = path.join(process.cwd(), 'client', 'build');
-  const altPath2 = '/opt/render/project/src/client/build';
-  console.log(`Alt path 1 (cwd): ${altPath1}, exists: ${fs.existsSync(altPath1)}`);
-  console.log(`Alt path 2 (absolute): ${altPath2}, exists: ${fs.existsSync(altPath2)}`);
 }
 
-app.use(express.static(buildPath, {
-  maxAge: '1m',
-  setHeaders: (res, filePath) => {
-    if (filePath.endsWith('.html')) {
-      res.setHeader('Cache-Control', 'no-cache');
+if (staticPath) {
+  app.use(express.static(staticPath, {
+    maxAge: '1m',
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('.html')) {
+        res.setHeader('Cache-Control', 'no-cache');
+      }
     }
-  }
-}));
+  }));
+} else {
+  console.log('No static frontend path found, API only mode');
+}
 
 // Health check
 app.get('/api/health', async (req, res) => {
@@ -120,7 +128,7 @@ app.get('/api/health', async (req, res) => {
       status: 'ok',
       movies: movieCount,
       users: userCount,
-      frontend: fs.existsSync(path.join(buildPath, 'index.html'))
+      frontend: !!staticPath
     });
   } catch (e) {
     res.status(500).json({ status: 'error', message: e.message });
@@ -129,8 +137,8 @@ app.get('/api/health', async (req, res) => {
 
 // SPA fallback
 app.get('*', (req, res) => {
-  const indexPath = path.join(buildPath, 'index.html');
-  if (fs.existsSync(indexPath)) {
+  if (staticPath) {
+    const indexPath = path.join(staticPath, 'index.html');
     res.sendFile(indexPath);
   } else {
     res.status(503).json({ error: 'Frontend build missing - check deployment logs' });
