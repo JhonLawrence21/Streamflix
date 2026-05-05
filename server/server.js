@@ -7,6 +7,9 @@ const path = require('path');
 const fs = require('fs');
 const connectDB = require('./config/db');
 
+console.log('[ENV] CLIENT_URL:', process.env.CLIENT_URL || 'NOT SET');
+console.log('[ENV] DATABASE_URL:', process.env.DATABASE_URL ? 'SET' : 'NOT SET');
+
 if (!process.env.JWT_SECRET) {
   process.env.JWT_SECRET = 'streamflix_jwt_secret_key_2024_prod';
 }
@@ -24,9 +27,11 @@ const adminRoutes = require('./routes/admin');
 
 const app = express();
 
+// Default to Render URL if CLIENT_URL not set
+const renderUrl = 'https://streamflix-1-4gr5.onrender.com';
 const allowedOrigins = process.env.CLIENT_URL 
-  ? [process.env.CLIENT_URL, 'http://localhost:3000', 'http://localhost:5000', 'https://streamflix-1-4gr5.onrender.com']
-  : ['http://localhost:3000', 'http://localhost:5000'];
+  ? [process.env.CLIENT_URL, 'http://localhost:3000', 'http://localhost:5000']
+  : [renderUrl, 'http://localhost:3000', 'http://localhost:5000'];
 
 console.log('[CORS] Allowed origins:', allowedOrigins);
 
