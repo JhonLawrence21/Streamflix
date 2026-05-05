@@ -106,11 +106,14 @@ const connectDB = async (retries = 5, delay = 3000) => {
               for (const colName of colNames) {
                 if (colName.toLowerCase().includes('profile') || colName.toLowerCase().includes('image')) {
                   console.log('[DB] Found column:', colName, 'type:', userTableInfo[colName].type);
-                  const colType = userTableInfo[colName].type;
-                  if (colType && (colType.includes('varchar') || colType.includes('character varying'))) {
-                    console.log('[DB] Migrating: changing', colName, 'to TEXT...');
-                    await sequelize.query(`ALTER TABLE users ALTER COLUMN "${colName}" TYPE TEXT`);
+                  console.log('[DB] Attempting to change', colName, 'to TEXT...');
+                  try {
+                    await sequelize.query(`ALTER TABLE users ALTER COLUMN "${colName}" SET DATA TYPE TEXT`);
                     console.log('[DB] Migration complete:', colName, 'changed to TEXT');
+                  } catch (alterErr) {
+                    console.log('[DB] Trying alternate method for', colName);
+                    await sequelize.query(`ALTER TABLE users ALTER COLUMN "${colName}" TYPE TEXT`);
+                    console.log('[DB] Migration complete (alt):', colName, 'changed to TEXT');
                   }
                 }
               }
