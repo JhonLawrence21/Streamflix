@@ -38,16 +38,18 @@ router.get('/categories', async (req, res) => {
     const { sequelize } = require('../config/db');
     
     try {
+      await sequelize.query('CREATE TABLE IF NOT EXISTS categories (id SERIAL PRIMARY KEY, name VARCHAR(255) UNIQUE NOT NULL, description TEXT, "createdAt" TIMESTAMP DEFAULT NOW(), "updatedAt" TIMESTAMP DEFAULT NOW())');
+    } catch (e) { console.log('Create categories table:', e.message); }
+    
+    try {
       const tableInfo = await sequelize.getQueryInterface().describeTable('categories');
-      if (!tableInfo.color) {
+      if (tableInfo && !tableInfo.color) {
         await sequelize.query('ALTER TABLE categories ADD COLUMN color VARCHAR(255) DEFAULT \'#E50914\'');
       }
-    } catch (e) {
-      console.log('Categories table check:', e.message);
-    }
+    } catch (e) { console.log('Categories column check:', e.message); }
     
     const [categories] = await sequelize.query('SELECT * FROM categories ORDER BY name ASC');
-    res.json(categories);
+    res.json(categories || []);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

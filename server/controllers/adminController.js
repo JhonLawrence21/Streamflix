@@ -149,26 +149,25 @@ exports.createCategory = async (req, res) => {
     const { sequelize } = require('../config/db');
     
     try {
+      await sequelize.query('CREATE TABLE IF NOT EXISTS categories (id SERIAL PRIMARY KEY, name VARCHAR(255) UNIQUE NOT NULL, description TEXT, "createdAt" TIMESTAMP DEFAULT NOW(), "updatedAt" TIMESTAMP DEFAULT NOW())');
+    } catch (e) { console.log('[createCategory] Create table:', e.message); }
+    
+    try {
       const tableInfo = await sequelize.getQueryInterface().describeTable('categories');
-      console.log('[createCategory] Table columns:', Object.keys(tableInfo));
-      
-      if (!tableInfo.color) {
+      if (tableInfo && !tableInfo.color) {
         await sequelize.query('ALTER TABLE categories ADD COLUMN color VARCHAR(255) DEFAULT \'#E50914\'');
-        console.log('[createCategory] Added color column');
       }
-    } catch (e) {
-      console.log('[createCategory] Table check error:', e.message);
-    }
+    } catch (e) { console.log('[createCategory] Column check:', e.message); }
     
     const now = new Date().toISOString();
     const colorValue = color || '#E50914';
+    const descValue = description || '';
     
     await sequelize.query(`
       INSERT INTO categories (name, description, color, "createdAt", "updatedAt")
-      VALUES ('${name.replace(/'/g, "''")}', '${(description || '').replace(/'/g, "''")}', '${colorValue}', '${now}', '${now}')
+      VALUES ('${name.replace(/'/g, "''")}', '${descValue.replace(/'/g, "''")}', '${colorValue}', '${now}', '${now}')
     `);
     
-    console.log('[createCategory] Insert successful');
     const [categories] = await sequelize.query('SELECT * FROM categories ORDER BY id DESC LIMIT 1');
     console.log('[createCategory] Created:', categories[0]);
     
@@ -202,11 +201,20 @@ exports.deleteCategory = async (req, res) => {
 exports.getCategories = async (req, res) => {
   try {
     const { sequelize } = require('../config/db');
-    const [categories] = await sequelize.query('SELECT * FROM categories ORDER BY name ASC');
+    
+    let categories = [];
+    try {
+      const [result] = await sequelize.query('SELECT * FROM categories ORDER BY name ASC');
+      categories = result || [];
+    } catch (e) { console.log('getCategories query:', e.message); }
     
     const categoriesWithCount = categories.map(cat => {
-      const [[{ categoryCount }]] = sequelize.query(`SELECT COUNT(*) as count FROM movies WHERE category = '${cat.name}'`);
-      return { ...cat, movieCount: categoryCount?.count || 0 };
+      try {
+        const [[{ categoryCount }]] = sequelize.query(`SELECT COUNT(*) as count FROM movies WHERE category = '${cat.name}'`);
+        return { ...cat, movieCount: categoryCount?.count || 0 };
+      } catch (e) {
+        return { ...cat, movieCount: 0 };
+      }
     });
     
     res.json(categoriesWithCount);
@@ -271,38 +279,77 @@ exports.getAnalytics = async (req, res) => {
   try {
     const { sequelize } = require('../config/db');
     
-    const [[{ userCount }]] = await sequelize.query('SELECT COUNT(*) as userCount FROM users');
-    const [[{ movieCount }]] = await sequelize.query('SELECT COUNT(*) as movieCount FROM movies');
-    const [[{ totalViews }]] = await sequelize.query('SELECT COALESCE(SUM(views), 0) as totalViews FROM movies');
-    const [[{ avgRating }]] = await sequelize.query('SELECT COALESCE(AVG(rating), 0) as avgRating FROM movies WHERE rating IS NOT NULL');
+    let userCount = 0, movieCount = 0, totalViews = 0, avgRating = 0;
+    let releasedCount = 0, upcomingCount = 0, inProductionCount = 0;
+    let categoryCounts = [], recentMovies = [], topMovies = [], trending = [];
     
-    const [categoryCounts] = await sequelize.query(`
-      SELECT category, COUNT(*) as count 
-      FROM movies 
-      WHERE category IS NOT NULL 
-      GROUP BY category
-    `);
+    try {
+      const [userResult] = await sequelize.query('SELECT COUNT(*) as cnt FROM users');
+      userCount = userResult[0]?.cnt || 0;
+    } catch (e) { console.log('users query error:', e.message); }
     
-    const [[{ releasedCount }]] = await sequelize.query(`SELECT COUNT(*) as releasedCount FROM movies WHERE status = 'released'`);
-    const [[{ upcomingCount }]] = await sequelize.query(`SELECT COUNT(*) as upcomingCount FROM movies WHERE status = 'upcoming'`);
-    const [[{ inProductionCount }]] = await sequelize.query(`SELECT COUNT(*) as inProductionCount FROM movies WHERE status = 'in-production'`);
+    try {
+      const [movieResult] = await sequelize.query('SELECT COUNT(*) as cnt FROM movies');
+      movieCount = movieResult[0]?.cnt || 0;
+    } catch (e) { console.log('movies query error:', e.message); }
     
-    const [recentMovies] = await sequelize.query('SELECT * FROM movies ORDER BY "createdAt" DESC LIMIT 5');
-    const [topMovies] = await sequelize.query('SELECT * FROM movies ORDER BY views DESC LIMIT 10');
-    const [trending] = await sequelize.query('SELECT * FROM movies WHERE trending = true ORDER BY views DESC LIMIT 5');
+    try {
+      const [viewsResult] = await sequelize.query('SELECT COALESCE(SUM(views), 0) as total FROM movies');
+      totalViews = viewsResult[0]?.total || 0;
+    } catch (e) { console.log('views query error:', e.message); }
+    
+    try {
+      const [ratingResult] = await sequelize.query('SELECT COALESCE(AVG(rating), 0) as avg FROM movies WHERE rating IS NOT NULL');
+      avgRating = ratingResult[0]?.avg || 0;
+    } catch (e) { console.log('rating query error:', e.message); }
+    
+    try {
+      const [catResult] = await sequelize.query(`SELECT category, COUNT(*) as count FROM movies WHERE category IS NOT NULL GROUP BY category`);
+      categoryCounts = catResult || [];
+    } catch (e) { console.log('category query error:', e.message); }
+    
+    try {
+      const [relResult] = await sequelize.query(`SELECT COUNT(*) as cnt FROM movies WHERE status = 'released'`);
+      releasedCount = relResult[0]?.cnt || 0;
+    } catch (e) { console.log('released query error:', e.message); }
+    
+    try {
+      const [upcResult] = await sequelize.query(`SELECT COUNT(*) as cnt FROM movies WHERE status = 'upcoming'`);
+      upcomingCount = upcResult[0]?.cnt || 0;
+    } catch (e) { console.log('upcoming query error:', e.message); }
+    
+    try {
+      const [prodResult] = await sequelize.query(`SELECT COUNT(*) as cnt FROM movies WHERE status = 'in-production'`);
+      inProductionCount = prodResult[0]?.cnt || 0;
+    } catch (e) { console.log('in-production query error:', e.message); }
+    
+    try {
+      const [recentResult] = await sequelize.query('SELECT * FROM movies ORDER BY "createdAt" DESC LIMIT 5');
+      recentMovies = recentResult || [];
+    } catch (e) { console.log('recent query error:', e.message); }
+    
+    try {
+      const [topResult] = await sequelize.query('SELECT * FROM movies ORDER BY views DESC LIMIT 10');
+      topMovies = topResult || [];
+    } catch (e) { console.log('top query error:', e.message); }
+    
+    try {
+      const [trendingResult] = await sequelize.query('SELECT * FROM movies WHERE trending = true ORDER BY views DESC LIMIT 5');
+      trending = trendingResult || [];
+    } catch (e) { console.log('trending query error:', e.message); }
     
     res.json({
-      totalUsers: userCount || 0,
-      totalMovies: movieCount || 0,
-      totalViews: totalViews || 0,
-      avgRating: avgRating || 0,
-      releasedCount: releasedCount || 0,
-      upcomingCount: upcomingCount || 0,
-      inProductionCount: inProductionCount || 0,
-      moviesByCategory: categoryCounts || [],
-      recentMovies: recentMovies || [],
-      topMovies: topMovies || [],
-      trending: trending || []
+      totalUsers: userCount,
+      totalMovies: movieCount,
+      totalViews: totalViews,
+      avgRating: avgRating,
+      releasedCount: releasedCount,
+      upcomingCount: upcomingCount,
+      inProductionCount: inProductionCount,
+      moviesByCategory: categoryCounts,
+      recentMovies: recentMovies,
+      topMovies: topMovies,
+      trending: trending
     });
   } catch (error) {
     console.error('Analytics error:', error);
