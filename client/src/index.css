@@ -110,50 +110,16 @@ body {
 
   /* Netflix-styled card hover effect */
   .netflix-card-hover {
-    transition: transform 0.3s ease, z-index 0.3s ease;
+    transition: transform 0.3s ease;
   }
   
   .netflix-card-hover:hover {
     transform: scale(1.1);
-    z-index: 50;
-  }
-
-  /* Top 10 badge animation */
-  .top-10-badge {
-    animation: slideInTop10 0.5s ease-out;
-  }
-
-  @keyframes slideInTop10 {
-    from {
-      opacity: 0;
-      transform: translateX(-20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
-  }
-
-  /* Hero fade in */
-  .hero-content {
-    animation: heroFadeIn 0.8s ease-out;
-  }
-
-  @keyframes heroFadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
   }
 
   /* Row title styling like Netflix */
   .netflix-row-title {
     font-weight: 600;
-    letter-spacing: 0.5px;
   }
 }
 

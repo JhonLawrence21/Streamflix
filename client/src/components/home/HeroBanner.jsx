@@ -79,13 +79,11 @@ return (
           <p className="text-netflix-text mb-6 line-clamp-3 text-lg">{movie.description}</p>
 
           <div className="flex flex-col sm:flex-row gap-3">
-            <Link to={`/watch/${movie.id}`} className="flex items-center justify-center gap-2 bg-white text-black px-6 md:px-8 py-3 md:py-3.5 rounded font-semibold hover:bg-gray-200 transition-all text-sm md:text-base shadow-lg">
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-              Play
+            <Link to={`/watch/${movie.id}`} className="bg-white text-black px-6 md:px-8 py-3 rounded font-semibold hover:bg-gray-200 transition-colors text-sm md:text-base">
+              ▶ Play
             </Link>
-            <Link to={`/movie/${movie.id}`} className="flex items-center justify-center gap-2 bg-netflix-bg-tertiary/70 text-white px-6 md:px-8 py-3 md:py-3.5 rounded font-semibold hover:bg-netflix-bg-tertiary transition-all text-sm md:text-base backdrop-blur-sm">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-              More Info
+            <Link to={`/movie/${movie.id}`} className="bg-netflix-bg-tertiary/70 text-white px-6 md:px-8 py-3 rounded font-semibold hover:bg-netflix-bg-tertiary transition-colors text-sm md:text-base">
+              ℹ More Info
             </Link>
           </div>
         </div>
