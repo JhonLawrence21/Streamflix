@@ -139,8 +139,23 @@ exports.getAllMovies = async (req, res) => {
 
 exports.createCategory = async (req, res) => {
   try {
-    const category = await Category.create(req.body);
-    res.status(201).json(category);
+    const { name, description, color } = req.body;
+    if (!name) {
+      return res.status(400).json({ message: 'Category name is required' });
+    }
+    
+    const sequelize = getSequelize();
+    const now = new Date().toISOString();
+    
+    await sequelize.query(`
+      INSERT INTO categories (name, description, color, "createdAt", "updatedAt")
+      VALUES ('${name.replace(/'/g, "''")}', '${(description || '').replace(/'/g, "''")}', '${color || '#E50914'}', '${now}', '${now}')
+    `);
+    
+    const [categories] = await sequelize.query('SELECT * FROM categories ORDER BY id DESC LIMIT 1');
+    await sequelize.close();
+    
+    res.status(201).json(categories[0]);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -148,13 +163,18 @@ exports.createCategory = async (req, res) => {
 
 exports.deleteCategory = async (req, res) => {
   try {
-    const category = await Category.findByPk(req.params.id);
-
-    if (!category) {
+    const id = parseInt(req.params.id);
+    const sequelize = getSequelize();
+    
+    const [categories] = await sequelize.query(`SELECT * FROM categories WHERE id = ${id} LIMIT 1`);
+    if (categories.length === 0) {
+      await sequelize.close();
       return res.status(404).json({ message: 'Category not found' });
     }
-
-    await category.destroy();
+    
+    await sequelize.query(`DELETE FROM categories WHERE id = ${id}`);
+    await sequelize.close();
+    
     res.json({ message: 'Category deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -163,7 +183,9 @@ exports.deleteCategory = async (req, res) => {
 
 exports.getCategories = async (req, res) => {
   try {
-    const categories = await Category.findAll();
+    const sequelize = getSequelize();
+    const [categories] = await sequelize.query('SELECT * FROM categories ORDER BY name ASC');
+    await sequelize.close();
     res.json(categories);
   } catch (error) {
     res.status(500).json({ message: error.message });
