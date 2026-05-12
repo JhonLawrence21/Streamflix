@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Play, Star, Calendar, Clock, Plus, Check, ExternalLink, X } from 'lucide-react';
+import { ArrowLeft, Play, Star, Calendar, Clock, Plus, Check, ExternalLink, X, Download, CheckCircle } from 'lucide-react';
 import Navbar from '../components/layout/Navbar';
 import MovieCard from '../components/movie/MovieCard';
 import { movieService, watchlistService } from '../services/api';
@@ -19,6 +19,8 @@ const MovieDetailsPage = () => {
   const [watchlistIds, setWatchlistIds] = useState([]);
 
   const [bgError, setBgError] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [isDownloaded, setIsDownloaded] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -72,6 +74,35 @@ const MovieDetailsPage = () => {
       }
     } catch (error) {
       console.error('Error:', error);
+    }
+  };
+
+  const handleDownload = () => {
+    if (!movie.videoUrl || isDownloaded) return;
+    
+    setIsDownloading(true);
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({
+        type: 'DOWNLOAD_VIDEO',
+        url: movie.videoUrl,
+        movieId: movie.id
+      });
+
+      navigator.serviceWorker.addEventListener('message', function handler(event) {
+        if (event.data.type === 'DOWNLOAD_COMPLETE' && event.data.movieId === movie.id) {
+          setIsDownloading(false);
+          setIsDownloaded(true);
+          navigator.serviceWorker.removeEventListener('message', handler);
+        }
+        if (event.data.type === 'DOWNLOAD_ERROR' && event.data.movieId === movie.id) {
+          setIsDownloading(false);
+          alert('Download failed: ' + event.data.error);
+          navigator.serviceWorker.removeEventListener('message', handler);
+        }
+      });
+    } else {
+      setIsDownloading(false);
+      alert('Download not supported in this browser');
     }
   };
 
@@ -145,6 +176,11 @@ const MovieDetailsPage = () => {
               <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-white mb-4">{movie.title}</h1>
               
               <div className="flex flex-wrap items-center gap-3 md:gap-4 mb-6 text-netflix-text-secondary text-sm md:text-base">
+                {movie.ageRating && (
+                  <span className="px-2 py-1 border border-white/50 rounded text-xs font-bold">
+                    {movie.ageRating}
+                  </span>
+                )}
                 {movie.rating > 0 && (
                   <span className="flex items-center gap-1 text-netflix-warning">
                     <Star size={18} fill="currentColor" />
@@ -214,6 +250,37 @@ const MovieDetailsPage = () => {
                   {inWatchlist ? <Check size={24} /> : <Plus size={24} />}
                   {inWatchlist ? 'In Watchlist' : 'Add to Watchlist'}
                 </button>
+
+                {movie.videoUrl && (
+                  <button 
+                    onClick={handleDownload}
+                    disabled={isDownloading || isDownloaded}
+                    className={`flex items-center justify-center gap-2 px-6 py-3 rounded font-semibold transition-colors ${
+                      isDownloaded 
+                        ? 'bg-green-600 text-white' 
+                        : isDownloading 
+                          ? 'bg-gray-600 text-gray-300 cursor-wait'
+                          : 'bg-blue-600 text-white hover:bg-blue-700'
+                    }`}
+                  >
+                    {isDownloaded ? (
+                      <>
+                        <CheckCircle size={24} />
+                        Downloaded
+                      </>
+                    ) : isDownloading ? (
+                      <>
+                        <div className="w-6 h-6 border-2 border-t-transparent border-white rounded-full animate-spin"></div>
+                        Downloading...
+                      </>
+                    ) : (
+                      <>
+                        <Download size={24} />
+                        Download
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
 
               {/* Director */}

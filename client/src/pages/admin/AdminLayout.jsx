@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, Outlet, useLocation } from 'react-router-dom';
-import { Film, Users, LogOut, Menu, BarChart3 } from 'lucide-react';
+import { Film, Users, LogOut, Menu, BarChart3, Tags, Flag, LayoutGrid } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const AdminLayout = () => {
@@ -18,7 +18,9 @@ const AdminLayout = () => {
   const menuItems = [
     { path: '/admin', icon: BarChart3, label: 'Dashboard' },
     { path: '/admin/movies', icon: Film, label: 'Movies' },
+    { path: '/admin/categories', icon: Tags, label: 'Categories' },
     { path: '/admin/users', icon: Users, label: 'Users' },
+    { path: '/admin/reports', icon: Flag, label: 'Reports' },
   ];
 
   const handleLogout = () => {

@@ -1,9 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Play, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Play, ExternalLink, Volume2, VolumeX, SkipForward, Settings, Maximize, Minimize } from 'lucide-react';
 import Navbar from '../components/layout/Navbar';
 import { movieService } from '../services/api';
-import { getYouTubeVideoId, getYouTubeWatchUrl, isDirectVideoUrl } from '../utils/imageUtils';
 
 const WatchPage = () => {
   const { id } = useParams();
@@ -11,6 +10,15 @@ const WatchPage = () => {
   const [movie, setMovie] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showControls, setShowControls] = useState(true);
+  const [autoplay, setAutoplay] = useState(true);
+  const [skipIntro, setSkipIntro] = useState(false);
+  const [introDuration] = useState(10);
+  const [skipCountdown, setSkipCountdown] = useState(null);
+  const videoRef = useRef(null);
+  const controlsTimeoutRef = useRef(null);
 
   useEffect(() => {
     const fetchMovie = async () => {
@@ -28,6 +36,82 @@ const WatchPage = () => {
 
     fetchMovie();
   }, [id]);
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.muted = isMuted;
+    }
+  }, [isMuted]);
+
+  useEffect(() => {
+    let interval;
+    if (skipIntro && skipCountdown !== null && skipCountdown > 0) {
+      interval = setInterval(() => {
+        setSkipCountdown(prev => {
+          if (prev <= 1) {
+            setSkipIntro(false);
+            setSkipCountdown(null);
+            if (videoRef.current) {
+              videoRef.current.currentTime = introDuration;
+            }
+            return null;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [skipIntro, skipCountdown, introDuration]);
+
+  const handleMouseMove = () => {
+    setShowControls(true);
+    if (controlsTimeoutRef.current) {
+      clearTimeout(controlsTimeoutRef.current);
+    }
+    controlsTimeoutRef.current = setTimeout(() => {
+      if (videoRef.current && !videoRef.current.paused) {
+        setShowControls(false);
+      }
+    }, 3000);
+  };
+
+  const handlePlay = () => {
+    if (videoRef.current) {
+      if (videoRef.current.paused) {
+        videoRef.current.play();
+      } else {
+        videoRef.current.pause();
+      }
+    }
+  };
+
+  const toggleMute = () => setIsMuted(!isMuted);
+
+  const toggleFullscreen = () => {
+    if (videoRef.current) {
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+        setIsFullscreen(false);
+      } else {
+        videoRef.current.requestFullscreen();
+        setIsFullscreen(true);
+      }
+    }
+  };
+
+  const handleSkipIntro = () => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = introDuration;
+    }
+    setSkipIntro(false);
+    setSkipCountdown(null);
+  };
+
+  const handleVideoTimeUpdate = () => {
+    if (videoRef.current && skipIntro && videoRef.current.currentTime < introDuration && !skipCountdown) {
+      setSkipCountdown(introDuration - Math.floor(videoRef.current.currentTime));
+    }
+  };
 
   if (loading) {
     return (
@@ -53,11 +137,21 @@ const WatchPage = () => {
 
   const videoUrl = movie.videoUrl?.trim();
   const externalUrl = movie.externalUrl?.trim();
+  const getYouTubeVideoId = (url) => {
+    if (!url) return null;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+  };
   const ytId = videoUrl ? getYouTubeVideoId(videoUrl) : null;
 
   return (
     <div className="min-h-screen bg-black">
-      <div className="fixed top-0 left-0 right-0 z-50 p-4 flex items-center justify-between">
+      <div
+        className={`fixed top-0 left-0 right-0 z-50 p-4 flex items-center justify-between transition-opacity duration-300 ${
+          showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+      >
         <button
           onClick={() => navigate(-1)}
           className="flex items-center gap-2 text-white/80 hover:text-white transition-colors bg-black/50 px-3 py-2 rounded"
@@ -65,26 +159,54 @@ const WatchPage = () => {
           <ArrowLeft size={20} />
           Back
         </button>
-        {ytId && (
-          <a
-            href={getYouTubeWatchUrl(ytId)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 text-white/80 hover:text-white transition-colors bg-netflix-red/80 hover:bg-netflix-red px-4 py-2 rounded"
+
+        <div className="flex items-center gap-4">
+          <button
+            onClick={toggleMute}
+            className="p-2 rounded bg-black/50 hover:bg-black/70 transition-colors"
           >
-            <ExternalLink size={18} />
-            Watch on YouTube
-          </a>
-        )}
+            {isMuted ? <VolumeX size={20} className="text-white" /> : <Volume2 size={20} className="text-white" />}
+          </button>
+          <button
+            onClick={toggleFullscreen}
+            className="p-2 rounded bg-black/50 hover:bg-black/70 transition-colors"
+          >
+            {isFullscreen ? <Minimize size={20} className="text-white" /> : <Maximize size={20} className="text-white" />}
+          </button>
+          <div className="flex items-center gap-2 bg-black/50 rounded px-3 py-1">
+            <span className="text-xs text-white">Autoplay</span>
+            <button
+              onClick={() => setAutoplay(!autoplay)}
+              className={`w-8 h-4 rounded-full transition-colors ${autoplay ? 'bg-netflix-red' : 'bg-gray-600'}`}
+            >
+              <div className={`w-3 h-3 rounded-full bg-white transition-transform ${autoplay ? 'translate-x-4' : 'translate-x-0.5'}`} />
+            </button>
+          </div>
+          {ytId && (
+            <a
+              href={`https://www.youtube.com/watch?v=${ytId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-white/80 hover:text-white transition-colors bg-netflix-red/80 hover:bg-netflix-red px-4 py-2 rounded"
+            >
+              <ExternalLink size={18} />
+              YouTube
+            </a>
+          )}
+        </div>
       </div>
 
-      <div className="relative h-screen bg-black flex items-center justify-center">
+      <div
+        className="relative h-screen bg-black flex items-center justify-center"
+        onMouseMove={handleMouseMove}
+        onMouseLeave={() => setShowControls(false)}
+      >
         {ytId ? (
           <div className="text-center text-white p-8">
             <Play size={64} className="text-netflix-text-secondary mb-4 mx-auto" />
             <p className="text-netflix-text-secondary text-lg mb-4">This video opens on YouTube</p>
             <a
-              href={getYouTubeWatchUrl(ytId)}
+              href={`https://www.youtube.com/watch?v=${ytId}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-netflix-red text-white px-6 py-3 rounded font-semibold hover:bg-red-700 transition-colors"
@@ -96,13 +218,65 @@ const WatchPage = () => {
               View Details
             </Link>
           </div>
-        ) : videoUrl && isDirectVideoUrl(videoUrl) ? (
-          <video
-            src={videoUrl}
-            controls
-            className="w-full h-full object-contain"
-            autoPlay
-          />
+        ) : videoUrl ? (
+          <>
+            <video
+              ref={videoRef}
+              src={videoUrl}
+              controls={false}
+              className="w-full h-full object-contain"
+              autoPlay={autoplay}
+              muted={isMuted}
+              onTimeUpdate={handleVideoTimeUpdate}
+              onClick={handlePlay}
+            />
+
+            {skipIntro && skipCountdown !== null && videoRef.current && videoRef.current.currentTime < introDuration && (
+              <button
+                onClick={handleSkipIntro}
+                className="absolute bottom-20 right-8 bg-black/80 text-white px-4 py-2 rounded border border-white/30 hover:bg-black/90 transition-colors"
+              >
+                Skip Intro ({skipCountdown}s)
+              </button>
+            )}
+
+            <div
+              className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/80 to-transparent p-4 transition-opacity duration-300 ${
+                showControls ? 'opacity-100' : 'opacity-0'
+              }`}
+            >
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={handlePlay}
+                  className="p-2 hover:bg-white/20 rounded transition-colors"
+                >
+                  <Play size={24} className="text-white" />
+                </button>
+                <button
+                  onClick={handleSkipIntro}
+                  className="p-2 hover:bg-white/20 rounded transition-colors"
+                  disabled={!skipIntro}
+                >
+                  <SkipForward size={24} className={`text-white ${!skipIntro ? 'opacity-50' : ''}`} />
+                </button>
+                <div className="flex-1">
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    defaultValue="0"
+                    className="w-full h-1 bg-gray-600 rounded appearance-none cursor-pointer accent-netflix-red"
+                  />
+                </div>
+                <button onClick={toggleMute} className="p-2 hover:bg-white/20 rounded transition-colors">
+                  {isMuted ? <VolumeX size={20} className="text-white" /> : <Volume2 size={20} className="text-white" />}
+                </button>
+                <button onClick={toggleFullscreen} className="p-2 hover:bg-white/20 rounded transition-colors">
+                  {isFullscreen ? <Minimize size={20} className="text-white" /> : <Maximize size={20} className="text-white" />}
+                </button>
+              </div>
+            </div>
+          </>
         ) : externalUrl ? (
           <div className="text-center text-white p-8">
             <Play size={64} className="text-netflix-text-secondary mb-4 mx-auto" />

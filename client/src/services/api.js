@@ -163,6 +163,33 @@ export const watchlistService = {
   }
 };
 
+export const recommendationService = {
+  getForYou: async () => {
+    const response = await api.get('/recommendations/for-you');
+    return response.data;
+  },
+  
+  getSimilar: async (movieId) => {
+    const response = await api.get(`/recommendations/similar/${movieId}`);
+    return response.data;
+  },
+  
+  trackWatch: async (movieId, watchData) => {
+    const response = await api.post(`/recommendations/track/${movieId}`, watchData);
+    return response.data;
+  },
+  
+  getHistory: async () => {
+    const response = await api.get('/recommendations/history');
+    return response.data;
+  },
+  
+  clearHistory: async () => {
+    const response = await api.delete('/recommendations/history');
+    return response.data;
+  }
+};
+
 export const adminService = {
   getMovies: async () => {
     const response = await api.get('/admin/movies');
@@ -216,6 +243,16 @@ export const adminService = {
   
   getAnalytics: async () => {
     const response = await api.get('/admin/analytics');
+    return response.data;
+  },
+
+  getUserWatchlist: async (userId) => {
+    const response = await api.get(`/admin/users/${userId}/watchlist`);
+    return response.data;
+  },
+
+  getUserViewHistory: async (userId) => {
+    const response = await api.get(`/admin/users/${userId}/history`);
     return response.data;
   }
 };

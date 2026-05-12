@@ -44,9 +44,23 @@ const User = sequelize.define('User', {
     type: DataTypes.JSON,
     defaultValue: []
   },
-  resetToken: {
+  profiles: {
+    type: DataTypes.JSON,
+    defaultValue: [
+      { id: 'default', name: 'Main Profile', avatar: '', isKid: false,pin: '' }
+    ]
+  },
+  activeProfile: {
     type: DataTypes.STRING,
-    allowNull: true
+    defaultValue: 'default'
+  },
+  parentalControlPin: {
+    type: DataTypes.STRING,
+    defaultValue: ''
+  },
+  viewingHistory: {
+    type: DataTypes.JSON,
+    defaultValue: []
   },
   resetTokenExpiry: {
     type: DataTypes.DATE,

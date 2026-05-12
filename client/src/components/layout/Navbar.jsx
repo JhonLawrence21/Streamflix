@@ -113,8 +113,11 @@ const Navbar = () => {
                           <Settings size={16} /> Admin Dashboard
                         </Link>
                       )}
+                      <Link to="/profiles" className="flex items-center gap-2 px-4 py-2 text-netflix-text hover:text-white hover:bg-netflix-bg-tertiary" onClick={() => setProfileOpen(false)}>
+                        <User size={16} /> Manage Profiles
+                      </Link>
                       <Link to="/profile" className="flex items-center gap-2 px-4 py-2 text-netflix-text hover:text-white hover:bg-netflix-bg-tertiary" onClick={() => setProfileOpen(false)}>
-                        <User size={16} /> Profile
+                        <Settings size={16} /> Settings
                       </Link>
                       <button onClick={handleLogout} className="flex items-center gap-2 w-full px-4 py-2 text-netflix-text hover:text-white hover:bg-netflix-bg-tertiary">
                         <LogOut size={16} /> Sign Out

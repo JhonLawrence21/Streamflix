@@ -1,14 +1,21 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Film, X } from 'lucide-react';
+import { Plus, Edit, Trash2, Film, X, Search, Filter, CheckSquare, Square, Trash } from 'lucide-react';
 import { adminService } from '../../services/api';
 import { getThumbnailUrl, handleImageError } from '../../utils/imageUtils';
 
 const AdminMoviesPage = () => {
   const [movies, setMovies] = useState([]);
+  const [filteredMovies, setFilteredMovies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingMovie, setEditingMovie] = useState(null);
   const [formError, setFormError] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [selectedMovies, setSelectedMovies] = useState([]);
+  const [showBulkActions, setShowBulkActions] = useState(false);
+  const [categories, setCategories] = useState([]);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -31,7 +38,74 @@ const AdminMoviesPage = () => {
 
   useEffect(() => {
     fetchMovies();
+    fetchCategories();
   }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const cats = await adminService.getCategories();
+      setCategories(cats);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
+
+  useEffect(() => {
+    filterMovies();
+  }, [searchQuery, statusFilter, categoryFilter, movies]);
+
+  const filterMovies = () => {
+    let filtered = [...movies];
+    
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(movie => 
+        movie.title?.toLowerCase().includes(query) ||
+        movie.director?.toLowerCase().includes(query) ||
+        movie.category?.toLowerCase().includes(query)
+      );
+    }
+    
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(movie => movie.status === statusFilter);
+    }
+    
+    if (categoryFilter !== 'all') {
+      filtered = filtered.filter(movie => movie.category === categoryFilter);
+    }
+    
+    setFilteredMovies(filtered);
+  };
+
+  const toggleSelectMovie = (movieId) => {
+    setSelectedMovies(prev => 
+      prev.includes(movieId) 
+        ? prev.filter(id => id !== movieId)
+        : [...prev, movieId]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedMovies.length === filteredMovies.length) {
+      setSelectedMovies([]);
+    } else {
+      setSelectedMovies(filteredMovies.map(m => m.id));
+    }
+    setShowBulkActions(true);
+  };
+
+  const bulkDelete = async () => {
+    if (window.confirm(`Delete ${selectedMovies.length} selected movies?`)) {
+      try {
+        await Promise.all(selectedMovies.map(id => adminService.deleteMovie(id)));
+        setSelectedMovies([]);
+        setShowBulkActions(false);
+        fetchMovies();
+      } catch (error) {
+        console.error('Error bulk deleting movies:', error);
+      }
+    }
+  };
 
   const fetchMovies = async () => {
     try {
@@ -181,16 +255,76 @@ const AdminMoviesPage = () => {
         </button>
       </div>
 
+      <div className="mb-6 flex flex-col lg:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-netflix-text-muted" size={20} />
+          <input
+            type="text"
+            placeholder="Search movies by title, director, or category..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-3 bg-netflix-bg-tertiary border border-transparent rounded-lg text-white placeholder-netflix-text-muted focus:outline-none focus:border-netflix-red transition-colors"
+          />
+        </div>
+        
+        <div className="flex gap-3">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-4 py-3 bg-netflix-bg-tertiary rounded-lg text-white border border-transparent focus:outline-none focus:border-netflix-red cursor-pointer"
+          >
+            <option value="all">All Status</option>
+            <option value="released">Released</option>
+            <option value="upcoming">Upcoming</option>
+            <option value="in-production">In Production</option>
+          </select>
+          
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="px-4 py-3 bg-netflix-bg-tertiary rounded-lg text-white border border-transparent focus:outline-none focus:border-netflix-red cursor-pointer"
+          >
+            <option value="all">All Categories</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.name}>{cat.name}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {showBulkActions && selectedMovies.length > 0 && (
+        <div className="mb-4 p-4 bg-netflix-bg-tertiary rounded-lg flex items-center justify-between">
+          <span className="text-white">{selectedMovies.length} movie(s) selected</span>
+          <div className="flex gap-2">
+            <button
+              onClick={bulkDelete}
+              className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+            >
+              <Trash size={16} />
+              Delete Selected
+            </button>
+            <button
+              onClick={() => { setSelectedMovies([]); setShowBulkActions(false); }}
+              className="px-4 py-2 bg-netflix-bg-secondary hover:bg-netflix-bg-tertiary text-white rounded-lg transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <div className="animate-pulse space-y-4">
           {[...Array(5)].map((_, i) => (
             <div key={i} className="h-16 bg-netflix-bg-tertiary rounded"></div>
           ))}
         </div>
-      ) : movies.length === 0 ? (
+      ) : filteredMovies.length === 0 ? (
         <div className="text-center py-16">
           <Film size={48} className="mx-auto text-netflix-text-muted mb-4" />
-          <p className="text-netflix-text-secondary">No movies yet. Add your first movie!</p>
+          <p className="text-netflix-text-secondary">
+            {movies.length === 0 ? 'No movies yet. Add your first movie!' : 'No movies match your filters.'}
+          </p>
         </div>
       ) : (
         <div className="bg-netflix-bg-secondary rounded-lg overflow-hidden">
@@ -198,17 +332,36 @@ const AdminMoviesPage = () => {
             <table className="w-full min-w-[600px]">
               <thead className="bg-netflix-bg-tertiary">
                 <tr>
+                  <th className="px-6 py-3 text-left">
+                    <button onClick={toggleSelectAll} className="text-netflix-text-secondary hover:text-white">
+                      {selectedMovies.length === filteredMovies.length && filteredMovies.length > 0 ? (
+                        <CheckSquare size={18} />
+                      ) : (
+                        <Square size={18} />
+                      )}
+                    </button>
+                  </th>
                   <th className="px-6 py-3 text-left text-netflix-text-secondary text-sm">Title</th>
                   <th className="px-6 py-3 text-left text-netflix-text-secondary text-sm">Category</th>
                   <th className="px-6 py-3 text-left text-netflix-text-secondary text-sm">Genre</th>
+                  <th className="px-6 py-3 text-left text-netflix-text-secondary text-sm">Status</th>
                   <th className="px-6 py-3 text-left text-netflix-text-secondary text-sm">Rating</th>
                   <th className="px-6 py-3 text-left text-netflix-text-secondary text-sm">Views</th>
                   <th className="px-6 py-3 text-right text-netflix-text-secondary text-sm">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {movies.map((movie) => (
-                  <tr key={movie.id} className="border-t border-netflix-bg-tertiary">
+                {filteredMovies.map((movie) => (
+                  <tr key={movie.id} className={`border-t border-netflix-bg-tertiary ${selectedMovies.includes(movie.id) ? 'bg-netflix-bg-tertiary/50' : ''}`}>
+                    <td className="px-6 py-4">
+                      <button onClick={() => toggleSelectMovie(movie.id)} className="text-netflix-text-secondary hover:text-white">
+                        {selectedMovies.includes(movie.id) ? (
+                          <CheckSquare size={18} className="text-netflix-red" />
+                        ) : (
+                          <Square size={18} />
+                        )}
+                      </button>
+                    </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <img
@@ -235,6 +388,15 @@ const AdminMoviesPage = () => {
                       <div className="flex flex-wrap gap-1">
                         {renderGenreTags(movie.genre)}
                       </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`text-xs px-2 py-1 rounded-full ${
+                        movie.status === 'released' ? 'bg-green-900/50 text-green-200' :
+                        movie.status === 'upcoming' ? 'bg-blue-900/50 text-blue-200' :
+                        'bg-gray-900/50 text-gray-200'
+                      }`}>
+                        {movie.status || 'released'}
+                      </span>
                     </td>
                     <td className="px-6 py-4 text-netflix-success">{movie.rating?.toFixed(1) || 'N/A'}</td>
                     <td className="px-6 py-4 text-netflix-text-secondary">{movie.views || 0}</td>
@@ -469,7 +631,7 @@ const AdminMoviesPage = () => {
                     type="checkbox"
                     id="trending"
                     checked={formData.trending}
-                    onChange={(e) => setFormData({ ...formData, trending: e.target.checked })}
+                    onChange={(e) => setFormData({ ...formData, trending: e.target.target.checked })}
                     className="w-4 h-4"
                   />
                   <label htmlFor="trending" className="text-white">Show in Trending Now</label>
@@ -488,4 +650,3 @@ const AdminMoviesPage = () => {
 };
 
 export default AdminMoviesPage;
-

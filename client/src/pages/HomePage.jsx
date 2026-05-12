@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import Navbar from '../components/layout/Navbar';
 import HeroBanner from '../components/home/HeroBanner';
 import MovieRow from '../components/home/MovieRow';
-import LoadingSkeleton from '../components/LoadingSkeleton'; // Will create if needed
-import { movieService, watchlistService } from '../services/api';
+import LoadingSkeleton from '../components/LoadingSkeleton';
+import { movieService, watchlistService, recommendationService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useParentalControls } from '../context/ParentalControlsContext';
 
 const HomePage = () => {
   const [trending, setTrending] = useState([]);
@@ -20,16 +21,21 @@ const HomePage = () => {
   const [myList, setMyList] = useState([]);
   const [watchlist, setWatchlist] = useState([]);
   const [upcoming, setUpcoming] = useState([]);
+  const [forYou, setForYou] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { user } = useAuth();
+  const { filterContent } = useParentalControls();
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       setError(null);
       try {
-        const [trendingData, popularData, actionData, dramaData, comedyData, horrorData, sciFiData, thrillerData, animationData, tvData, upcomingData] = await Promise.all([
+        const [
+          trendingData, popularData, actionData, dramaData, comedyData,
+          horrorData, sciFiData, thrillerData, animationData, tvData, upcomingData
+        ] = await Promise.all([
           movieService.getTrending().catch(() => []),
           movieService.getPopular().catch(() => []),
           movieService.getByCategory('Action').catch(() => []),
@@ -42,18 +48,28 @@ const HomePage = () => {
           movieService.getByCategory('TV Shows').catch(() => []),
           movieService.getUpcoming().catch(() => [])
         ]);
+
+        let forYouData = [];
+        if (user) {
+          try {
+            forYouData = await recommendationService.getForYou();
+          } catch {
+            forYouData = trendingData.slice(0, 10);
+          }
+        }
         
         setTrending(Array.isArray(trendingData) ? trendingData.slice(0, 20) : []);
         setPopular(Array.isArray(popularData) ? popularData.slice(0, 20) : (popularData?.movies || []).slice(0, 20));
-        setAction(Array.isArray(actionData) ? actionData.slice(0, 20) : []);
-        setDrama(Array.isArray(dramaData) ? dramaData.slice(0, 20) : []);
-        setComedy(Array.isArray(comedyData) ? comedyData.slice(0, 20) : []);
-        setHorror(Array.isArray(horrorData) ? horrorData.slice(0, 20) : []);
-        setSciFi(Array.isArray(sciFiData) ? sciFiData.slice(0, 20) : []);
-        setThriller(Array.isArray(thrillerData) ? thrillerData.slice(0, 20) : []);
-        setAnimation(Array.isArray(animationData) ? animationData.slice(0, 20) : []);
+        setAction(filterContent(Array.isArray(actionData) ? actionData.slice(0, 20) : []));
+        setDrama(filterContent(Array.isArray(dramaData) ? dramaData.slice(0, 20) : []));
+        setComedy(filterContent(Array.isArray(comedyData) ? comedyData.slice(0, 20) : []));
+        setHorror(filterContent(Array.isArray(horrorData) ? horrorData.slice(0, 20) : []));
+        setSciFi(filterContent(Array.isArray(sciFiData) ? sciFiData.slice(0, 20) : []));
+        setThriller(filterContent(Array.isArray(thrillerData) ? thrillerData.slice(0, 20) : []));
+        setAnimation(filterContent(Array.isArray(animationData) ? animationData.slice(0, 20) : []));
         setTvShows(Array.isArray(tvData) ? tvData.slice(0, 20) : []);
         setUpcoming(Array.isArray(upcomingData) ? upcomingData : []);
+        setForYou(Array.isArray(forYouData) ? forYouData.slice(0, 20) : []);
       } catch (error) {
         console.error('Error fetching movies:', error);
         setError('Failed to load movies. Please refresh the page.');
@@ -63,7 +79,7 @@ const HomePage = () => {
     };
 
     fetchData();
-  }, []);
+  }, [user, filterContent]);
 
   useEffect(() => {
     const fetchWatchlist = async () => {
@@ -116,6 +132,14 @@ const HomePage = () => {
       <HeroBanner />
       
       <div className="relative -mt-32 z-10 pb-8">
+        {forYou.length > 0 && user && (
+          <MovieRow 
+            title="Because You Watched" 
+            movies={forYou} 
+            onWatchlist={watchlist}
+          />
+        )}
+
         {upcoming.length > 0 && (
           <MovieRow 
             title="Upcoming Releases" 

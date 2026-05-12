@@ -1,29 +1,94 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Play, Plus, Check } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Play, Plus, Check, Volume2, VolumeX, Info } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { watchlistService } from '../../services/api';
 import { getThumbnailUrl, handleImageError } from '../../utils/imageUtils';
 
-const ThumbnailWithFallback = ({ movie }) => {
-  const [imageError, setImageError] = useState(false);
+const VideoPreview = ({ movie, position, onClose }) => {
+  const [isMuted, setIsMuted] = useState(true);
+  const [showInfo, setShowInfo] = useState(false);
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
-  const src = imageError || !movie.thumbnail
-    ? getThumbnailUrl(null)
-    : getThumbnailUrl(movie.thumbnail);
+  const handlePlay = (e) => {
+    e.stopPropagation();
+    navigate(`/watch/${movie.id}`);
+  };
+
+  const handleDetails = (e) => {
+    e.stopPropagation();
+    navigate(`/movie/${movie.id}`);
+  };
+
+  const style = {
+    position: 'absolute',
+    top: position.top,
+    left: position.left,
+    width: '340px',
+    zIndex: 1000,
+  };
 
   return (
-    <div className="relative aspect-[2/3] rounded overflow-hidden bg-netflix-bg-tertiary">
-      <img
-        src={src}
-        alt={movie.title}
-        className="w-full h-full object-cover transition-all duration-500 ease-out group-hover/card:scale-110 group-hover/card:brightness-75"
-        loading="lazy"
-        onError={(e) => {
-          setImageError(true);
-          handleImageError(e);
-        }}
-      />
+    <div
+      style={style}
+      className="animate-scale-in bg-netflix-bg-secondary rounded-lg shadow-2xl overflow-hidden border border-netflix-bg-tertiary"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="relative">
+        <div className="aspect-video bg-black flex items-center justify-center">
+          <div className="text-center">
+            <Play className="w-16 h-16 text-white/50 mx-auto mb-2" />
+            <p className="text-white/70 text-sm">Preview Playing...</p>
+          </div>
+        </div>
+
+        <div className="absolute top-2 right-2 flex gap-2">
+          <button
+            onClick={() => setIsMuted(!isMuted)}
+            className="w-8 h-8 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 transition-colors"
+          >
+            {isMuted ? <VolumeX size={16} className="text-white" /> : <Volume2 size={16} className="text-white" />}
+          </button>
+        </div>
+
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/50 to-transparent p-4">
+          <h3 className="text-white font-semibold text-sm">{movie.title}</h3>
+          <p className="text-gray-300 text-xs mt-1 line-clamp-2">{movie.description}</p>
+        </div>
+      </div>
+
+      <div className="p-3 flex items-center justify-between bg-netflix-bg-secondary">
+        <div className="flex gap-2">
+          <button
+            onClick={handlePlay}
+            className="w-9 h-9 rounded-full bg-white flex items-center justify-center hover:bg-gray-200 transition-colors"
+          >
+            <Play size={16} className="text-black ml-0.5" />
+          </button>
+          {user && (
+            <button className="w-9 h-9 rounded-full border-2 border-gray-400 flex items-center justify-center hover:border-white hover:bg-white/10 transition-colors">
+              <Plus size={16} className="text-white" />
+            </button>
+          )}
+          <button
+            onClick={handleDetails}
+            className="w-9 h-9 rounded-full border-2 border-gray-400 flex items-center justify-center hover:border-white hover:bg-white/10 transition-colors"
+          >
+            <Info size={16} className="text-white" />
+          </button>
+        </div>
+        <div className="flex items-center gap-2 text-xs">
+          {movie.rating > 0 && (
+            <span className="text-green-400 font-medium">{movie.rating.toFixed(1)}</span>
+          )}
+          {movie.category && (
+            <span className="text-gray-400 border border-gray-500 px-1 rounded text-[10px]">
+              {movie.category}
+            </span>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
@@ -33,6 +98,9 @@ const MovieRow = ({ title, movies, onWatchlist = [] }) => {
   const rowRef = useRef(null);
   const [showButtons, setShowButtons] = useState(false);
   const [localWatchlist, setLocalWatchlist] = useState(onWatchlist);
+  const [hoveredMovie, setHoveredMovie] = useState(null);
+  const [hoverPosition, setHoverPosition] = useState({ top: 0, left: 0 });
+  const [hoverTimeout, setHoverTimeout] = useState(null);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -74,13 +142,42 @@ const MovieRow = ({ title, movies, onWatchlist = [] }) => {
     navigate(`/watch/${movieId}`);
   };
 
+  const handleMouseEnter = (e, movie) => {
+    const timeout = setTimeout(() => {
+      const card = e.currentTarget.getBoundingClientRect();
+      const row = rowRef.current.getBoundingClientRect();
+
+      let left = card.left - row.left + card.width / 2 - 170;
+      const maxLeft = row.width - 340;
+      left = Math.max(0, Math.min(left, maxLeft));
+
+      setHoverPosition({
+        top: card.top - row.top - 10,
+        left: left
+      });
+      setHoveredMovie(movie);
+    }, 500);
+
+    setHoverTimeout(timeout);
+  };
+
+  const handleMouseLeave = () => {
+    if (hoverTimeout) {
+      clearTimeout(hoverTimeout);
+    }
+    setHoveredMovie(null);
+  };
+
   if (!movies || movies.length === 0) return null;
 
   return (
     <div
       className="py-8 px-4 md:px-12 animate-fade-in-up"
       onMouseEnter={() => setShowButtons(true)}
-      onMouseLeave={() => setShowButtons(false)}
+      onMouseLeave={() => {
+        setShowButtons(false);
+        setHoveredMovie(null);
+      }}
     >
       <h2 className="text-xl md:text-2xl font-semibold text-white mb-4 animate-slide-in-left">{title}</h2>
 
@@ -89,61 +186,79 @@ const MovieRow = ({ title, movies, onWatchlist = [] }) => {
           <>
             <button
               onClick={() => scroll('left')}
-              className="absolute left-0 top-0 bottom-0 z-10 bg-black/60 p-2 hover:bg-black/80 transition-all duration-300 hidden md:flex items-center opacity-0 group-hover:opacity-100 hover:scale-110 rounded-r"
+              className="absolute left-0 top-0 bottom-0 z-20 bg-black/60 p-2 hover:bg-black/80 transition-all duration-300 hidden md:flex items-center opacity-0 group-hover:opacity-100 hover:scale-110 rounded-r"
             >
               <ChevronLeft size={32} className="text-white" />
             </button>
             <button
               onClick={() => scroll('right')}
-              className="absolute right-0 top-0 bottom-0 z-10 bg-black/60 p-2 hover:bg-black/80 transition-all duration-300 hidden md:flex items-center opacity-0 group-hover:opacity-100 hover:scale-110 rounded-l"
+              className="absolute right-0 top-0 bottom-0 z-20 bg-black/60 p-2 hover:bg-black/80 transition-all duration-300 hidden md:flex items-center opacity-0 group-hover:opacity-100 hover:scale-110 rounded-l"
             >
               <ChevronRight size={32} className="text-white" />
             </button>
           </>
         )}
 
-        <div ref={rowRef} className="flex gap-2 md:gap-3 overflow-x-auto scrollbar-hide pb-4">
+        <div ref={rowRef} className="flex gap-2 md:gap-3 overflow-x-auto scrollbar-hide pb-4 relative">
           {movies.map((movie, index) => (
             <div
               key={movie.id}
               onClick={() => handleCardClick(movie.id)}
               className="flex-shrink-0 w-24 sm:w-28 md:w-36 lg:w-48 group/card relative cursor-pointer animate-card-entrance"
               style={{ animationDelay: `${index * 80}ms` }}
+              onMouseEnter={(e) => handleMouseEnter(e, movie)}
+              onMouseLeave={handleMouseLeave}
             >
               <div className="transition-all duration-300 ease-out hover:-translate-y-2 hover:shadow-2xl hover:shadow-black/50 rounded overflow-hidden">
-                <ThumbnailWithFallback movie={movie} />
+                <div className="relative aspect-[2/3] rounded overflow-hidden bg-netflix-bg-tertiary">
+                  <img
+                    src={movie.thumbnail ? getThumbnailUrl(movie.thumbnail) : getThumbnailUrl(null)}
+                    alt={movie.title}
+                    className="w-full h-full object-cover transition-all duration-500 ease-out group-hover/card:scale-110 group-hover/card:brightness-75"
+                    loading="lazy"
+                    onError={(e) => handleImageError(e)}
+                  />
 
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover/card:opacity-100 transition-all duration-500 flex flex-col items-center justify-center gap-3">
-                  <button
-                    onClick={(e) => handlePlay(e, movie.id)}
-                    className="w-14 h-14 rounded-full bg-white flex items-center justify-center hover:scale-125 transition-transform duration-300 shadow-lg"
-                  >
-                    <Play size={24} className="text-black ml-1" />
-                  </button>
-                  {user && (
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover/card:opacity-100 transition-all duration-500 flex flex-col items-center justify-center gap-3">
                     <button
-                      onClick={(e) => handleAddToWatchlist(e, movie.id)}
-                      className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all duration-300 hover:scale-110 ${localWatchlist.includes(movie.id) ? 'bg-netflix-red border-netflix-red' : 'border-white hover:border-netflix-red hover:bg-white/10'}`}
+                      onClick={(e) => handlePlay(e, movie.id)}
+                      className="w-14 h-14 rounded-full bg-white flex items-center justify-center hover:scale-125 transition-transform duration-300 shadow-lg"
                     >
-                      {localWatchlist.includes(movie.id) ? <Check size={18} className="text-white" /> : <Plus size={18} className="text-white" />}
+                      <Play size={24} className="text-black ml-1" />
                     </button>
-                  )}
-                </div>
-
-                <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black via-black/60 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-500">
-                  <h3 className="text-sm font-bold text-white truncate drop-shadow-md">{movie.title}</h3>
-                  <div className="flex items-center gap-2 text-xs text-gray-300 mt-1">
-                    {movie.rating > 0 && <span className="text-green-400 font-semibold">{movie.rating.toFixed(1)}</span>}
-                    {movie.releaseYear && <span>{movie.releaseYear}</span>}
-                    {movie.duration && <span className="text-gray-400">{movie.duration}</span>}
+                    {user && (
+                      <button
+                        onClick={(e) => handleAddToWatchlist(e, movie.id)}
+                        className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all duration-300 hover:scale-110 ${localWatchlist.includes(movie.id) ? 'bg-netflix-red border-netflix-red' : 'border-white hover:border-netflix-red hover:bg-white/10'}`}
+                      >
+                        {localWatchlist.includes(movie.id) ? <Check size={18} className="text-white" /> : <Plus size={18} className="text-white" />}
+                      </button>
+                    )}
                   </div>
-                  {movie.category && (
-                    <span className="inline-block mt-1 px-2 py-0.5 bg-netflix-red/80 text-white text-[10px] rounded-full uppercase tracking-wide">
-                      {movie.category}
-                    </span>
-                  )}
+
+                  <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black via-black/60 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-500">
+                    <h3 className="text-sm font-bold text-white truncate drop-shadow-md">{movie.title}</h3>
+                    <div className="flex items-center gap-2 text-xs text-gray-300 mt-1">
+                      {movie.rating > 0 && <span className="text-green-400 font-semibold">{movie.rating.toFixed(1)}</span>}
+                      {movie.releaseYear && <span>{movie.releaseYear}</span>}
+                      {movie.duration && <span className="text-gray-400">{movie.duration}</span>}
+                    </div>
+                    {movie.category && (
+                      <span className="inline-block mt-1 px-2 py-0.5 bg-netflix-red/80 text-white text-[10px] rounded-full uppercase tracking-wide">
+                        {movie.category}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
+
+              {hoveredMovie && hoveredMovie.id === movie.id && (
+                <VideoPreview
+                  movie={hoveredMovie}
+                  position={hoverPosition}
+                  onClose={() => setHoveredMovie(null)}
+                />
+              )}
             </div>
           ))}
         </div>
