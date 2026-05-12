@@ -1,6 +1,6 @@
-const CACHE_NAME = 'streamflix-v2';
-const DATA_CACHE_NAME = 'streamflix-data-v1';
-const VIDEO_CACHE_NAME = 'streamflix-videos-v1';
+const CACHE_NAME = 'streamflix-v3';
+const DATA_CACHE_NAME = 'streamflix-data-v2';
+const VIDEO_CACHE_NAME = 'streamflix-videos-v2';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -13,6 +13,21 @@ self.addEventListener('install', event => {
       .then(cache => cache.addAll(urlsToCache))
   );
   self.skipWaiting();
+});
+
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cacheName => {
+          if (cacheName !== CACHE_NAME && cacheName !== DATA_CACHE_NAME && cacheName !== VIDEO_CACHE_NAME) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
+  self.clients.claim();
 });
 
 self.addEventListener('fetch', event => {
