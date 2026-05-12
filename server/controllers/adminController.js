@@ -5,51 +5,50 @@ const User = require('../models/User');
 const db = require('../config/db');
 const sequelize = db.sequelize;
 
+const getSequelize = () => {
+  const { Sequelize } = require('sequelize');
+  return new Sequelize(process.env.DATABASE_URL, { logging: false });
+};
+
 exports.createMovie = async (req, res) => {
   try {
     console.log('[createMovie] Received body:', JSON.stringify(req.body));
-    const { genre, cast, ...otherData } = req.body;
+    const { genre, cast, ageRating, status, releaseDate, trending, ...otherData } = req.body;
     
-    const movieData = {};
-    const stringFields = ['title', 'description', 'videoUrl', 'externalUrl', 'trailerUrl', 'thumbnail', 'category', 'director', 'duration'];
-    const numberFields = ['rating', 'releaseYear', 'views'];
-    const booleanFields = ['featured'];
+    const genreStr = Array.isArray(genre) ? JSON.stringify(genre) : (typeof genre === 'string' ? genre : '[]');
+    const castStr = Array.isArray(cast) ? JSON.stringify(cast) : (typeof cast === 'string' ? cast : '[]');
     
-    for (const field of stringFields) {
-      if (otherData[field] !== undefined && otherData[field] !== null && otherData[field] !== '') {
-        movieData[field] = otherData[field];
-      }
-    }
+    const title = otherData.title || '';
+    const description = otherData.description || '';
+    const videoUrl = otherData.videoUrl || '';
+    const externalUrl = otherData.externalUrl || '';
+    const trailerUrl = otherData.trailerUrl || '';
+    const thumbnail = otherData.thumbnail || '';
+    const category = otherData.category || 'Movies';
+    const director = otherData.director || '';
+    const duration = otherData.duration || '';
+    const rating = parseFloat(otherData.rating) || 0;
+    const releaseYear = parseInt(otherData.releaseYear) || null;
+    const views = parseInt(otherData.views) || 0;
+    const featured = otherData.featured ? 'true' : 'false';
+    const ageRatingVal = ageRating || 'PG-13';
+    const statusVal = status || 'released';
+    const releaseDateVal = releaseDate || 'NULL';
+    const trendingVal = trending ? 'true' : 'false';
     
-    if (Array.isArray(genre)) {
-      movieData.genre = genre;
-    } else if (typeof genre === 'string' && genre.length > 0) {
-      movieData.genre = [genre];
-    }
+    const sequelize = getSequelize();
+    const now = new Date().toISOString();
     
-    if (Array.isArray(cast)) {
-      movieData.cast = cast;
-    } else if (typeof cast === 'string' && cast.length > 0) {
-      movieData.cast = [cast];
-    }
+    await sequelize.query(`
+      INSERT INTO movies (title, description, "videoUrl", "externalUrl", "trailerUrl", thumbnail, category, director, duration, genre, "cast", rating, "releaseYear", views, featured, "ageRating", status, "releaseDate", trending, "createdAt", "updatedAt")
+      VALUES (${title ? `'${title.replace(/'/g, "''")}'` : null}, ${description ? `'${description.replace(/'/g, "''")}'` : null}, ${videoUrl ? `'${videoUrl.replace(/'/g, "''")}'` : null}, ${externalUrl ? `'${externalUrl.replace(/'/g, "''")}'` : null}, ${trailerUrl ? `'${trailerUrl.replace(/'/g, "''")}'` : null}, ${thumbnail ? `'${thumbnail.replace(/'/g, "''")}'` : null}, ${category ? `'${category}'` : null}, ${director ? `'${director.replace(/'/g, "''")}'` : null}, ${duration ? `'${duration}'` : null}, ${genreStr}, ${castStr}, ${rating}, ${releaseYear}, ${views}, ${featured}, ${ageRatingVal ? `'${ageRatingVal}'` : 'PG-13'}, ${statusVal ? `'${statusVal}'` : 'released'}, ${releaseDateVal !== 'NULL' ? `'${releaseDateVal}'` : 'NULL'}, ${trendingVal}, '${now}', '${now}')
+    `);
     
-    for (const field of numberFields) {
-      if (otherData[field] !== undefined && otherData[field] !== null && otherData[field] !== '') {
-        movieData[field] = parseFloat(otherData[field]) || 0;
-      }
-    }
+    const [movies] = await sequelize.query('SELECT * FROM movies ORDER BY id DESC LIMIT 1');
+    await sequelize.close();
     
-    for (const field of booleanFields) {
-      if (otherData[field] !== undefined) {
-        movieData[field] = Boolean(otherData[field]);
-      }
-    }
-    
-    console.log('[createMovie] Movie data to save:', JSON.stringify(movieData));
-    const movie = await Movie.create(movieData);
-    const savedMovie = movie.get({ plain: true });
-    console.log('[createMovie] Saved movie:', JSON.stringify(savedMovie));
-    res.status(201).json(savedMovie);
+    console.log('[createMovie] Saved movie:', JSON.stringify(movies[0]));
+    res.status(201).json(movies[0]);
   } catch (error) {
     console.error('[createMovie] Error:', error);
     res.status(500).json({ message: error.message });
@@ -58,24 +57,49 @@ exports.createMovie = async (req, res) => {
 
 exports.updateMovie = async (req, res) => {
   try {
-    const movie = await Movie.findByPk(req.params.id);
-
-    if (!movie) {
+    const id = parseInt(req.params.id);
+    const { genre, cast, ageRating, status, releaseDate, trending, ...otherData } = req.body;
+    
+    const sequelize = getSequelize();
+    const [movies] = await sequelize.query(`SELECT * FROM movies WHERE id = ${id} LIMIT 1`);
+    
+    if (movies.length === 0) {
+      await sequelize.close();
       return res.status(404).json({ message: 'Movie not found' });
     }
-
-    const { genre, cast, ...otherData } = req.body;
-    let updateData = { ...otherData };
     
-    if (genre !== undefined) {
-      updateData.genre = Array.isArray(genre) ? genre : genre;
-    }
-    if (cast !== undefined) {
-      updateData.cast = Array.isArray(cast) ? cast : cast;
-    }
-
-    await movie.update(updateData);
-    res.json(movie.get({ plain: true }));
+    const genreStr = Array.isArray(genre) ? JSON.stringify(genre) : (typeof genre === 'string' ? genre : null);
+    const castStr = Array.isArray(cast) ? JSON.stringify(cast) : (typeof cast === 'string' ? cast : null);
+    
+    const updates = [];
+    if (otherData.title !== undefined) updates.push(`title = '${otherData.title.replace(/'/g, "''")}'`);
+    if (otherData.description !== undefined) updates.push(`description = '${(otherData.description || '').replace(/'/g, "''")}'`);
+    if (otherData.videoUrl !== undefined) updates.push(`"videoUrl" = '${(otherData.videoUrl || '').replace(/'/g, "''")}'`);
+    if (otherData.externalUrl !== undefined) updates.push(`"externalUrl" = '${(otherData.externalUrl || '').replace(/'/g, "''")}'`);
+    if (otherData.trailerUrl !== undefined) updates.push(`"trailerUrl" = '${(otherData.trailerUrl || '').replace(/'/g, "''")}'`);
+    if (otherData.thumbnail !== undefined) updates.push(`thumbnail = '${(otherData.thumbnail || '').replace(/'/g, "''")}'`);
+    if (otherData.category !== undefined) updates.push(`category = '${otherData.category}'`);
+    if (otherData.director !== undefined) updates.push(`director = '${(otherData.director || '').replace(/'/g, "''")}'`);
+    if (otherData.duration !== undefined) updates.push(`duration = '${otherData.duration || ''}'`);
+    if (otherData.rating !== undefined) updates.push(`rating = ${parseFloat(otherData.rating) || 0}`);
+    if (otherData.releaseYear !== undefined) updates.push(`"releaseYear" = ${parseInt(otherData.releaseYear) || null}`);
+    if (otherData.views !== undefined) updates.push(`views = ${parseInt(otherData.views) || 0}`);
+    if (otherData.featured !== undefined) updates.push(`featured = ${otherData.featured ? 'true' : 'false'}`);
+    if (genreStr) updates.push(`genre = '${genreStr.replace(/'/g, "''")}'`);
+    if (castStr) updates.push(`"cast" = '${castStr.replace(/'/g, "''")}'`);
+    if (ageRating) updates.push(`"ageRating" = '${ageRating}'`);
+    if (status) updates.push(`status = '${status}'`);
+    if (releaseDate) updates.push(`"releaseDate" = '${releaseDate}'`);
+    if (trending !== undefined) updates.push(`trending = ${trending ? 'true' : 'false'}`);
+    
+    updates.push(`"updatedAt" = '${new Date().toISOString()}'`);
+    
+    await sequelize.query(`UPDATE movies SET ${updates.join(', ')} WHERE id = ${id}`);
+    
+    const [updatedMovies] = await sequelize.query(`SELECT * FROM movies WHERE id = ${id} LIMIT 1`);
+    await sequelize.close();
+    
+    res.json(updatedMovies[0]);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -83,13 +107,18 @@ exports.updateMovie = async (req, res) => {
 
 exports.deleteMovie = async (req, res) => {
   try {
-    const movie = await Movie.findByPk(req.params.id);
-
-    if (!movie) {
+    const id = parseInt(req.params.id);
+    const sequelize = getSequelize();
+    
+    const [movies] = await sequelize.query(`SELECT * FROM movies WHERE id = ${id} LIMIT 1`);
+    if (movies.length === 0) {
+      await sequelize.close();
       return res.status(404).json({ message: 'Movie not found' });
     }
-
-    await movie.destroy();
+    
+    await sequelize.query(`DELETE FROM movies WHERE id = ${id}`);
+    await sequelize.close();
+    
     res.json({ message: 'Movie deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -98,13 +127,11 @@ exports.deleteMovie = async (req, res) => {
 
 exports.getAllMovies = async (req, res) => {
   try {
-    const movies = await Movie.findAll({ order: [['createdAt', 'DESC']] });
-    const plainMovies = movies.map(m => m.get({ plain: true }));
+    const sequelize = getSequelize();
+    const [movies] = await sequelize.query('SELECT * FROM movies ORDER BY "createdAt" DESC');
+    await sequelize.close();
     console.log('[getAllMovies] Found', movies.length, 'movies');
-    if (movies.length > 0) {
-      console.log('[getAllMovies] First movie:', JSON.stringify(plainMovies[0]));
-    }
-    res.json(plainMovies);
+    res.json(movies);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

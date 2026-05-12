@@ -54,6 +54,9 @@ const createDefaultAdmin = async () => {
     await sequelize.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS "viewingHistory" JSONB DEFAULT \'[]\'');
     await sequelize.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS watchlist JSONB DEFAULT \'[]\'');
     
+    await sequelize.query('ALTER TABLE movies ADD COLUMN IF NOT EXISTS "ageRating" VARCHAR(20) DEFAULT \'PG-13\'');
+    await sequelize.query('ALTER TABLE movies ADD COLUMN IF NOT EXISTS "cast" JSONB DEFAULT \'[]\'');
+    
     const [results] = await sequelize.query(`SELECT * FROM users WHERE email = '${process.env.ADMIN_EMAIL}' LIMIT 1`);
     console.log('[Admin] Query result:', results ? results.length : 0);
     
