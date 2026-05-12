@@ -47,7 +47,10 @@ router.get('/categories', async (req, res) => {
     } catch (e) { console.log('Categories column check:', e.message); }
     
     const [categories] = await sequelize.query('SELECT * FROM categories ORDER BY id ASC');
-    console.log('[GET /categories] Found categories:', categories?.length, categories?.map(c => c.name));
+    console.log('[GET /categories] Found categories:', categories?.length);
+    
+    const [movieStats] = await sequelize.query('SELECT category, COUNT(*) as cnt FROM movies WHERE category IS NOT NULL GROUP BY category');
+    console.log('[GET /categories] Movies by category:', movieStats);
     
     if (!categories || categories.length === 0) {
       const defaultCategories = [
