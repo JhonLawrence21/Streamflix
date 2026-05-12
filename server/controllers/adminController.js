@@ -145,6 +145,16 @@ exports.createCategory = async (req, res) => {
     }
     
     const sequelize = getSequelize();
+    
+    const [columns] = await sequelize.query(`
+      SELECT column_name FROM information_schema.columns 
+      WHERE table_name = 'categories' AND column_name = 'color'
+    `);
+    
+    if (columns.length === 0) {
+      await sequelize.query('ALTER TABLE categories ADD COLUMN color VARCHAR(255) DEFAULT \'#E50914\'');
+    }
+    
     const now = new Date().toISOString();
     
     await sequelize.query(`
@@ -256,30 +266,29 @@ exports.deleteUser = async (req, res) => {
 
 exports.getAnalytics = async (req, res) => {
   try {
-    const totalUsers = await User.count();
-    const totalMovies = await Movie.count();
-    const movies = await Movie.findAll();
-    const totalViews = movies.reduce((sum, m) => sum + (m.views || 0), 0);
-
-    const categoryCounts = await Movie.findAll({
-      attributes: [
-        'category',
-        [sequelize.fn('COUNT', sequelize.col('category')), 'count']
-      ],
-      group: ['category']
-    });
-
-    const recentMovies = await Movie.findAll({ 
-      order: [['createdAt', 'DESC']], 
-      limit: 5
-    });
-
+    const sequelize = getSequelize();
+    
+    const [[{ userCount }]] = await sequelize.query('SELECT COUNT(*) as userCount FROM users');
+    const [[{ movieCount }]] = await sequelize.query('SELECT COUNT(*) as movieCount FROM movies');
+    const [[{ totalViews }]] = await sequelize.query('SELECT COALESCE(SUM(views), 0) as totalViews FROM movies');
+    
+    const [categoryCounts] = await sequelize.query(`
+      SELECT category, COUNT(*) as count 
+      FROM movies 
+      WHERE category IS NOT NULL 
+      GROUP BY category
+    `);
+    
+    const [recentMovies] = await sequelize.query('SELECT * FROM movies ORDER BY "createdAt" DESC LIMIT 5');
+    
+    await sequelize.close();
+    
     res.json({
-      totalUsers,
-      totalMovies,
-      totalViews,
-      moviesByCategory: categoryCounts,
-      recentMovies
+      totalUsers: userCount || 0,
+      totalMovies: movieCount || 0,
+      totalViews: totalViews || 0,
+      moviesByCategory: categoryCounts || [],
+      recentMovies: recentMovies || []
     });
   } catch (error) {
     console.error('Analytics error:', error);
