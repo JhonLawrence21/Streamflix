@@ -1,10 +1,5 @@
 const User = require('../models/User');
 
-const getSequelize = () => {
-  const { Sequelize } = require('sequelize');
-  return new Sequelize(process.env.DATABASE_URL, { logging: false });
-};
-
 exports.getWatchlist = async (req, res) => {
   try {
     const user = await User.findByPk(req.user.id);
@@ -29,7 +24,7 @@ exports.getWatchlist = async (req, res) => {
       return res.json([]);
     }
 
-    const sequelize = getSequelize();
+    const { sequelize } = require('../config/db');
     const ids = watchlistIds.join(',');
     const [movies] = await sequelize.query(`SELECT * FROM movies WHERE id IN (${ids})`);
     await sequelize.close();
@@ -44,7 +39,7 @@ exports.addToWatchlist = async (req, res) => {
   try {
     const { movieId } = req.params;
 
-    const sequelize = getSequelize();
+    const { sequelize } = require('../config/db');
     const [movies] = await sequelize.query(`SELECT id FROM movies WHERE id = ${parseInt(movieId)} LIMIT 1`);
     
     if (movies.length === 0) {

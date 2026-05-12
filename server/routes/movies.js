@@ -16,10 +16,8 @@ const {
 
 router.get('/test', async (req, res) => {
   try {
-    const { Sequelize } = require('sequelize');
-    const sequelize = new Sequelize(process.env.DATABASE_URL, { logging: false });
+    const { sequelize } = require('../config/db');
     const [movies] = await sequelize.query('SELECT * FROM movies LIMIT 5');
-    await sequelize.close();
     res.json({ count: movies.length, movies });
   } catch (e) {
     res.status(500).json({ error: e.message });
