@@ -3,12 +3,7 @@ const Movie = require('../models/Movie');
 const Category = require('../models/Category');
 const User = require('../models/User');
 const db = require('../config/db');
-const sequelize = db.sequelize;
-
-const getSequelize = () => {
-  const { Sequelize } = require('sequelize');
-  return new Sequelize(process.env.DATABASE_URL, { logging: false });
-};
+const { sequelize: sharedSequelize } = db;
 
 exports.createMovie = async (req, res) => {
   try {
@@ -36,7 +31,7 @@ exports.createMovie = async (req, res) => {
     const releaseDateVal = releaseDate || 'NULL';
     const trendingVal = trending ? 'true' : 'false';
     
-    const sequelize = getSequelize();
+    const { sequelize } = require('../config/db');
     const now = new Date().toISOString();
     
     await sequelize.query(`
@@ -45,7 +40,6 @@ exports.createMovie = async (req, res) => {
     `);
     
     const [movies] = await sequelize.query('SELECT * FROM movies ORDER BY id DESC LIMIT 1');
-    await sequelize.close();
     
     console.log('[createMovie] Saved movie:', JSON.stringify(movies[0]));
     res.status(201).json(movies[0]);
@@ -60,11 +54,10 @@ exports.updateMovie = async (req, res) => {
     const id = parseInt(req.params.id);
     const { genre, cast, ageRating, status, releaseDate, trending, ...otherData } = req.body;
     
-    const sequelize = getSequelize();
+    const { sequelize } = require('../config/db');
     const [movies] = await sequelize.query(`SELECT * FROM movies WHERE id = ${id} LIMIT 1`);
     
     if (movies.length === 0) {
-      await sequelize.close();
       return res.status(404).json({ message: 'Movie not found' });
     }
     
@@ -108,16 +101,14 @@ exports.updateMovie = async (req, res) => {
 exports.deleteMovie = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
-    const sequelize = getSequelize();
+    const { sequelize } = require('../config/db');
     
     const [movies] = await sequelize.query(`SELECT * FROM movies WHERE id = ${id} LIMIT 1`);
     if (movies.length === 0) {
-      await sequelize.close();
       return res.status(404).json({ message: 'Movie not found' });
     }
     
     await sequelize.query(`DELETE FROM movies WHERE id = ${id}`);
-    await sequelize.close();
     
     res.json({ message: 'Movie deleted successfully' });
   } catch (error) {
@@ -127,9 +118,8 @@ exports.deleteMovie = async (req, res) => {
 
 exports.getAllMovies = async (req, res) => {
   try {
-    const sequelize = getSequelize();
+    const { sequelize } = require('../config/db');
     const [movies] = await sequelize.query('SELECT * FROM movies ORDER BY "createdAt" DESC');
-    await sequelize.close();
     console.log('[getAllMovies] Found', movies.length, 'movies');
     res.json(movies);
   } catch (error) {
