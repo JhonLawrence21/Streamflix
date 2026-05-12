@@ -42,27 +42,31 @@ const createDefaultAdmin = async () => {
   try {
     const { Sequelize } = require('sequelize');
     const sequelize = new Sequelize(process.env.DATABASE_URL);
-    await sequelize.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS profiles JSON DEFAULT \'[{"id":"default","name":"Main Profile","avatar":"","isKid":false,"pin":""}]\';');
-    await sequelize.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS activeProfile VARCHAR(255) DEFAULT \'default\';');
-    await sequelize.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS parentalControlPin VARCHAR(255) DEFAULT \'\';');
+    await sequelize.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS profiles JSONB DEFAULT \'[{"id":"default","name":"Main Profile","avatar":"","isKid":false,"pin":""}]\'');
+    await sequelize.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS "activeProfile" VARCHAR(255) DEFAULT \'default\'');
+    await sequelize.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS "parentalControlPin" VARCHAR(255) DEFAULT \'\'');
     await sequelize.close();
   } catch (e) {
     console.log('[DB] Columns may already exist, continuing...');
   }
 
   try {
-    const adminExists = await User.findOne({ where: { email: process.env.ADMIN_EMAIL } });
-    if (!adminExists) {
-      await User.create({
-        name: 'Admin',
-        email: process.env.ADMIN_EMAIL,
-        password: process.env.ADMIN_PASSWORD,
-        role: 'admin'
-      });
+    const { Sequelize } = require('sequelize');
+    const sequelize = new Sequelize(process.env.DATABASE_URL);
+    const [results] = await sequelize.query(`SELECT * FROM users WHERE email = '${process.env.ADMIN_EMAIL}' LIMIT 1`);
+    await sequelize.close();
+    
+    if (!results || results.length === 0) {
+      const bcrypt = require('bcryptjs');
+      const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
+      const { Sequelize: Seq } = require('sequelize');
+      const sequelize2 = new Seq(process.env.DATABASE_URL);
+      await sequelize2.query(`INSERT INTO users (name, email, password, role, "createdAt", "updatedAt") VALUES ('Admin', '${process.env.ADMIN_EMAIL}', '${hashedPassword}', 'admin', NOW(), NOW())`);
+      await sequelize2.close();
       console.log(`Admin created: ${process.env.ADMIN_EMAIL}`);
     }
   } catch (error) {
-    console.error('Error creating admin:', error);
+    console.error('Error creating admin:', error.message);
   }
 };
 
