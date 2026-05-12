@@ -4,14 +4,19 @@ const { auth } = require('../middleware/auth');
 
 let recommendationController;
 try {
-  recommendationController = require('../controllers/recommendationController');
-  if (!recommendationController || typeof recommendationController.getForYou !== 'function') {
-    console.warn('Recommendation controller not properly loaded');
-    recommendationController = null;
+  const ctrl = require('../controllers/recommendationController');
+  if (ctrl && typeof ctrl.getForYou === 'function' && 
+      typeof ctrl.getSimilar === 'function' &&
+      typeof ctrl.trackWatch === 'function' &&
+      typeof ctrl.getHistory === 'function' &&
+      typeof ctrl.clearHistory === 'function') {
+    recommendationController = ctrl;
+    console.log('[Recommendations] Controller loaded successfully');
+  } else {
+    console.warn('[Recommendations] Controller methods missing');
   }
 } catch (e) {
-  console.warn('Recommendation controller not available:', e.message);
-  recommendationController = null;
+  console.warn('[Recommendations] Controller not available:', e.message);
 }
 
 if (recommendationController) {
