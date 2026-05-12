@@ -24,7 +24,7 @@ const authRoutes = require('./routes/auth');
 const movieRoutes = require('./routes/movies');
 const watchlistRoutes = require('./routes/watchlist');
 const adminRoutes = require('./routes/admin');
-const recommendationRoutes = require('./routes/recommendations');
+// const recommendationRoutes = require('./routes/recommendations');
 
 const app = express();
 
