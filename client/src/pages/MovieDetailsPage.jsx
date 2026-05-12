@@ -323,20 +323,30 @@ const MovieDetailsPage = () => {
 
       {/* Trailer Modal - Fullscreen with Autoplay */}
       {showTrailer && trailerId && (
-        <div className="fixed inset-0 z-50 bg-black">
+        <div 
+          className="fixed inset-0 z-50 bg-black"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowTrailer(false);
+          }}
+        >
           <button 
             onClick={() => setShowTrailer(false)} 
-            className="absolute top-4 right-4 text-white p-2 z-50 bg-black/50 rounded-full hover:bg-black/70 transition-colors"
+            className="absolute top-4 right-4 z-[60] text-white p-2 bg-black/50 rounded-full hover:bg-black/70 transition-colors"
           >
             <X size={32} />
           </button>
           <iframe
-            src={`https://www.youtube.com/embed/${trailerId}?autoplay=1&rel=0&modestbranding=1`}
-            className="w-full h-full"
-            allow="autoplay; encrypted-media; fullscreen"
-            allowFullScreen
+            src={`https://www.youtube.com/embed/${trailerId}?autoplay=1&rel=0&modestbranding=1&playsinline=1`}
+            className="absolute top-0 left-0 w-full h-full"
+            style={{ border: 'none' }}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen={true}
+            mozallowfullscreen="true"
+            webkitallowfullscreen="true"
             title="Trailer"
           />
+        </div>
+      )}
         </div>
       )}
     </div>
