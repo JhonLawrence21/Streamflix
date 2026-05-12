@@ -321,16 +321,19 @@ const MovieDetailsPage = () => {
         </div>
       )}
 
-      {/* Trailer Modal */}
+      {/* Trailer Modal - Fullscreen with Autoplay */}
       {showTrailer && trailerId && (
-        <div className="fixed inset-0 z-50 bg-black flex items-center justify-center">
-          <button onClick={() => setShowTrailer(false)} className="absolute top-4 right-4 text-white p-2">
+        <div className="fixed inset-0 z-50 bg-black">
+          <button 
+            onClick={() => setShowTrailer(false)} 
+            className="absolute top-4 right-4 text-white p-2 z-50 bg-black/50 rounded-full hover:bg-black/70 transition-colors"
+          >
             <X size={32} />
           </button>
           <iframe
-            src={getYouTubeEmbedUrl(trailerId, true)}
-            className="w-full h-full max-w-4xl aspect-video"
-            allow="autoplay; encrypted-media"
+            src={`https://www.youtube.com/embed/${trailerId}?autoplay=1&rel=0&modestbranding=1`}
+            className="w-full h-full"
+            allow="autoplay; encrypted-media; fullscreen"
             allowFullScreen
             title="Trailer"
           />

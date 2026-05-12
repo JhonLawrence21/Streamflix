@@ -5,6 +5,28 @@ const getSequelize = () => {
   return new Sequelize(process.env.DATABASE_URL, { logging: false });
 };
 
+const parseJsonField = (value) => {
+  if (Array.isArray(value)) return value;
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const processMovie = (movie) => {
+  if (!movie) return movie;
+  return {
+    ...movie,
+    genre: parseJsonField(movie.genre),
+    cast: parseJsonField(movie.cast)
+  };
+};
+
+const processMovies = (movies) => movies.map(processMovie);
+
 exports.getMovies = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -17,7 +39,7 @@ exports.getMovies = async (req, res) => {
     await sequelize.close();
 
     res.json({
-      movies: movies,
+      movies: processMovies(movies),
       totalPages: Math.ceil(count / limit),
       currentPage: page,
       total: count
@@ -37,7 +59,7 @@ exports.getMovie = async (req, res) => {
     if (movies.length === 0) {
       return res.status(404).json({ message: 'Movie not found' });
     }
-    res.json(movies[0]);
+    res.json(processMovie(movies[0]));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -55,7 +77,7 @@ exports.watchMovie = async (req, res) => {
     if (movies.length === 0) {
       return res.status(404).json({ message: 'Movie not found' });
     }
-    res.json(movies[0]);
+    res.json(processMovie(movies[0]));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -71,7 +93,7 @@ exports.getFeaturedMovie = async (req, res) => {
     }
     await sequelize.close();
     
-    res.json(movies.length > 0 ? movies[0] : null);
+    res.json(movies.length > 0 ? processMovie(movies[0]) : null);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -87,7 +109,7 @@ exports.getTrendingMovies = async (req, res) => {
     }
     await sequelize.close();
     
-    res.json(movies);
+    res.json(processMovies(movies));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -99,7 +121,7 @@ exports.getPopularMovies = async (req, res) => {
     const sequelize = getSequelize();
     const [movies] = await sequelize.query(`SELECT * FROM movies ORDER BY views DESC, rating DESC LIMIT ${limit}`);
     await sequelize.close();
-    res.json(movies);
+    res.json(processMovies(movies));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -111,7 +133,7 @@ exports.getMoviesByCategory = async (req, res) => {
     const sequelize = getSequelize();
     const [movies] = await sequelize.query(`SELECT * FROM movies WHERE category = '${category}' ORDER BY "createdAt" DESC`);
     await sequelize.close();
-    res.json(movies);
+    res.json(processMovies(movies));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -125,7 +147,7 @@ exports.getSimilarMovies = async (req, res) => {
     const [movies] = await sequelize.query(`SELECT * FROM movies WHERE id != ${id} ORDER BY rating DESC LIMIT 10`);
     await sequelize.close();
     
-    res.json(movies);
+    res.json(processMovies(movies));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -136,7 +158,7 @@ exports.getUpcomingReleases = async (req, res) => {
     const sequelize = getSequelize();
     const [movies] = await sequelize.query(`SELECT * FROM movies WHERE status = 'upcoming' OR "releaseDate" > NOW() ORDER BY "releaseDate" ASC LIMIT 20`);
     await sequelize.close();
-    res.json(movies);
+    res.json(processMovies(movies));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -148,7 +170,7 @@ exports.getReleasesByMonth = async (req, res) => {
     const sequelize = getSequelize();
     const [movies] = await sequelize.query(`SELECT * FROM movies WHERE EXTRACT(YEAR FROM "releaseDate") = ${year} AND EXTRACT(MONTH FROM "releaseDate") = ${month} ORDER BY "releaseDate" ASC`);
     await sequelize.close();
-    res.json(movies);
+    res.json(processMovies(movies));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
