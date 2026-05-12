@@ -28,33 +28,37 @@ const HomePage = () => {
   const { filterContent } = useParentalControls();
 
   useEffect(() => {
+    console.log('[HomePage] Fetching data...');
     const fetchData = async () => {
       setLoading(true);
       setError(null);
       try {
+        console.log('[HomePage] Calling API...');
         const [
           trendingData, popularData, actionData, dramaData, comedyData,
           horrorData, sciFiData, thrillerData, animationData, tvData, upcomingData
         ] = await Promise.all([
-          movieService.getTrending().catch(() => []),
-          movieService.getPopular().catch(() => []),
-          movieService.getByCategory('Action').catch(() => []),
-          movieService.getByCategory('Drama').catch(() => []),
-          movieService.getByCategory('Comedy').catch(() => []),
-          movieService.getByCategory('Horror').catch(() => []),
-          movieService.getByCategory('Sci-Fi').catch(() => []),
-          movieService.getByCategory('Thriller').catch(() => []),
-          movieService.getByCategory('Animation').catch(() => []),
-          movieService.getByCategory('TV Shows').catch(() => []),
-          movieService.getUpcoming().catch(() => [])
+          movieService.getTrending().catch(e => { console.warn('trending error', e); return []; }),
+          movieService.getPopular().catch(e => { console.warn('popular error', e); return []; }),
+          movieService.getByCategory('Action').catch(e => { console.warn('action error', e); return []; }),
+          movieService.getByCategory('Drama').catch(e => { console.warn('drama error', e); return []; }),
+          movieService.getByCategory('Comedy').catch(e => { console.warn('comedy error', e); return []; }),
+          movieService.getByCategory('Horror').catch(e => { console.warn('horror error', e); return []; }),
+          movieService.getByCategory('Sci-Fi').catch(e => { console.warn('scifi error', e); return []; }),
+          movieService.getByCategory('Thriller').catch(e => { console.warn('thriller error', e); return []; }),
+          movieService.getByCategory('Animation').catch(e => { console.warn('animation error', e); return []; }),
+          movieService.getByCategory('TV Shows').catch(e => { console.warn('tv error', e); return []; }),
+          movieService.getUpcoming().catch(e => { console.warn('upcoming error', e); return []; })
         ]);
+        
+        console.log('[HomePage] Data received:', { trending: trendingData?.length, popular: popularData?.length });
 
         let forYouData = [];
-        if (user) {
+        if (user?.id) {
           try {
             forYouData = await recommendationService.getForYou();
           } catch {
-            forYouData = trendingData.slice(0, 10);
+            forYouData = [];
           }
         }
         
@@ -70,8 +74,9 @@ const HomePage = () => {
         setTvShows(Array.isArray(tvData) ? tvData.slice(0, 20) : []);
         setUpcoming(Array.isArray(upcomingData) ? upcomingData : []);
         setForYou(Array.isArray(forYouData) ? forYouData.slice(0, 20) : []);
+        console.log('[HomePage] State set successfully');
       } catch (error) {
-        console.error('Error fetching movies:', error);
+        console.error('[HomePage] Error:', error);
         setError('Failed to load movies. Please refresh the page.');
       } finally {
         setLoading(false);
