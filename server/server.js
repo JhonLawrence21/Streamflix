@@ -204,10 +204,23 @@ connectDB()
     console.log('Continuing without database...');
   });
 
-// seedInitialData function here (same as before)
 async function seedInitialData() {
-  // ... (keep original seed code)
-  // Omitted for brevity, copy from original
+  try {
+    const sampleMovies = [
+      { title: 'Sample Movie 1', description: 'A great movie', category: 'Movies', genre: '["Action"]', thumbnail: '', videoUrl: '', rating: 4.5, views: 100 },
+      { title: 'Sample Movie 2', description: 'Another great movie', category: 'Movies', genre: '["Drama"]', thumbnail: '', videoUrl: '', rating: 4.0, views: 50 },
+      { title: 'Sample Series 1', description: 'An awesome series', category: 'Series', genre: '["Comedy"]', thumbnail: '', videoUrl: '', rating: 4.8, views: 200 },
+      { title: 'Sample Anime 1', description: 'Best anime', category: 'Anime', genre: '["Adventure"]', thumbnail: '', videoUrl: '', rating: 4.9, views: 500 },
+      { title: 'Sample K-Drama 1', description: 'Amazing drama', category: 'K-Drama', genre: '["Romance"]', thumbnail: '', videoUrl: '', rating: 4.7, views: 300 }
+    ];
+    
+    for (const movie of sampleMovies) {
+      await Movie.create(movie);
+    }
+    console.log('✓ Sample data seeded');
+  } catch (e) {
+    console.error('Seeding error:', e.message);
+  }
 }
 
 process.on('unhandledRejection', (err) => console.error(err.message));
