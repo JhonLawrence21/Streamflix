@@ -5,8 +5,12 @@ const { auth } = require('../middleware/auth');
 let recommendationController;
 try {
   recommendationController = require('../controllers/recommendationController');
+  if (!recommendationController || typeof recommendationController.getForYou !== 'function') {
+    console.warn('Recommendation controller not properly loaded');
+    recommendationController = null;
+  }
 } catch (e) {
-  console.warn('Recommendation controller not available');
+  console.warn('Recommendation controller not available:', e.message);
   recommendationController = null;
 }
 
