@@ -91,7 +91,7 @@ app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/movies', generalLimiter, movieRoutes);
 app.use('/api/watchlist', generalLimiter, watchlistRoutes);
 app.use('/api/admin', generalLimiter, adminRoutes);
-app.use('/api/recommendations', generalLimiter, recommendationRoutes);
+// app.use('/api/recommendations', generalLimiter, recommendationRoutes);
 
 // Frontend static serve with fallbacks
 const possiblePaths = [
