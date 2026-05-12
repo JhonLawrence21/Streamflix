@@ -1,10 +1,10 @@
 const { Op } = require('sequelize');
 const Movie = require('../models/Movie');
-const { sequelize } = require('../config/db');
 
 exports.getMovies = async (req, res) => {
   console.log('[getMovies] Called');
   try {
+    console.log('[getMovies] About to query movies...');
     const { category, search, page = 1, limit = 12 } = req.query;
 
     let where = {};
@@ -17,19 +17,23 @@ exports.getMovies = async (req, res) => {
     }
 
     const offset = (page - 1) * limit;
+    console.log('[getMovies] Query params:', { where, offset, limit: parseInt(limit) });
     const movies = await Movie.findAll({
       where,
       order: [['createdAt', 'DESC']],
       limit: parseInt(limit),
       offset: parseInt(offset)
     });
+    console.log('[getMovies] findAll done');
 
     const plainMovies = movies.map(m => m.get({ plain: true }));
     console.log('[getMovies] Movies found:', movies.length);
     if (movies.length > 0) {
       console.log('[getMovies] First movie thumbnail:', plainMovies[0].thumbnail);
     }
+    console.log('[getMovies] About to count...');
     const total = await Movie.count({ where });
+    console.log('[getMovies] count done, total:', total);
 
     res.json({
       movies: plainMovies,
