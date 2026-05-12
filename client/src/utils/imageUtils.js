@@ -1,6 +1,6 @@
-const DEFAULT_THUMBNAIL = 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=400';
-const DEFAULT_HERO_THUMBNAIL = 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=1920';
-const DEFAULT_DETAIL_THUMBNAIL = 'https://placehold.co/400x600/1a1a1a/ffffff?text=No+Image';
+const DEFAULT_THUMBNAIL = '/icon-512.png';
+const DEFAULT_HERO_THUMBNAIL = '/icon-512.png';
+const DEFAULT_DETAIL_THUMBNAIL = '/icon-512.png';
 
 /**
  * Extract YouTube video ID from various YouTube URL formats
@@ -45,15 +45,25 @@ export const getYouTubeEmbedUrl = (videoId) => {
 };
 
 /**
- * Get thumbnail URL with fallback
+ * Get thumbnail URL with fallback - simplified to avoid crashes
  */
 export const getThumbnailUrl = (url, size = 'small') => {
-  if (url && typeof url === 'string' && url.trim().length > 0) {
-    return url.trim();
+  try {
+    if (!url || typeof url !== 'string') {
+      return size === 'hero' ? DEFAULT_HERO_THUMBNAIL : (size === 'detail' ? DEFAULT_DETAIL_THUMBNAIL : DEFAULT_THUMBNAIL);
+    }
+    const trimmed = url.trim();
+    if (trimmed.length === 0) {
+      return size === 'hero' ? DEFAULT_HERO_THUMBNAIL : (size === 'detail' ? DEFAULT_DETAIL_THUMBNAIL : DEFAULT_THUMBNAIL);
+    }
+    // Basic URL validation
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('data:')) {
+      return trimmed;
+    }
+    return DEFAULT_THUMBNAIL;
+  } catch (e) {
+    return DEFAULT_THUMBNAIL;
   }
-  if (size === 'hero') return DEFAULT_HERO_THUMBNAIL;
-  if (size === 'detail') return DEFAULT_DETAIL_THUMBNAIL;
-  return DEFAULT_THUMBNAIL;
 };
 
 /**
