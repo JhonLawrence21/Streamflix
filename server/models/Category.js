@@ -18,6 +18,10 @@ const Category = sequelize.define('Category', {
   description: {
     type: DataTypes.TEXT,
     defaultValue: ''
+  },
+  color: {
+    type: DataTypes.STRING,
+    defaultValue: '#E50914'
   }
 }, {
   tableName: 'categories',
