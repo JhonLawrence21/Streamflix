@@ -2,48 +2,29 @@ const { Op } = require('sequelize');
 const Movie = require('../models/Movie');
 
 exports.getMovies = async (req, res) => {
-  console.log('[getMovies] Called');
   try {
-    console.log('[getMovies] About to query movies...');
-    const { category, search, page = 1, limit = 12 } = req.query;
-
-    let where = {};
-    if (category) where.category = category;
-    if (search) {
-      where[Op.or] = [
-        { title: { [Op.iLike]: `%${search}%` } },
-        { description: { [Op.iLike]: `%${search}%` } }
-      ];
-    }
-
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
     const offset = (page - 1) * limit;
-    console.log('[getMovies] Query params:', { where, offset, limit: parseInt(limit) });
-    const movies = await Movie.findAll({
-      where,
-      order: [['createdAt', 'DESC']],
-      limit: parseInt(limit),
-      offset: parseInt(offset)
-    });
-    console.log('[getMovies] findAll done');
 
-    const plainMovies = movies.map(m => m.get({ plain: true }));
-    console.log('[getMovies] Movies found:', movies.length);
-    if (movies.length > 0) {
-      console.log('[getMovies] First movie thumbnail:', plainMovies[0].thumbnail);
-    }
-    console.log('[getMovies] About to count...');
-    const total = await Movie.count({ where });
-    console.log('[getMovies] count done, total:', total);
+    const movies = await Movie.findAll({
+      limit: limit,
+      offset: offset,
+      order: [['id', 'DESC']]
+    });
+
+    const total = await Movie.count();
+    const plain = movies.map(m => m.toJSON());
 
     res.json({
-      movies: plainMovies,
+      movies: plain,
       totalPages: Math.ceil(total / limit),
-      currentPage: parseInt(page),
+      currentPage: page,
       total
     });
   } catch (error) {
-    console.error('[getMovies] Error:', error.message, error.stack);
-    res.status(500).json({ message: error.message });
+    console.error('getMovies error:', error);
+    res.status(500).json({ error: error.message });
   }
 };
 
