@@ -144,15 +144,15 @@ exports.createCategory = async (req, res) => {
       return res.status(400).json({ message: 'Category name is required' });
     }
     
-    const sequelize = getSequelize();
+    const { sequelize } = require('../config/db');
     
-    const [columns] = await sequelize.query(`
-      SELECT column_name FROM information_schema.columns 
-      WHERE table_name = 'categories' AND column_name = 'color'
-    `);
-    
-    if (columns.length === 0) {
-      await sequelize.query('ALTER TABLE categories ADD COLUMN color VARCHAR(255) DEFAULT \'#E50914\'');
+    try {
+      const tableInfo = await sequelize.getQueryInterface().describeTable('categories');
+      if (!tableInfo.color) {
+        await sequelize.query('ALTER TABLE categories ADD COLUMN color VARCHAR(255) DEFAULT \'#E50914\'');
+      }
+    } catch (e) {
+      console.log('Category table check:', e.message);
     }
     
     const now = new Date().toISOString();
@@ -163,10 +163,10 @@ exports.createCategory = async (req, res) => {
     `);
     
     const [categories] = await sequelize.query('SELECT * FROM categories ORDER BY id DESC LIMIT 1');
-    await sequelize.close();
     
     res.status(201).json(categories[0]);
   } catch (error) {
+    console.error('CreateCategory error:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -193,19 +193,14 @@ exports.deleteCategory = async (req, res) => {
 
 exports.getCategories = async (req, res) => {
   try {
-    const sequelize = getSequelize();
+    const { sequelize } = require('../config/db');
     const [categories] = await sequelize.query('SELECT * FROM categories ORDER BY name ASC');
     
-    // Get movie counts for each category
-    const [[{ count }]] = await sequelize.query('SELECT COUNT(*) as count FROM movies');
-    
-    // Add movieCount to each category based on category name match
     const categoriesWithCount = categories.map(cat => {
       const [[{ categoryCount }]] = sequelize.query(`SELECT COUNT(*) as count FROM movies WHERE category = '${cat.name}'`);
       return { ...cat, movieCount: categoryCount?.count || 0 };
     });
     
-    await sequelize.close();
     res.json(categoriesWithCount);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -266,7 +261,7 @@ exports.deleteUser = async (req, res) => {
 
 exports.getAnalytics = async (req, res) => {
   try {
-    const sequelize = getSequelize();
+    const { sequelize } = require('../config/db');
     
     const [[{ userCount }]] = await sequelize.query('SELECT COUNT(*) as userCount FROM users');
     const [[{ movieCount }]] = await sequelize.query('SELECT COUNT(*) as movieCount FROM movies');
@@ -280,8 +275,6 @@ exports.getAnalytics = async (req, res) => {
     `);
     
     const [recentMovies] = await sequelize.query('SELECT * FROM movies ORDER BY "createdAt" DESC LIMIT 5');
-    
-    await sequelize.close();
     
     res.json({
       totalUsers: userCount || 0,

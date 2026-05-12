@@ -37,13 +37,13 @@ router.get('/categories', async (req, res) => {
   try {
     const { sequelize } = require('../config/db');
     
-    const [columns] = await sequelize.query(`
-      SELECT column_name FROM information_schema.columns 
-      WHERE table_name = 'categories' AND column_name = 'color'
-    `);
-    
-    if (columns.length === 0) {
-      await sequelize.query('ALTER TABLE categories ADD COLUMN color VARCHAR(255) DEFAULT \'#E50914\'');
+    try {
+      const tableInfo = await sequelize.getQueryInterface().describeTable('categories');
+      if (!tableInfo.color) {
+        await sequelize.query('ALTER TABLE categories ADD COLUMN color VARCHAR(255) DEFAULT \'#E50914\'');
+      }
+    } catch (e) {
+      console.log('Categories table check:', e.message);
     }
     
     const [categories] = await sequelize.query('SELECT * FROM categories ORDER BY name ASC');
