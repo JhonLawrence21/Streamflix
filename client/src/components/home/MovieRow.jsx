@@ -179,7 +179,7 @@ const MovieRow = ({ title, movies, onWatchlist = [] }) => {
         setHoveredMovie(null);
       }}
     >
-      <h2 className="text-xl md:text-2xl font-semibold text-white mb-4 animate-slide-in-left">{title}</h2>
+      <h2 className="text-xl md:text-2xl font-semibold text-white mb-4 netflix-row-title hover:text-netflix-red transition-colors cursor-pointer">{title}</h2>
 
       <div className="relative group">
         {showButtons && movies.length > 4 && (
