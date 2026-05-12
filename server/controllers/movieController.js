@@ -3,6 +3,7 @@ const Movie = require('../models/Movie');
 const { sequelize } = require('../config/db');
 
 exports.getMovies = async (req, res) => {
+  console.log('[getMovies] Called');
   try {
     const { category, search, page = 1, limit = 12 } = req.query;
 
@@ -37,6 +38,7 @@ exports.getMovies = async (req, res) => {
       total
     });
   } catch (error) {
+    console.error('[getMovies] Error:', error.message, error.stack);
     res.status(500).json({ message: error.message });
   }
 };
