@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { auth } = require('../middleware/auth');
 
+console.log('[ROUTES] Loading recommendations routes...');
+
 let recommendationController;
 try {
   recommendationController = require('../controllers/recommendationController');
