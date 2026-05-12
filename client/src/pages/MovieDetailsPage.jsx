@@ -347,8 +347,6 @@ const MovieDetailsPage = () => {
           />
         </div>
       )}
-        </div>
-      )}
     </div>
   );
 };
