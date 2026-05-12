@@ -170,14 +170,12 @@ const HomePage = () => {
         )}
         
         {categories.map((cat) => (
-          categoryMovies[cat.name]?.length > 0 && (
-            <MovieRow 
-              key={cat.id} 
-              title={cat.name} 
-              movies={categoryMovies[cat.name]} 
-              onWatchlist={watchlist}
-            />
-          )
+          <MovieRow 
+            key={cat.id} 
+            title={cat.name} 
+            movies={categoryMovies[cat.name] || []} 
+            onWatchlist={watchlist}
+          />
         ))}
       </div>
 

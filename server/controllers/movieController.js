@@ -126,7 +126,7 @@ exports.getMoviesByCategory = async (req, res) => {
   try {
     const { category } = req.params;
     const { sequelize } = require('../config/db');
-    const [movies] = await sequelize.query(`SELECT * FROM movies WHERE category = '${category}' ORDER BY "createdAt" DESC`);
+    const [movies] = await sequelize.query(`SELECT * FROM movies WHERE LOWER(category) = LOWER('${category}') ORDER BY "createdAt" DESC`);
     
     res.json(processMovies(movies));
   } catch (error) {

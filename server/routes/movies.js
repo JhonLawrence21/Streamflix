@@ -47,6 +47,29 @@ router.get('/categories', async (req, res) => {
     } catch (e) { console.log('Categories column check:', e.message); }
     
     const [categories] = await sequelize.query('SELECT * FROM categories ORDER BY name ASC');
+    
+    if (!categories || categories.length === 0) {
+      const defaultCategories = [
+        { name: 'Action', description: 'High-octane action movies', color: '#E50914' },
+        { name: 'Comedy', description: 'Hilarious comedies', color: '#FFA500' },
+        { name: 'Drama', description: 'Compelling dramas', color: '#4169E1' },
+        { name: 'Horror', description: 'Hair-raising horror', color: '#8B0000' },
+        { name: 'Sci-Fi', description: 'Mind-bending science fiction', color: '#00CED1' },
+        { name: 'Thriller', description: 'Edge-of-your-seat thrillers', color: '#1C1C1C' },
+        { name: 'Romance', description: 'Heartwarming love stories', color: '#FF69B4' },
+        { name: 'TV Shows', description: 'Binge-worthy TV series', color: '#32CD32' }
+      ];
+      
+      for (const cat of defaultCategories) {
+        try {
+          await sequelize.query(`INSERT INTO categories (name, description, color, "createdAt", "updatedAt") VALUES ('${cat.name}', '${cat.description}', '${cat.color}', NOW(), NOW())`);
+        } catch (e) { }
+      }
+      
+      const [newCategories] = await sequelize.query('SELECT * FROM categories ORDER BY name ASC');
+      return res.json(newCategories || []);
+    }
+    
     res.json(categories || []);
   } catch (error) {
     res.status(500).json({ message: error.message });
