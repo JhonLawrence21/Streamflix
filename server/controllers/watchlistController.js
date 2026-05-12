@@ -1,5 +1,9 @@
 const User = require('../models/User');
-const Movie = require('../models/Movie');
+
+const getSequelize = () => {
+  const { Sequelize } = require('sequelize');
+  return new Sequelize(process.env.DATABASE_URL, { logging: false });
+};
 
 exports.getWatchlist = async (req, res) => {
   try {
@@ -25,11 +29,12 @@ exports.getWatchlist = async (req, res) => {
       return res.json([]);
     }
 
-    const movies = await Movie.findAll({
-      where: { id: watchlistIds }
-    });
+    const sequelize = getSequelize();
+    const ids = watchlistIds.join(',');
+    const [movies] = await sequelize.query(`SELECT * FROM movies WHERE id IN (${ids})`);
+    await sequelize.close();
 
-    res.json(movies.map(m => m.get({ plain: true })));
+    res.json(movies);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -39,22 +44,30 @@ exports.addToWatchlist = async (req, res) => {
   try {
     const { movieId } = req.params;
 
-    const movie = await Movie.findByPk(movieId);
-    if (!movie) {
+    const sequelize = getSequelize();
+    const [movies] = await sequelize.query(`SELECT id FROM movies WHERE id = ${parseInt(movieId)} LIMIT 1`);
+    
+    if (movies.length === 0) {
+      await sequelize.close();
       return res.status(404).json({ message: 'Movie not found' });
     }
 
     const user = await User.findByPk(req.user.id);
-    const watchlist = [...(user.watchlist || [])];
+    let watchlist = user.watchlist || [];
+    if (typeof watchlist === 'string') {
+      try { watchlist = JSON.parse(watchlist); } catch { watchlist = []; }
+    }
     const movieIdInt = parseInt(movieId);
 
     if (watchlist.includes(movieIdInt)) {
+      await sequelize.close();
       return res.status(400).json({ message: 'Movie already in watchlist' });
     }
 
     watchlist.push(movieIdInt);
     user.watchlist = watchlist;
     await user.save();
+    await sequelize.close();
 
     res.json({ message: 'Movie added to watchlist' });
   } catch (error) {
@@ -67,7 +80,10 @@ exports.removeFromWatchlist = async (req, res) => {
     const { movieId } = req.params;
 
     const user = await User.findByPk(req.user.id);
-    const watchlist = user.watchlist || [];
+    let watchlist = user.watchlist || [];
+    if (typeof watchlist === 'string') {
+      try { watchlist = JSON.parse(watchlist); } catch { watchlist = []; }
+    }
     const movieIdInt = parseInt(movieId);
 
     user.watchlist = watchlist.filter(id => id !== movieIdInt);
