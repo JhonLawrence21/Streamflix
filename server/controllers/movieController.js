@@ -7,20 +7,19 @@ exports.getMovies = async (req, res) => {
     const limit = parseInt(req.query.limit) || 20;
     const offset = (page - 1) * limit;
 
-    const movies = await Movie.findAll({
-      limit: limit,
-      offset: offset,
-      order: [['id', 'DESC']]
-    });
-
-    const total = await Movie.count();
-    const plain = movies.map(m => m.toJSON());
+    const { Sequelize } = require('sequelize');
+    const sequelize = new Sequelize(process.env.DATABASE_URL, { logging: false });
+    
+    const [movies] = await sequelize.query(`SELECT * FROM movies ORDER BY id DESC LIMIT ${limit} OFFSET ${offset}`);
+    const [[{ count }]] = await sequelize.query('SELECT COUNT(*) as count FROM movies');
+    
+    await sequelize.close();
 
     res.json({
-      movies: plain,
-      totalPages: Math.ceil(total / limit),
+      movies: movies,
+      totalPages: Math.ceil(count / limit),
       currentPage: page,
-      total
+      total: count
     });
   } catch (error) {
     console.error('getMovies error:', error);
