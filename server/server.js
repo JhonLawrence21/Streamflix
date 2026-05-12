@@ -99,7 +99,9 @@ app.use(helmet({
       mediaSrc: ["'self'", "https:", "http:"],
       frameSrc: ["'self'", "https://www.youtube.com", "https://youtube.com"],
       scriptSrc: ["'self'", "'unsafe-inline'"],
-      styleSrc: ["'self'", "'unsafe-inline'"]
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      connectSrc: ["'self'", "https://fonts.googleapis.com", "https://fonts.gstatic.com"]
     }
   }
 }));
