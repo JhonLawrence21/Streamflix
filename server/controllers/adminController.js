@@ -90,7 +90,7 @@ exports.updateMovie = async (req, res) => {
     await sequelize.query(`UPDATE movies SET ${updates.join(', ')} WHERE id = ${id}`);
     
     const [updatedMovies] = await sequelize.query(`SELECT * FROM movies WHERE id = ${id} LIMIT 1`);
-    await sequelize.close();
+    
     
     res.json(updatedMovies[0]);
   } catch (error) {
@@ -175,12 +175,12 @@ exports.deleteCategory = async (req, res) => {
     
     const [categories] = await sequelize.query(`SELECT * FROM categories WHERE id = ${id} LIMIT 1`);
     if (categories.length === 0) {
-      await sequelize.close();
+      
       return res.status(404).json({ message: 'Category not found' });
     }
     
     await sequelize.query(`DELETE FROM categories WHERE id = ${id}`);
-    await sequelize.close();
+    
     
     res.json({ message: 'Category deleted successfully' });
   } catch (error) {

@@ -27,7 +27,7 @@ exports.getWatchlist = async (req, res) => {
     const { sequelize } = require('../config/db');
     const ids = watchlistIds.join(',');
     const [movies] = await sequelize.query(`SELECT * FROM movies WHERE id IN (${ids})`);
-    await sequelize.close();
+    
 
     res.json(movies);
   } catch (error) {
@@ -43,7 +43,7 @@ exports.addToWatchlist = async (req, res) => {
     const [movies] = await sequelize.query(`SELECT id FROM movies WHERE id = ${parseInt(movieId)} LIMIT 1`);
     
     if (movies.length === 0) {
-      await sequelize.close();
+      
       return res.status(404).json({ message: 'Movie not found' });
     }
 
@@ -55,14 +55,14 @@ exports.addToWatchlist = async (req, res) => {
     const movieIdInt = parseInt(movieId);
 
     if (watchlist.includes(movieIdInt)) {
-      await sequelize.close();
+      
       return res.status(400).json({ message: 'Movie already in watchlist' });
     }
 
     watchlist.push(movieIdInt);
     user.watchlist = watchlist;
     await user.save();
-    await sequelize.close();
+    
 
     res.json({ message: 'Movie added to watchlist' });
   } catch (error) {

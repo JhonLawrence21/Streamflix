@@ -31,7 +31,7 @@ exports.getMovies = async (req, res) => {
     const { sequelize } = require('../config/db');
     const [movies] = await sequelize.query(`SELECT * FROM movies ORDER BY id DESC LIMIT ${limit} OFFSET ${offset}`);
     const [[{ count }]] = await sequelize.query('SELECT COUNT(*) as count FROM movies');
-    await sequelize.close();
+    
 
     res.json({
       movies: processMovies(movies),
@@ -49,7 +49,7 @@ exports.getMovie = async (req, res) => {
     const id = parseInt(req.params.id);
     const { sequelize } = require('../config/db');
     const [movies] = await sequelize.query(`SELECT * FROM movies WHERE id = ${id} LIMIT 1`);
-    await sequelize.close();
+    
     
     if (movies.length === 0) {
       return res.status(404).json({ message: 'Movie not found' });
@@ -67,7 +67,7 @@ exports.watchMovie = async (req, res) => {
     
     await sequelize.query(`UPDATE movies SET views = views + 1 WHERE id = ${id}`);
     const [movies] = await sequelize.query(`SELECT * FROM movies WHERE id = ${id} LIMIT 1`);
-    await sequelize.close();
+    
     
     if (movies.length === 0) {
       return res.status(404).json({ message: 'Movie not found' });
@@ -86,7 +86,7 @@ exports.getFeaturedMovie = async (req, res) => {
     if (movies.length === 0) {
       [movies] = await sequelize.query(`SELECT * FROM movies ORDER BY views DESC LIMIT 1`);
     }
-    await sequelize.close();
+    
     
     res.json(movies.length > 0 ? processMovie(movies[0]) : null);
   } catch (error) {
@@ -102,7 +102,7 @@ exports.getTrendingMovies = async (req, res) => {
     if (movies.length === 0) {
       [movies] = await sequelize.query(`SELECT * FROM movies ORDER BY views DESC LIMIT 10`);
     }
-    await sequelize.close();
+    
     
     res.json(processMovies(movies));
   } catch (error) {
@@ -115,7 +115,7 @@ exports.getPopularMovies = async (req, res) => {
     const limit = parseInt(req.query.limit) || 20;
     const { sequelize } = require('../config/db');
     const [movies] = await sequelize.query(`SELECT * FROM movies ORDER BY views DESC, rating DESC LIMIT ${limit}`);
-    await sequelize.close();
+    
     res.json(processMovies(movies));
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -127,7 +127,7 @@ exports.getMoviesByCategory = async (req, res) => {
     const { category } = req.params;
     const { sequelize } = require('../config/db');
     const [movies] = await sequelize.query(`SELECT * FROM movies WHERE category = '${category}' ORDER BY "createdAt" DESC`);
-    await sequelize.close();
+    
     res.json(processMovies(movies));
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -140,7 +140,7 @@ exports.getSimilarMovies = async (req, res) => {
     const { sequelize } = require('../config/db');
     
     const [movies] = await sequelize.query(`SELECT * FROM movies WHERE id != ${id} ORDER BY rating DESC LIMIT 10`);
-    await sequelize.close();
+    
     
     res.json(processMovies(movies));
   } catch (error) {
@@ -152,7 +152,7 @@ exports.getUpcomingReleases = async (req, res) => {
   try {
     const { sequelize } = require('../config/db');
     const [movies] = await sequelize.query(`SELECT * FROM movies WHERE status = 'upcoming' OR "releaseDate" > NOW() ORDER BY "releaseDate" ASC LIMIT 20`);
-    await sequelize.close();
+    
     res.json(processMovies(movies));
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -164,7 +164,7 @@ exports.getReleasesByMonth = async (req, res) => {
     const { year, month } = req.params;
     const { sequelize } = require('../config/db');
     const [movies] = await sequelize.query(`SELECT * FROM movies WHERE EXTRACT(YEAR FROM "releaseDate") = ${year} AND EXTRACT(MONTH FROM "releaseDate") = ${month} ORDER BY "releaseDate" ASC`);
-    await sequelize.close();
+    
     res.json(processMovies(movies));
   } catch (error) {
     res.status(500).json({ message: error.message });
