@@ -37,38 +37,41 @@ const allowedOrigins = process.env.CLIENT_URL
 console.log('[CORS] Allowed origins:', allowedOrigins);
 
 const createDefaultAdmin = async () => {
-  if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD) return;
+  if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD) {
+    console.log('[Admin] ADMIN_EMAIL or ADMIN_PASSWORD not set, skipping admin creation');
+    return;
+  }
+  
+  console.log('[Admin] Checking admin user...');
   
   try {
     const { Sequelize } = require('sequelize');
     const sequelize = new Sequelize(process.env.DATABASE_URL);
+    
     await sequelize.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS profiles JSONB DEFAULT \'[{"id":"default","name":"Main Profile","avatar":"","isKid":false,"pin":""}]\'');
     await sequelize.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS "activeProfile" VARCHAR(255) DEFAULT \'default\'');
     await sequelize.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS "parentalControlPin" VARCHAR(255) DEFAULT \'\'');
     await sequelize.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS "viewingHistory" JSONB DEFAULT \'[]\'');
     await sequelize.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS watchlist JSONB DEFAULT \'[]\'');
-    await sequelize.close();
-  } catch (e) {
-    console.log('[DB] Columns may already exist, continuing...');
-  }
-
-  try {
-    const { Sequelize } = require('sequelize');
-    const sequelize = new Sequelize(process.env.DATABASE_URL);
+    
     const [results] = await sequelize.query(`SELECT * FROM users WHERE email = '${process.env.ADMIN_EMAIL}' LIMIT 1`);
-    await sequelize.close();
+    console.log('[Admin] Query result:', results ? results.length : 0);
     
     if (!results || results.length === 0) {
+      console.log('[Admin] Creating admin user...');
       const bcrypt = require('bcryptjs');
       const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
-      const { Sequelize: Seq } = require('sequelize');
-      const sequelize2 = new Seq(process.env.DATABASE_URL);
-      await sequelize2.query(`INSERT INTO users (name, email, password, role, "createdAt", "updatedAt") VALUES ('Admin', '${process.env.ADMIN_EMAIL}', '${hashedPassword}', 'admin', NOW(), NOW())`);
-      await sequelize2.close();
+      
+      await sequelize.query(`INSERT INTO users (name, email, password, role, "profileImage", watchlist, profiles, "activeProfile", "parentalControlPin", "viewingHistory", "createdAt", "updatedAt") 
+        VALUES ('Admin', '${process.env.ADMIN_EMAIL}', '${hashedPassword}', 'admin', '', '[]', '[{"id":"default","name":"Main Profile","avatar":"","isKid":false,"pin":""}]', 'default', '[]', '[]', NOW(), NOW())`);
+      
       console.log(`Admin created: ${process.env.ADMIN_EMAIL}`);
+    } else {
+      console.log('[Admin] Admin user already exists');
     }
+    await sequelize.close();
   } catch (error) {
-    console.error('Error creating admin:', error.message);
+    console.error('Error creating admin:', error.message, error.stack);
   }
 };
 
