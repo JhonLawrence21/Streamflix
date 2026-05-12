@@ -107,20 +107,6 @@ body {
       transform: scale(1);
     }
   }
-
-  /* Netflix-styled card hover effect */
-  .netflix-card-hover {
-    transition: transform 0.3s ease;
-  }
-  
-  .netflix-card-hover:hover {
-    transform: scale(1.1);
-  }
-
-  /* Row title styling like Netflix */
-  .netflix-row-title {
-    font-weight: 600;
-  }
 }
 
 ::-webkit-scrollbar {
