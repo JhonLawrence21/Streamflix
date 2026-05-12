@@ -40,6 +40,17 @@ const createDefaultAdmin = async () => {
   if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD) return;
   
   try {
+    const { Sequelize } = require('sequelize');
+    const sequelize = new Sequelize(process.env.DATABASE_URL);
+    await sequelize.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS profiles JSON DEFAULT \'[{"id":"default","name":"Main Profile","avatar":"","isKid":false,"pin":""}]\';');
+    await sequelize.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS activeProfile VARCHAR(255) DEFAULT \'default\';');
+    await sequelize.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS parentalControlPin VARCHAR(255) DEFAULT \'\';');
+    await sequelize.close();
+  } catch (e) {
+    console.log('[DB] Columns may already exist, continuing...');
+  }
+
+  try {
     const adminExists = await User.findOne({ where: { email: process.env.ADMIN_EMAIL } });
     if (!adminExists) {
       await User.create({
