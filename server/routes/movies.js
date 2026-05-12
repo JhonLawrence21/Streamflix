@@ -46,7 +46,8 @@ router.get('/categories', async (req, res) => {
       }
     } catch (e) { console.log('Categories column check:', e.message); }
     
-    const [categories] = await sequelize.query('SELECT * FROM categories ORDER BY name ASC');
+    const [categories] = await sequelize.query('SELECT * FROM categories ORDER BY id ASC');
+    console.log('[GET /categories] Found categories:', categories?.length, categories?.map(c => c.name));
     
     if (!categories || categories.length === 0) {
       const defaultCategories = [

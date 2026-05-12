@@ -161,6 +161,10 @@ exports.createCategory = async (req, res) => {
     const [categories] = await sequelize.query('SELECT * FROM categories ORDER BY id DESC LIMIT 1');
     console.log('[createCategory] Created:', categories[0]);
     
+    console.log('[createCategory] All categories in DB:');
+    const [allCats] = await sequelize.query('SELECT * FROM categories ORDER BY id ASC');
+    console.log(allCats);
+    
     res.status(201).json(categories[0]);
   } catch (error) {
     console.error('[createCategory] Error:', error);
