@@ -140,6 +140,8 @@ exports.getAllMovies = async (req, res) => {
 exports.createCategory = async (req, res) => {
   try {
     const { name, description, color } = req.body;
+    console.log('[createCategory] Received:', { name, description, color });
+    
     if (!name) {
       return res.status(400).json({ message: 'Category name is required' });
     }
@@ -148,25 +150,31 @@ exports.createCategory = async (req, res) => {
     
     try {
       const tableInfo = await sequelize.getQueryInterface().describeTable('categories');
+      console.log('[createCategory] Table columns:', Object.keys(tableInfo));
+      
       if (!tableInfo.color) {
         await sequelize.query('ALTER TABLE categories ADD COLUMN color VARCHAR(255) DEFAULT \'#E50914\'');
+        console.log('[createCategory] Added color column');
       }
     } catch (e) {
-      console.log('Category table check:', e.message);
+      console.log('[createCategory] Table check error:', e.message);
     }
     
     const now = new Date().toISOString();
+    const colorValue = color || '#E50914';
     
     await sequelize.query(`
       INSERT INTO categories (name, description, color, "createdAt", "updatedAt")
-      VALUES ('${name.replace(/'/g, "''")}', '${(description || '').replace(/'/g, "''")}', '${color || '#E50914'}', '${now}', '${now}')
+      VALUES ('${name.replace(/'/g, "''")}', '${(description || '').replace(/'/g, "''")}', '${colorValue}', '${now}', '${now}')
     `);
     
+    console.log('[createCategory] Insert successful');
     const [categories] = await sequelize.query('SELECT * FROM categories ORDER BY id DESC LIMIT 1');
+    console.log('[createCategory] Created:', categories[0]);
     
     res.status(201).json(categories[0]);
   } catch (error) {
-    console.error('CreateCategory error:', error);
+    console.error('[createCategory] Error:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -174,7 +182,7 @@ exports.createCategory = async (req, res) => {
 exports.deleteCategory = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
-    const sequelize = getSequelize();
+    const { sequelize } = require('../config/db');
     
     const [categories] = await sequelize.query(`SELECT * FROM categories WHERE id = ${id} LIMIT 1`);
     if (categories.length === 0) {
@@ -266,6 +274,7 @@ exports.getAnalytics = async (req, res) => {
     const [[{ userCount }]] = await sequelize.query('SELECT COUNT(*) as userCount FROM users');
     const [[{ movieCount }]] = await sequelize.query('SELECT COUNT(*) as movieCount FROM movies');
     const [[{ totalViews }]] = await sequelize.query('SELECT COALESCE(SUM(views), 0) as totalViews FROM movies');
+    const [[{ avgRating }]] = await sequelize.query('SELECT COALESCE(AVG(rating), 0) as avgRating FROM movies WHERE rating IS NOT NULL');
     
     const [categoryCounts] = await sequelize.query(`
       SELECT category, COUNT(*) as count 
@@ -274,14 +283,26 @@ exports.getAnalytics = async (req, res) => {
       GROUP BY category
     `);
     
+    const [[{ releasedCount }]] = await sequelize.query(`SELECT COUNT(*) as releasedCount FROM movies WHERE status = 'released'`);
+    const [[{ upcomingCount }]] = await sequelize.query(`SELECT COUNT(*) as upcomingCount FROM movies WHERE status = 'upcoming'`);
+    const [[{ inProductionCount }]] = await sequelize.query(`SELECT COUNT(*) as inProductionCount FROM movies WHERE status = 'in-production'`);
+    
     const [recentMovies] = await sequelize.query('SELECT * FROM movies ORDER BY "createdAt" DESC LIMIT 5');
+    const [topMovies] = await sequelize.query('SELECT * FROM movies ORDER BY views DESC LIMIT 10');
+    const [trending] = await sequelize.query('SELECT * FROM movies WHERE trending = true ORDER BY views DESC LIMIT 5');
     
     res.json({
       totalUsers: userCount || 0,
       totalMovies: movieCount || 0,
       totalViews: totalViews || 0,
+      avgRating: avgRating || 0,
+      releasedCount: releasedCount || 0,
+      upcomingCount: upcomingCount || 0,
+      inProductionCount: inProductionCount || 0,
       moviesByCategory: categoryCounts || [],
-      recentMovies: recentMovies || []
+      recentMovies: recentMovies || [],
+      topMovies: topMovies || [],
+      trending: trending || []
     });
   } catch (error) {
     console.error('Analytics error:', error);
