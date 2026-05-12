@@ -3,14 +3,14 @@ const Movie = require('./models/Movie');
 require('dotenv').config();
 
 const sampleCategories = [
-  { name: "Action", description: "High-octane action movies with thrilling sequences" },
-  { name: "Comedy", description: "Hilarious comedies to brighten your day" },
-  { name: "Drama", description: "Compelling dramas that touch the heart" },
-  { name: "Horror", description: "Hair-raising horror movies" },
-  { name: "Sci-Fi", description: "Mind-bending science fiction" },
-  { name: "Thriller", description: "Edge-of-your-seat thrillers" },
-  { name: "Romance", description: "Heartwarming love stories" },
-  { name: "TV Shows", description: "Binge-worthy TV series and shows" }
+  { name: "Action", description: "High-octane action movies with thrilling sequences", color: "#E50914" },
+  { name: "Comedy", description: "Hilarious comedies to brighten your day", color: "#FFA500" },
+  { name: "Drama", description: "Compelling dramas that touch the heart", color: "#4169E1" },
+  { name: "Horror", description: "Hair-raising horror movies", color: "#8B0000" },
+  { name: "Sci-Fi", description: "Mind-bending science fiction", color: "#00CED1" },
+  { name: "Thriller", description: "Edge-of-your-seat thrillers", color: "#1C1C1C" },
+  { name: "Romance", description: "Heartwarming love stories", color: "#FF69B4" },
+  { name: "TV Shows", description: "Binge-worthy TV series and shows", color: "#32CD32" }
 ];
 
 const sampleMovies = [

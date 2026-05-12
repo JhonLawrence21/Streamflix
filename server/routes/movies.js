@@ -33,6 +33,15 @@ router.get('/category/:category', getMoviesByCategory);
 router.get('/similar/:id', getSimilarMovies);
 router.get('/upcoming', getUpcomingReleases);
 router.get('/releases/:year/:month', getReleasesByMonth);
+router.get('/categories', async (req, res) => {
+  try {
+    const { sequelize } = require('../config/db');
+    const [categories] = await sequelize.query('SELECT * FROM categories ORDER BY name ASC');
+    res.json(categories);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 router.get('/watch/:id', watchMovie);
 router.get('/', getMovies);
 router.get('/:id', getMovie);

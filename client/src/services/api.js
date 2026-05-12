@@ -143,6 +143,11 @@ export const movieService = {
   getReleasesByMonth: async (year, month) => {
     const response = await api.get(`/movies/releases/${year}/${month}`);
     return response.data;
+  },
+
+  getCategories: async () => {
+    const response = await api.get('/movies/categories');
+    return response.data;
   }
 };
 
