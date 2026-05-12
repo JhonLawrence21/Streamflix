@@ -66,6 +66,8 @@ const createDefaultAdmin = async () => {
       "updatedAt" TIMESTAMP DEFAULT NOW()
     )`);
     
+    await sequelize.query('ALTER TABLE categories ADD COLUMN IF NOT EXISTS color VARCHAR(20) DEFAULT \'#E50914\'');
+    
     const [results] = await sequelize.query(`SELECT * FROM users WHERE email = '${process.env.ADMIN_EMAIL}' LIMIT 1`);
     console.log('[Admin] Query result:', results ? results.length : 0);
     

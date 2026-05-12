@@ -185,8 +185,18 @@ exports.getCategories = async (req, res) => {
   try {
     const sequelize = getSequelize();
     const [categories] = await sequelize.query('SELECT * FROM categories ORDER BY name ASC');
+    
+    // Get movie counts for each category
+    const [[{ count }]] = await sequelize.query('SELECT COUNT(*) as count FROM movies');
+    
+    // Add movieCount to each category based on category name match
+    const categoriesWithCount = categories.map(cat => {
+      const [[{ categoryCount }]] = sequelize.query(`SELECT COUNT(*) as count FROM movies WHERE category = '${cat.name}'`);
+      return { ...cat, movieCount: categoryCount?.count || 0 };
+    });
+    
     await sequelize.close();
-    res.json(categories);
+    res.json(categoriesWithCount);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
