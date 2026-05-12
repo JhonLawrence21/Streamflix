@@ -162,9 +162,11 @@ app.get('/api/health', async (req, res) => {
 // Debug endpoint to test movie queries
 app.get('/api/debug/movies', async (req, res) => {
   try {
-    const movies = await Movie.findAll({ limit: 5 });
-    const plain = movies.map(m => m.get({ plain: true }));
-    res.json({ count: movies.length, movies: plain });
+    const { Sequelize } = require('sequelize');
+    const sequelize = new Sequelize(process.env.DATABASE_URL);
+    const [movies] = await sequelize.query('SELECT * FROM movies LIMIT 5');
+    await sequelize.close();
+    res.json({ count: movies.length, movies });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
