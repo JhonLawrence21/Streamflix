@@ -45,6 +45,8 @@ const createDefaultAdmin = async () => {
     await sequelize.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS profiles JSONB DEFAULT \'[{"id":"default","name":"Main Profile","avatar":"","isKid":false,"pin":""}]\'');
     await sequelize.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS "activeProfile" VARCHAR(255) DEFAULT \'default\'');
     await sequelize.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS "parentalControlPin" VARCHAR(255) DEFAULT \'\'');
+    await sequelize.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS "viewingHistory" JSONB DEFAULT \'[]\'');
+    await sequelize.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS watchlist JSONB DEFAULT \'[]\'');
     await sequelize.close();
   } catch (e) {
     console.log('[DB] Columns may already exist, continuing...');
