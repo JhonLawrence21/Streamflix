@@ -159,6 +159,20 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
+// Test SQL direct
+app.get('/api/test-sql', async (req, res) => {
+  const { Sequelize } = require('sequelize');
+  const sequelize = new Sequelize(process.env.DATABASE_URL, { logging: false });
+  try {
+    const [results] = await sequelize.query('SELECT COUNT(*) as cnt FROM movies');
+    await sequelize.close();
+    res.json({ count: results[0].cnt });
+  } catch (e) {
+    await sequelize.close();
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // Debug endpoint to test movie queries
 app.get('/api/debug/movies', async (req, res) => {
   try {
