@@ -57,7 +57,7 @@ router.get('/categories', async (req, res) => {
         console.log('Categories column check:', e.message);
       }
 
-      // If movies table is empty, insert a minimal safe dataset that matches default categories.
+    // If movies table is empty (or missing expected columns), insert a minimal safe dataset.
       // This prevents “categories still 0 movies” situations.
       let movieCount = 0;
       try {
