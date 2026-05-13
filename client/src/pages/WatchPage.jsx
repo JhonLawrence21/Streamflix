@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Play, ExternalLink, Volume2, VolumeX, SkipForward, Settings, Maximize, Minimize } from 'lucide-react';
 import Navbar from '../components/layout/Navbar';
 import { movieService } from '../services/api';
+import { isDirectVideoUrl } from '../utils/imageUtils';
 
 const WatchPage = () => {
   const { id } = useParams();
@@ -14,6 +15,7 @@ const WatchPage = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [autoplay, setAutoplay] = useState(true);
+  const [videoError, setVideoError] = useState(false);
   const [skipIntro, setSkipIntro] = useState(false);
   const [introDuration] = useState(10);
   const [skipCountdown, setSkipCountdown] = useState(null);
@@ -25,6 +27,7 @@ const WatchPage = () => {
       try {
         setLoading(true);
         setError(null);
+        setVideoError(false);
         const data = await movieService.watchMovie(id);
         setMovie(data);
       } catch (err) {
@@ -218,7 +221,7 @@ const WatchPage = () => {
               View Details
             </Link>
           </div>
-        ) : videoUrl ? (
+        ) : videoUrl && isDirectVideoUrl(videoUrl) && !videoError ? (
           <>
             <video
               ref={videoRef}
@@ -229,6 +232,7 @@ const WatchPage = () => {
               muted={isMuted}
               onTimeUpdate={handleVideoTimeUpdate}
               onClick={handlePlay}
+              onError={() => setVideoError(true)}
             />
 
             {skipIntro && skipCountdown !== null && videoRef.current && videoRef.current.currentTime < introDuration && (

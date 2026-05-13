@@ -11,3 +11,6 @@ server/database.sqlite
 client/node_modules/.cache/
 client/build/
 
+
+# eslint cache
+client/node_modules/.cache/

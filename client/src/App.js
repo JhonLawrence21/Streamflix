@@ -19,6 +19,7 @@ import ProfilePage from './pages/ProfilePage';
 import UpcomingReleasesPage from './pages/UpcomingReleasesPage';
 import ProfilesPage from './pages/ProfilesPage';
 import DownloadsPage from './pages/DownloadsPage';
+import CategoryPage from './pages/CategoryPage';
 
 function App() {
   return (
@@ -37,9 +38,11 @@ function App() {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/profiles" element={<ProfilesPage />} />
           <Route path="/downloads" element={<DownloadsPage />} />
-          <Route path="/upcoming" element={<UpcomingReleasesPage />} />
-           
-           <Route path="/admin" element={<AdminLayout />}>
+           <Route path="/upcoming" element={<UpcomingReleasesPage />} />
+           <Route path="/category/:name" element={<CategoryPage />} />
+           <Route path="/tv-shows" element={<CategoryPage />} />
+            
+            <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboardPage />} />
             <Route path="movies" element={<AdminMoviesPage />} />
             <Route path="users" element={<AdminUsersPage />} />

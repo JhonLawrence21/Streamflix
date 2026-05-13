@@ -5,13 +5,10 @@ import MovieRow from '../components/home/MovieRow';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import { movieService, watchlistService, recommendationService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { useParentalControls } from '../context/ParentalControlsContext';
 
 const HomePage = () => {
   const [trending, setTrending] = useState([]);
   const [popular, setPopular] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [categoryMovies, setCategoryMovies] = useState({});
   const [myList, setMyList] = useState([]);
   const [watchlist, setWatchlist] = useState([]);
   const [upcoming, setUpcoming] = useState([]);
@@ -19,7 +16,6 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { user } = useAuth();
-  const { filterContent } = useParentalControls();
 
   useEffect(() => {
     console.log('[HomePage] Fetching data...');
@@ -29,35 +25,11 @@ const HomePage = () => {
       try {
         console.log('[HomePage] Calling API...');
         
-        const [trendingData, popularData, categoriesData, upcomingData] = await Promise.all([
+        const [trendingData, popularData, upcomingData] = await Promise.all([
           movieService.getTrending().catch(e => { console.warn('trending error', e); return []; }),
           movieService.getPopular().catch(e => { console.warn('popular error', e); return []; }),
-          movieService.getCategories().catch(e => { console.warn('categories error', e); return []; }),
           movieService.getUpcoming().catch(e => { console.warn('upcoming error', e); return []; })
         ]);
-        
-        console.log('[HomePage] Data received:', { trending: trendingData?.length, popular: popularData?.length, categories: categoriesData?.length });
-
-        const categoryMoviesData = {};
-        if (categoriesData && categoriesData.length > 0) {
-          // Ensure we pass *category name* exactly as stored in DB.
-          // Admin categories and DB category strings must match for filtering to work.
-          const moviePromises = categoriesData.map(async (cat) => {
-            try {
-              const movies = await movieService.getByCategory(cat.name);
-              return { [cat.name]: filterContent(Array.isArray(movies) ? movies.slice(0, 20) : []) };
-            } catch {
-              return { [cat.name]: [] };
-            }
-          });
-
-          const moviesResults = await Promise.all(moviePromises);
-          moviesResults.forEach(result => {
-            const [key, value] = Object.entries(result)[0];
-            categoryMoviesData[key] = value;
-          });
-        }
-
 
         let forYouData = [];
         if (user?.id) {
@@ -70,8 +42,6 @@ const HomePage = () => {
         
         setTrending(Array.isArray(trendingData) ? trendingData.slice(0, 20) : []);
         setPopular(Array.isArray(popularData) ? popularData.slice(0, 20) : (popularData?.movies || []).slice(0, 20));
-        setCategories(categoriesData || []);
-        setCategoryMovies(categoryMoviesData);
         setUpcoming(Array.isArray(upcomingData) ? upcomingData : []);
         setForYou(Array.isArray(forYouData) ? forYouData.slice(0, 20) : []);
         console.log('[HomePage] State set successfully');
@@ -84,7 +54,7 @@ const HomePage = () => {
     };
 
     fetchData();
-  }, [user, filterContent]);
+  }, [user]);
 
   useEffect(() => {
     const fetchWatchlist = async () => {
@@ -129,7 +99,7 @@ const HomePage = () => {
     );
   }
 
-  const hasAnyContent = [trending, popular, ...Object.values(categoryMovies)].some(arr => arr.length > 0);
+  const hasAnyContent = [trending, popular].some(arr => arr.length > 0);
 
   return (
     <div className="min-h-screen bg-netflix-bg">
@@ -172,15 +142,6 @@ const HomePage = () => {
             onWatchlist={watchlist}
           />
         )}
-        
-        {categories.map((cat) => (
-          <MovieRow 
-            key={cat.id} 
-            title={cat.name} 
-            movies={categoryMovies[cat.name] || []} 
-            onWatchlist={watchlist}
-          />
-        ))}
       </div>
 
       {!hasAnyContent && (

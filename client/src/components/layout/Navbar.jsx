@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Bell, Menu, X, User, LogOut, Settings } from 'lucide-react';
+import { Search, Bell, Menu, X, User, LogOut, Settings, ChevronDown } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { movieService } from '../../services/api';
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -9,6 +10,8 @@ const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [categoriesOpen, setCategoriesOpen] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -18,6 +21,18 @@ const Navbar = () => {
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const data = await movieService.getCategories();
+        if (Array.isArray(data)) {
+          setCategories(data.filter(c => c.name !== 'TV Shows'));
+        }
+      } catch {}
+    };
+    fetchCategories();
   }, []);
 
   const handleSearch = (e) => {
@@ -46,9 +61,32 @@ const Navbar = () => {
           </Link>
           
           <div className={`hidden md:flex items-center gap-6 ${scrolled ? 'opacity-100' : 'opacity-100'}`}>
-            <Link to="/" className="text-netflix-text text-sm hover:text-netflix-text-secondary transition-colors">Home</Link>
-            <Link to="/search?category=Action" className="text-netflix-text-secondary text-sm hover:text-white transition-colors">Action</Link>
-            <Link to="/search?category=Drama" className="text-netflix-text-secondary text-sm hover:text-white transition-colors">Drama</Link>
+            <Link to="/" className="text-netflix-text text-sm hover:text-netflix-text-secondary transition-colors">Movies</Link>
+            <Link to="/tv-shows" className="text-netflix-text-secondary text-sm hover:text-white transition-colors">TV Shows</Link>
+            <div className="relative">
+              <button
+                onClick={() => setCategoriesOpen(!categoriesOpen)}
+                className="flex items-center gap-1 text-netflix-text-secondary text-sm hover:text-white transition-colors"
+              >
+                Categories <ChevronDown size={14} />
+              </button>
+              {categoriesOpen && (
+                <div className="absolute top-full left-0 mt-2 w-48 bg-netflix-bg-secondary rounded shadow-lg py-2 z-50"
+                  onMouseLeave={() => setCategoriesOpen(false)}
+                >
+                  {categories.map(cat => (
+                    <Link
+                      key={cat.id}
+                      to={`/category/${encodeURIComponent(cat.name)}`}
+                      className="block px-4 py-2 text-netflix-text text-sm hover:bg-netflix-bg-tertiary hover:text-white"
+                      onClick={() => setCategoriesOpen(false)}
+                    >
+                      {cat.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
             <Link to="/upcoming" className="text-netflix-text-secondary text-sm hover:text-white transition-colors">Upcoming</Link>
             {user && (
               <Link to="/watchlist" className="text-netflix-text-secondary text-sm hover:text-white transition-colors">My List</Link>
@@ -142,9 +180,18 @@ const Navbar = () => {
           {mobileMenuOpen && (
         <div className="md:hidden bg-netflix-bg border-t border-netflix-bg-tertiary">
           <div className="flex flex-col p-4 gap-4">
-            <Link to="/" className="text-netflix-text py-2" onClick={() => setMobileMenuOpen(false)}>Home</Link>
-            <Link to="/search?category=Action" className="text-netflix-text-secondary py-2" onClick={() => setMobileMenuOpen(false)}>Action</Link>
-            <Link to="/search?category=Drama" className="text-netflix-text-secondary py-2" onClick={() => setMobileMenuOpen(false)}>Drama</Link>
+            <Link to="/" className="text-netflix-text py-2" onClick={() => setMobileMenuOpen(false)}>Movies</Link>
+            <Link to="/tv-shows" className="text-netflix-text-secondary py-2" onClick={() => setMobileMenuOpen(false)}>TV Shows</Link>
+            {categories.map(cat => (
+              <Link
+                key={cat.id}
+                to={`/category/${encodeURIComponent(cat.name)}`}
+                className="text-netflix-text-secondary py-2 pl-4"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {cat.name}
+              </Link>
+            ))}
             <Link to="/upcoming" className="text-netflix-text-secondary py-2" onClick={() => setMobileMenuOpen(false)}>Upcoming</Link>
             {user && (
               <>
