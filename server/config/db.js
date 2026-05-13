@@ -180,6 +180,30 @@ const connectDB = async (retries = 5, delay = 3000) => {
           } else {
             console.log('[DB] Migration check: status column already exists');
           }
+
+          // Auto-migrate: add type column if missing
+          if (!tableInfo.type) {
+            console.log('[DB] Migrating: adding type column to movies...');
+            await queryInterface.addColumn('movies', 'type', {
+              type: Sequelize.STRING,
+              defaultValue: 'movie'
+            });
+            console.log('[DB] Migration complete: type column added');
+          } else {
+            console.log('[DB] Migration check: type column already exists');
+          }
+
+          // Auto-migrate: add country column if missing
+          if (!tableInfo.country) {
+            console.log('[DB] Migrating: adding country column to movies...');
+            await queryInterface.addColumn('movies', 'country', {
+              type: Sequelize.STRING,
+              defaultValue: ''
+            });
+            console.log('[DB] Migration complete: country column added');
+          } else {
+            console.log('[DB] Migration check: country column already exists');
+          }
         }
       } catch (migrateErr) {
         console.error('[DB] Migration warning (non-fatal):', migrateErr.message);

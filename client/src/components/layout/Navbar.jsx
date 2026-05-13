@@ -61,7 +61,7 @@ const Navbar = () => {
           </Link>
           
           <div className={`hidden md:flex items-center gap-6 ${scrolled ? 'opacity-100' : 'opacity-100'}`}>
-            <Link to="/" className="text-netflix-text text-sm hover:text-netflix-text-secondary transition-colors">Movies</Link>
+            <Link to="/movies" className="text-netflix-text text-sm hover:text-netflix-text-secondary transition-colors">Movies</Link>
             <Link to="/tv-shows" className="text-netflix-text-secondary text-sm hover:text-white transition-colors">TV Shows</Link>
             <div className="relative">
               <button
@@ -180,7 +180,7 @@ const Navbar = () => {
           {mobileMenuOpen && (
         <div className="md:hidden bg-netflix-bg border-t border-netflix-bg-tertiary">
           <div className="flex flex-col p-4 gap-4">
-            <Link to="/" className="text-netflix-text py-2" onClick={() => setMobileMenuOpen(false)}>Movies</Link>
+            <Link to="/movies" className="text-netflix-text py-2" onClick={() => setMobileMenuOpen(false)}>Movies</Link>
             <Link to="/tv-shows" className="text-netflix-text-secondary py-2" onClick={() => setMobileMenuOpen(false)}>TV Shows</Link>
             {categories.map(cat => (
               <Link

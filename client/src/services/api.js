@@ -148,6 +148,11 @@ export const movieService = {
   getCategories: async () => {
     const response = await api.get('/movies/categories');
     return response.data;
+  },
+
+  browse: async (params) => {
+    const response = await api.get('/movies/browse', { params });
+    return response.data;
   }
 };
 

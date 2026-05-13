@@ -20,6 +20,7 @@ import UpcomingReleasesPage from './pages/UpcomingReleasesPage';
 import ProfilesPage from './pages/ProfilesPage';
 import DownloadsPage from './pages/DownloadsPage';
 import CategoryPage from './pages/CategoryPage';
+import BrowsePage from './pages/BrowsePage';
 
 function App() {
   return (
@@ -39,8 +40,9 @@ function App() {
           <Route path="/profiles" element={<ProfilesPage />} />
           <Route path="/downloads" element={<DownloadsPage />} />
            <Route path="/upcoming" element={<UpcomingReleasesPage />} />
+           <Route path="/movies" element={<BrowsePage />} />
+           <Route path="/tv-shows" element={<BrowsePage />} />
            <Route path="/category/:name" element={<CategoryPage />} />
-           <Route path="/tv-shows" element={<CategoryPage />} />
             
             <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboardPage />} />

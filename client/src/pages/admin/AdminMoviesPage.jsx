@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Film, X, Search, Filter, CheckSquare, Square, Trash } from 'lucide-react';
 import { adminService } from '../../services/api';
 import { getThumbnailUrl, handleImageError } from '../../utils/imageUtils';
+import { COUNTRIES } from '../../utils/filterOptions';
 
 const AdminMoviesPage = () => {
   const [movies, setMovies] = useState([]);
@@ -33,7 +34,9 @@ const AdminMoviesPage = () => {
     status: 'released',
     director: '',
     featured: false,
-    trending: false
+    trending: false,
+    type: 'movie',
+    country: ''
   });
 
   useEffect(() => {
@@ -130,6 +133,8 @@ const AdminMoviesPage = () => {
       externalUrl: formData.externalUrl || '',
       trailerUrl: formData.trailerUrl || '',
       category: formData.category || '',
+      type: formData.type || 'movie',
+      country: formData.country || '',
       director: formData.director || '',
       duration: formData.duration || '',
       genre: formData.genre ? formData.genre.split(',').map(g => g.trim()).filter(g => g) : [],
@@ -183,6 +188,8 @@ const AdminMoviesPage = () => {
       trailerUrl: movie.trailerUrl || '',
       thumbnail: movie.thumbnail || '',
       category: movie.category || '',
+      type: movie.type || 'movie',
+      country: movie.country || '',
       genre: parseGenre(movie.genre),
       cast: parseGenre(movie.cast),
       rating: movie.rating?.toString() || '',
@@ -227,7 +234,9 @@ const AdminMoviesPage = () => {
       director: '',
       status: 'released',
       featured: false,
-      trending: false
+      trending: false,
+      type: 'movie',
+      country: ''
     });
     setFormError('');
   };
@@ -453,6 +462,17 @@ const AdminMoviesPage = () => {
                   />
                 </div>
                 <div>
+                  <label className="block text-netflix-text-secondary text-sm mb-2">Type</label>
+                  <select
+                    value={formData.type}
+                    onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                    className="input-field"
+                  >
+                    <option value="movie">Movie</option>
+                    <option value="tv">TV Show</option>
+                  </select>
+                </div>
+                <div>
                   <label className="block text-netflix-text-secondary text-sm mb-2">Category</label>
                   <input
                     type="text"
@@ -578,6 +598,19 @@ const AdminMoviesPage = () => {
                     <option value="released">Released</option>
                     <option value="upcoming">Upcoming</option>
                     <option value="in-production">In Production</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-netflix-text-secondary text-sm mb-2">Country</label>
+                  <select
+                    value={formData.country}
+                    onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                    className="input-field"
+                  >
+                    <option value="">Select country</option>
+                    {COUNTRIES.map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
                   </select>
                 </div>
               </div>

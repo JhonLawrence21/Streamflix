@@ -165,6 +165,62 @@ exports.getUpcomingReleases = async (req, res) => {
   }
 };
 
+exports.browseMovies = async (req, res) => {
+  try {
+    const { type, genre, country, year } = req.query;
+    const { sequelize } = require('../config/db');
+
+    let query = 'SELECT * FROM movies WHERE 1=1';
+    const replacements = [];
+
+    if (type) {
+      query += ' AND type = ?';
+      replacements.push(type);
+    }
+
+    if (genre && genre !== 'All') {
+      if (genre === 'Other') {
+        query += " AND (genre IS NULL OR genre = '[]' OR genre = '')";
+      } else {
+        query += ' AND genre LIKE ?';
+        replacements.push(`%"${genre}"%`);
+      }
+    }
+
+    if (country && country !== 'All') {
+      if (country === 'Other') {
+        const known = ['United States', 'United Kingdom', 'Korea', 'Japan', 'Bangladesh', 'China', 'Egypt', 'France', 'Germany', 'India', 'Indonesia', 'Iraq', 'Italy', 'Ivory Coast', 'Kenya', 'Lebanon', 'Mexico', 'Morocco', 'Nigeria', 'Pakistan', 'Philippines', 'Russia', 'Saudi Arabia', 'South Africa', 'Spain', 'Syria', 'Thailand', 'Malaysia', 'Turkey'];
+        const placeholders = known.map(() => '?').join(', ');
+        query += ` AND (country IS NULL OR country = '' OR country NOT IN (${placeholders}))`;
+        replacements.push(...known);
+      } else {
+        query += ' AND country = ?';
+        replacements.push(country);
+      }
+    }
+
+    if (year && year !== 'All') {
+      if (year === 'Other') {
+        query += ' AND ("releaseYear" IS NULL OR "releaseYear" < 1980)';
+      } else if (year.endsWith('s')) {
+        const decade = parseInt(year.slice(0, -1));
+        query += ' AND "releaseYear" >= ? AND "releaseYear" <= ?';
+        replacements.push(decade, decade + 9);
+      } else {
+        query += ' AND "releaseYear" = ?';
+        replacements.push(parseInt(year));
+      }
+    }
+
+    query += ' ORDER BY "createdAt" DESC';
+
+    const [movies] = await sequelize.query(query, { replacements });
+    res.json(processMovies(movies));
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 exports.getReleasesByMonth = async (req, res) => {
   try {
     const { year, month } = req.params;

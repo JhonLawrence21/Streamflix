@@ -35,6 +35,14 @@ const Movie = sequelize.define('Movie', {
     type: DataTypes.TEXT,
     defaultValue: ''
   },
+  type: {
+    type: DataTypes.ENUM('movie', 'tv'),
+    defaultValue: 'movie'
+  },
+  country: {
+    type: DataTypes.STRING,
+    defaultValue: ''
+  },
   category: {
     type: DataTypes.STRING,
     defaultValue: 'uncategorized'

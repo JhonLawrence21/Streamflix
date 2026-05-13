@@ -19,6 +19,8 @@ exports.createMovie = async (req, res) => {
     const externalUrl = otherData.externalUrl || '';
     const trailerUrl = otherData.trailerUrl || '';
     const thumbnail = otherData.thumbnail || '';
+    const typeVal = otherData.type || 'movie';
+    const countryVal = otherData.country || '';
     const category = otherData.category || 'Movies';
     const director = otherData.director || '';
     const duration = otherData.duration || '';
@@ -35,8 +37,8 @@ exports.createMovie = async (req, res) => {
     const now = new Date().toISOString();
     
     await sequelize.query(`
-      INSERT INTO movies (title, description, "videoUrl", "externalUrl", "trailerUrl", thumbnail, category, director, duration, genre, "cast", rating, "releaseYear", views, featured, "ageRating", status, "releaseDate", trending, "createdAt", "updatedAt")
-      VALUES (${title ? `'${title.replace(/'/g, "''")}'` : null}, ${description ? `'${description.replace(/'/g, "''")}'` : null}, ${videoUrl ? `'${videoUrl.replace(/'/g, "''")}'` : null}, ${externalUrl ? `'${externalUrl.replace(/'/g, "''")}'` : null}, ${trailerUrl ? `'${trailerUrl.replace(/'/g, "''")}'` : null}, ${thumbnail ? `'${thumbnail.replace(/'/g, "''")}'` : null}, ${category ? `'${category}'` : null}, ${director ? `'${director.replace(/'/g, "''")}'` : null}, ${duration ? `'${duration}'` : null}, ${genreStr}, ${castStr}, ${rating}, ${releaseYear}, ${views}, ${featured}, ${ageRatingVal ? `'${ageRatingVal}'` : 'PG-13'}, ${statusVal ? `'${statusVal}'` : 'released'}, ${releaseDateVal !== 'NULL' ? `'${releaseDateVal}'` : 'NULL'}, ${trendingVal}, '${now}', '${now}')
+      INSERT INTO movies (title, description, "videoUrl", "externalUrl", "trailerUrl", thumbnail, category, director, duration, genre, "cast", rating, "releaseYear", views, featured, "ageRating", status, "releaseDate", trending, type, country, "createdAt", "updatedAt")
+      VALUES (${title ? `'${title.replace(/'/g, "''")}'` : null}, ${description ? `'${description.replace(/'/g, "''")}'` : null}, ${videoUrl ? `'${videoUrl.replace(/'/g, "''")}'` : null}, ${externalUrl ? `'${externalUrl.replace(/'/g, "''")}'` : null}, ${trailerUrl ? `'${trailerUrl.replace(/'/g, "''")}'` : null}, ${thumbnail ? `'${thumbnail.replace(/'/g, "''")}'` : null}, ${category ? `'${category}'` : null}, ${director ? `'${director.replace(/'/g, "''")}'` : null}, ${duration ? `'${duration}'` : null}, ${genreStr}, ${castStr}, ${rating}, ${releaseYear}, ${views}, ${featured}, ${ageRatingVal ? `'${ageRatingVal}'` : 'PG-13'}, ${statusVal ? `'${statusVal}'` : 'released'}, ${releaseDateVal !== 'NULL' ? `'${releaseDateVal}'` : 'NULL'}, ${trendingVal}, '${typeVal}', '${countryVal.replace(/'/g, "''")}', '${now}', '${now}')
     `);
     
     const [movies] = await sequelize.query('SELECT * FROM movies ORDER BY id DESC LIMIT 1');
@@ -71,6 +73,8 @@ exports.updateMovie = async (req, res) => {
     if (otherData.externalUrl !== undefined) updates.push(`"externalUrl" = '${(otherData.externalUrl || '').replace(/'/g, "''")}'`);
     if (otherData.trailerUrl !== undefined) updates.push(`"trailerUrl" = '${(otherData.trailerUrl || '').replace(/'/g, "''")}'`);
     if (otherData.thumbnail !== undefined) updates.push(`thumbnail = '${(otherData.thumbnail || '').replace(/'/g, "''")}'`);
+    if (otherData.type !== undefined) updates.push(`type = '${otherData.type}'`);
+    if (otherData.country !== undefined) updates.push(`country = '${(otherData.country || '').replace(/'/g, "''")}'`);
     if (otherData.category !== undefined) updates.push(`category = '${otherData.category}'`);
     if (otherData.director !== undefined) updates.push(`director = '${(otherData.director || '').replace(/'/g, "''")}'`);
     if (otherData.duration !== undefined) updates.push(`duration = '${otherData.duration || ''}'`);

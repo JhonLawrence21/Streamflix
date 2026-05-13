@@ -11,7 +11,8 @@ const {
   getMoviesByCategory,
   getSimilarMovies,
   getUpcomingReleases,
-  getReleasesByMonth
+  getReleasesByMonth,
+  browseMovies
 } = require('../controllers/movieController');
 
 router.get('/test', async (req, res) => {
@@ -31,6 +32,7 @@ router.get('/category/:category', getMoviesByCategory);
 router.get('/similar/:id', getSimilarMovies);
 router.get('/upcoming', getUpcomingReleases);
 router.get('/releases/:year/:month', getReleasesByMonth);
+router.get('/browse', browseMovies);
 router.get('/categories', async (req, res) => {
   const { sequelize } = require('../config/db');
 
