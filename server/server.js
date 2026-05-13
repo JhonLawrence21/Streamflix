@@ -131,12 +131,12 @@ app.use('/api/watchlist', generalLimiter, watchlistRoutes);
 app.use('/api/admin', generalLimiter, adminRoutes);
 // app.use('/api/recommendations', generalLimiter, recommendationRoutes);
 
-// Frontend static serve with fallbacks
+// Frontend static serve with fallbacks (client/build preferred over public/)
 const possiblePaths = [
-  path.join(__dirname, '..', 'public'),
-  path.join(process.cwd(), 'public'),
   path.join(__dirname, '..', '..', 'client', 'build'),
-  path.join(process.cwd(), 'client', 'build')
+  path.join(process.cwd(), 'client', 'build'),
+  path.join(__dirname, '..', 'public'),
+  path.join(process.cwd(), 'public')
 ];
 let staticPath = null;
 for (const p of possiblePaths) {

@@ -14,3 +14,5 @@ client/build/
 
 # eslint cache
 client/node_modules/.cache/
+# build output
+public/
