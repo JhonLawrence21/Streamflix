@@ -142,31 +142,32 @@ const MovieRow = ({ title, movies, onWatchlist = [] }) => {
     navigate(`/watch/${movieId}`);
   };
 
-  const handleMouseEnter = (e, movie) => {
-    const timeout = setTimeout(() => {
-      const card = e.currentTarget.getBoundingClientRect();
-      const row = rowRef.current.getBoundingClientRect();
+const handleMouseEnter = (e, movie) => {
+     const timeout = setTimeout(() => {
+       if (!e.currentTarget || !rowRef.current) return;
+       const card = e.currentTarget.getBoundingClientRect();
+       const row = rowRef.current.getBoundingClientRect();
 
-      let left = card.left - row.left + card.width / 2 - 170;
-      const maxLeft = row.width - 340;
-      left = Math.max(0, Math.min(left, maxLeft));
+       let left = card.left - row.left + card.width / 2 - 170;
+       const maxLeft = row.width - 340;
+       left = Math.max(0, Math.min(left, maxLeft));
 
-      setHoverPosition({
-        top: card.top - row.top - 10,
-        left: left
-      });
-      setHoveredMovie(movie);
-    }, 500);
+       setHoverPosition({
+         top: card.top - row.top - 10,
+         left: left
+       });
+       setHoveredMovie(movie);
+     }, 500);
 
-    setHoverTimeout(timeout);
-  };
+     setHoverTimeout(timeout);
+   };
 
-  const handleMouseLeave = () => {
-    if (hoverTimeout) {
-      clearTimeout(hoverTimeout);
-    }
-    setHoveredMovie(null);
-  };
+   const handleMouseLeave = () => {
+     if (hoverTimeout) {
+       clearTimeout(hoverTimeout);
+     }
+     setHoveredMovie(null);
+   };
 
   if (!movies || movies.length === 0) return null;
 
@@ -215,8 +216,8 @@ const MovieRow = ({ title, movies, onWatchlist = [] }) => {
                     src={getThumbnailUrl(movie.thumbnail, 'small', movie.title)}
                     alt={movie.title}
                     className="w-full h-full object-cover transition-all duration-500 ease-out group-hover/card:scale-110 group-hover/card:brightness-75"
-                    loading="lazy"
-                    referrerPolicy="no-referrer"
+loading="eager"
+                     referrerPolicy="no-referrer"
                     onError={(e) => handleImageError(e, 'small', movie.title)}
                   />
 
