@@ -19,10 +19,17 @@ const SearchPage = () => {
     const fetchMovies = async () => {
       setLoading(true);
       try {
+        // Category filtering must call the category endpoint.
+        // /api/movies ignores category params, so /api/movies?category=... won’t filter.
+        if (category) {
+          const data = await movieService.getByCategory(category);
+          setMovies(data || []);
+          return;
+        }
+
         const params = {};
         if (query) params.search = query;
-        if (category) params.category = category;
-        
+
         const data = await movieService.getAll(params);
         setMovies(data.movies || data);
       } catch (error) {
@@ -34,6 +41,7 @@ const SearchPage = () => {
 
     fetchMovies();
   }, [query, category]);
+
 
   useEffect(() => {
     const fetchWatchlist = async () => {
@@ -56,8 +64,12 @@ const SearchPage = () => {
   };
 
   const categories = ['All', 'Action', 'Drama', 'Comedy', 'Horror', 'Sci-Fi', 'Thriller'];
-  // TODO: In future, fetch categories from backend to keep UI aligned with DB.
-  // For now we keep existing UI list but sorting/filtering must rely on API response ordering.
+
+  // Keep UI responsive; backend returns category-filtered movies.
+  // If you add categories in Admin, they will still be supported in the backend,
+  // but they won't show up in this horizontal chip list unless added here (or
+  // fetched dynamically later).
+
 
   return (
     <div className="min-h-screen bg-netflix-bg">
