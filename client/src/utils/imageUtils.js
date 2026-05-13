@@ -1,6 +1,7 @@
-const DEFAULT_THUMBNAIL = '/icon-512.png';
+const PLACEHOLDER_SVG = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 450"><rect fill="#1a1a2e" width="300" height="450"/><g transform="translate(150,225)"><rect x="-40" y="-30" width="80" height="60" rx="4" fill="none" stroke="#333" stroke-width="2"/><polygon points="-8,-15 20,0 -8,15" fill="#333"/><circle cx="-15" cy="-10" r="3" fill="#333"/><circle cx="-15" cy="10" r="3" fill="#333"/></g><text x="150" y="300" text-anchor="middle" fill="#444" font-size="14" font-family="sans-serif">No Image</text></svg>');
+const DEFAULT_THUMBNAIL = PLACEHOLDER_SVG;
 const DEFAULT_HERO_THUMBNAIL = '/icon-512.png';
-const DEFAULT_DETAIL_THUMBNAIL = '/icon-512.png';
+const DEFAULT_DETAIL_THUMBNAIL = PLACEHOLDER_SVG;
 
 /**
  * Extract YouTube video ID from various YouTube URL formats

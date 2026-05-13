@@ -6,6 +6,7 @@ const {
   deleteMovie,
   getAllMovies,
   createCategory,
+  updateCategory,
   deleteCategory,
   getCategories,
   getUsers,
@@ -27,6 +28,7 @@ router.delete('/movies/:id', deleteMovie);
 
 router.get('/categories', getCategories);
 router.post('/categories', createCategory);
+router.put('/categories/:id', updateCategory);
 router.delete('/categories/:id', deleteCategory);
 
 router.get('/users', getUsers);

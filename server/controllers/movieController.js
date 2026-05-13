@@ -128,7 +128,10 @@ exports.getMoviesByCategory = async (req, res) => {
     const { sequelize } = require('../config/db');
     console.log(`[getMoviesByCategory] Fetching movies for category: "${category}"`);
     
-    const [movies] = await sequelize.query(`SELECT * FROM movies WHERE LOWER(category) = LOWER('${category}') ORDER BY "createdAt" DESC`);
+    const [movies] = await sequelize.query(
+      `SELECT * FROM movies WHERE LOWER(category) = LOWER(?) ORDER BY "createdAt" DESC`,
+      { replacements: [category] }
+    );
     console.log(`[getMoviesByCategory] Found ${movies?.length} movies for "${category}"`);
     
     res.json(processMovies(movies));

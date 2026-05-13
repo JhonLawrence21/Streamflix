@@ -15,6 +15,10 @@ const MovieCard = ({ movie, onWatchlist = [] }) => {
     setIsInWatchlist(onWatchlist.includes(movie.id));
   }, [onWatchlist, movie.id]);
 
+  useEffect(() => {
+    setImageError(false);
+  }, [movie.id]);
+
   const handleAddToWatchlist = async (e) => {
     e.preventDefault();
     e.stopPropagation();

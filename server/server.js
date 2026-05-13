@@ -246,11 +246,11 @@ connectDB()
 async function seedInitialData() {
   try {
     const sampleMovies = [
-      { title: 'Sample Movie 1', description: 'A great movie', category: 'Movies', genre: '["Action"]', thumbnail: '', videoUrl: '', rating: 4.5, views: 100 },
-      { title: 'Sample Movie 2', description: 'Another great movie', category: 'Movies', genre: '["Drama"]', thumbnail: '', videoUrl: '', rating: 4.0, views: 50 },
-      { title: 'Sample Series 1', description: 'An awesome series', category: 'Series', genre: '["Comedy"]', thumbnail: '', videoUrl: '', rating: 4.8, views: 200 },
-      { title: 'Sample Anime 1', description: 'Best anime', category: 'Anime', genre: '["Adventure"]', thumbnail: '', videoUrl: '', rating: 4.9, views: 500 },
-      { title: 'Sample K-Drama 1', description: 'Amazing drama', category: 'K-Drama', genre: '["Romance"]', thumbnail: '', videoUrl: '', rating: 4.7, views: 300 }
+      { title: 'The Action Hero', description: 'An epic adventure of a hero who must save the world from destruction.', category: 'Action', genre: '["Action"]', thumbnail: 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=400', videoUrl: '', rating: 4.5, views: 100 },
+      { title: 'Comedy Night', description: 'A hilarious comedy that will keep you laughing all night.', category: 'Comedy', genre: '["Comedy"]', thumbnail: 'https://images.unsplash.com/photo-1536440132201-1d93eW3roh1g?w=400', videoUrl: '', rating: 4.0, views: 50 },
+      { title: 'Dark Drama Series', description: 'An awesome series that explores the depths of human emotion.', category: 'Drama', genre: '["Drama"]', thumbnail: 'https://images.unsplash.com/photo-1518676591709-ec05fabc79a2?w=400', videoUrl: '', rating: 4.8, views: 200 },
+      { title: 'Anime World', description: 'Best anime with breathtaking animation and compelling stories.', category: 'Action', genre: '["Adventure"]', thumbnail: 'https://images.unsplash.com/photo-1509347528160-9a9e33742cdb?w=400', videoUrl: '', rating: 4.9, views: 500 },
+      { title: 'K-Drama Love Story', description: 'Amazing drama that will make you laugh and cry.', category: 'Romance', genre: '["Romance"]', thumbnail: 'https://images.unsplash.com/photo-1518834109062-2a85f8b40207?w=400', videoUrl: '', rating: 4.7, views: 300 }
     ];
     
     for (const movie of sampleMovies) {

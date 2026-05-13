@@ -172,20 +172,55 @@ exports.createCategory = async (req, res) => {
   }
 };
 
+exports.updateCategory = async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const { name, description, color } = req.body;
+    const { sequelize } = require('../config/db');
+
+    const [categories] = await sequelize.query(`SELECT * FROM categories WHERE id = ${id} LIMIT 1`);
+    if (categories.length === 0) {
+      return res.status(404).json({ message: 'Category not found' });
+    }
+
+    const oldName = categories[0].name;
+    const newName = name || oldName;
+    const descValue = description !== undefined ? description : categories[0].description;
+    const colorValue = color || categories[0].color;
+    const now = new Date().toISOString();
+
+    await sequelize.query(`
+      UPDATE categories SET name = '${newName.replace(/'/g, "''")}', description = '${(descValue || '').replace(/'/g, "''")}', color = '${colorValue}', "updatedAt" = '${now}'
+      WHERE id = ${id}
+    `);
+
+    if (oldName !== newName) {
+      await sequelize.query(`UPDATE movies SET category = '${newName.replace(/'/g, "''")}' WHERE category = '${oldName.replace(/'/g, "''")}'`);
+    }
+
+    const [updated] = await sequelize.query('SELECT * FROM categories ORDER BY id DESC LIMIT 1');
+    res.json(updated[0]);
+  } catch (error) {
+    console.error('[updateCategory] Error:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 exports.deleteCategory = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     const { sequelize } = require('../config/db');
-    
+
     const [categories] = await sequelize.query(`SELECT * FROM categories WHERE id = ${id} LIMIT 1`);
     if (categories.length === 0) {
-      
       return res.status(404).json({ message: 'Category not found' });
     }
-    
+
+    const categoryName = categories[0].name;
+
+    await sequelize.query(`UPDATE movies SET category = 'Uncategorized' WHERE category = '${categoryName.replace(/'/g, "''")}'`);
     await sequelize.query(`DELETE FROM categories WHERE id = ${id}`);
-    
-    
+
     res.json({ message: 'Category deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -250,7 +285,8 @@ exports.getCategories = async (req, res) => {
             views: 100,
             featured: 'true',
             trending: 'true',
-            status: 'released'
+            status: 'released',
+            thumbnail: 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=400'
           },
           {
             title: 'Sample Comedy Night',
@@ -261,7 +297,8 @@ exports.getCategories = async (req, res) => {
             views: 80,
             featured: 'false',
             trending: 'false',
-            status: 'released'
+            status: 'released',
+            thumbnail: 'https://images.unsplash.com/photo-1536440132201-1d93eW3roh1g?w=400'
           },
           {
             title: 'Sample Drama',
@@ -272,7 +309,8 @@ exports.getCategories = async (req, res) => {
             views: 60,
             featured: 'false',
             trending: 'false',
-            status: 'released'
+            status: 'released',
+            thumbnail: 'https://images.unsplash.com/photo-1518676591709-ec05fabc79a2?w=400'
           },
           {
             title: 'Sample TV Show',
@@ -283,7 +321,8 @@ exports.getCategories = async (req, res) => {
             views: 120,
             featured: 'false',
             trending: 'true',
-            status: 'released'
+            status: 'released',
+            thumbnail: 'https://images.unsplash.com/photo-1509347528160-9a9e33742cdb?w=400'
           }
         ];
 
@@ -298,7 +337,8 @@ exports.getCategories = async (req, res) => {
               ) VALUES (
                 '${m.title.replace(/'/g, "''")}',
                 '${m.description.replace(/'/g, "''")}',
-                '', '', '', '',
+                '', '', '',
+                ${m.thumbnail ? `'${m.thumbnail.replace(/'/g, "''")}'` : "''"},
                 '${m.category.replace(/'/g, "''")}',
                 '', '',
                 ${m.genre ? `'${m.genre.replace(/'/g, "''")}'` : "'[]'"},

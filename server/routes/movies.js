@@ -91,7 +91,8 @@ router.get('/categories', async (req, res) => {
             views: 80,
             featured: 'false',
             trending: 'false',
-            status: 'released'
+            status: 'released',
+            thumbnail: 'https://images.unsplash.com/photo-1536440132201-1d93eW3roh1g?w=400'
           },
           {
             title: 'Sample Drama',
@@ -102,7 +103,8 @@ router.get('/categories', async (req, res) => {
             views: 60,
             featured: 'false',
             trending: 'false',
-            status: 'released'
+            status: 'released',
+            thumbnail: 'https://images.unsplash.com/photo-1518676591709-ec05fabc79a2?w=400'
           },
           {
             title: 'Sample TV Show',
@@ -113,7 +115,8 @@ router.get('/categories', async (req, res) => {
             views: 120,
             featured: 'false',
             trending: 'true',
-            status: 'released'
+            status: 'released',
+            thumbnail: 'https://images.unsplash.com/photo-1509347528160-9a9e33742cdb?w=400'
           }
         ];
 

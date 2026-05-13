@@ -4,7 +4,8 @@ const VIDEO_CACHE_NAME = 'streamflix-videos-v2';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/manifest.json'
+  '/manifest.json',
+  '/icon-512.png'
 ];
 
 self.addEventListener('install', event => {
@@ -53,13 +54,12 @@ self.addEventListener('fetch', event => {
   if (request.destination === 'image') {
     event.respondWith(
       caches.open(CACHE_NAME).then(cache => {
-        return cache.match(request).then(response => {
-          if (response) return response;
-          return fetch(request).then(networkResponse => {
+        return fetch(request).then(networkResponse => {
+          if (networkResponse.ok) {
             cache.put(request, networkResponse.clone());
-            return networkResponse;
-          }).catch(() => caches.match(request));
-        });
+          }
+          return networkResponse;
+        }).catch(() => caches.match(request));
       })
     );
     return;
@@ -73,20 +73,6 @@ self.addEventListener('fetch', event => {
           return caches.match('/index.html');
         }
       })
-  );
-});
-
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME && cacheName !== DATA_CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    }).then(() => self.clients.claim())
   );
 });
 
