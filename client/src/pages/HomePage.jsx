@@ -40,6 +40,8 @@ const HomePage = () => {
 
         const categoryMoviesData = {};
         if (categoriesData && categoriesData.length > 0) {
+          // Ensure we pass *category name* exactly as stored in DB.
+          // Admin categories and DB category strings must match for filtering to work.
           const moviePromises = categoriesData.map(async (cat) => {
             try {
               const movies = await movieService.getByCategory(cat.name);
@@ -48,12 +50,14 @@ const HomePage = () => {
               return { [cat.name]: [] };
             }
           });
+
           const moviesResults = await Promise.all(moviePromises);
           moviesResults.forEach(result => {
             const [key, value] = Object.entries(result)[0];
             categoryMoviesData[key] = value;
           });
         }
+
 
         let forYouData = [];
         if (user?.id) {
