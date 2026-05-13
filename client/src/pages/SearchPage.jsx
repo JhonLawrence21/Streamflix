@@ -56,6 +56,8 @@ const SearchPage = () => {
   };
 
   const categories = ['All', 'Action', 'Drama', 'Comedy', 'Horror', 'Sci-Fi', 'Thriller'];
+  // TODO: In future, fetch categories from backend to keep UI aligned with DB.
+  // For now we keep existing UI list but sorting/filtering must rely on API response ordering.
 
   return (
     <div className="min-h-screen bg-netflix-bg">
