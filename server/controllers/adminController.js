@@ -356,23 +356,62 @@ exports.getCategories = async (req, res) => {
       return res.json([]);
     }
 
-    // Normalize category compare to avoid whitespace/case mismatch
-    const categoriesWithCount = await Promise.all(
-      categories.map(async (cat) => {
-        try {
-          const catName = (cat?.name || '').trim();
-          if (!catName) return { ...cat, movieCount: 0 };
+    const normalizeCategory = (value) => {
+      return (value ?? '')
+        .toString()
+        .trim()
+        .toLowerCase()
+        // treat common separators as spaces
+        .replace(/[\-_]/g, ' ')
+        // collapse multiple spaces
+        .replace(/\s+/g, ' ');
+    };
 
-          const [[{ categoryCount }]] = await sequelize.query(
-            `SELECT COUNT(*) as count FROM movies WHERE LOWER(TRIM(category)) = LOWER(TRIM('${catName.replace(/'/g, "''")}'))`
-          );
+    // Small synonyms/mappings to handle common category drift.
+    // This is intentionally minimal; the normalization above handles most mismatches.
+    const normalizeCategoryWithMap = (value) => {
+      const n = normalizeCategory(value);
+      const synonyms = {
+        'tv show': 'tv shows',
+        'tv series': 'tv shows',
+        'scifi': 'sci fi',
+        'sci fi': 'sci-fi',
+        'sci-fi': 'sci-fi'
+      };
+      return synonyms[n] || n;
+    };
 
-          return { ...cat, movieCount: categoryCount?.count || categoryCount || 0 };
-        } catch (e) {
-          return { ...cat, movieCount: 0 };
-        }
-      })
-    );
+    // Get the real category values stored in DB and their counts once.
+    // Then map UI categories to these DB categories using normalization.
+    let dbCategoryCounts = [];
+    try {
+      const [rows] = await sequelize.query(`
+        SELECT category, COUNT(*)::int as cnt
+        FROM movies
+        WHERE category IS NOT NULL
+        GROUP BY category
+      `);
+      dbCategoryCounts = rows || [];
+    } catch (e) {
+      // keep empty so we still return categories
+      dbCategoryCounts = [];
+    }
+
+    const dbCountsByNormalized = new Map();
+    for (const row of dbCategoryCounts) {
+      const raw = row?.category;
+      const cnt = row?.cnt ?? 0;
+      const key = normalizeCategoryWithMap(raw);
+      if (!key) continue;
+      dbCountsByNormalized.set(key, (dbCountsByNormalized.get(key) || 0) + Number(cnt));
+    }
+
+    const categoriesWithCount = categories.map((cat) => {
+      const catName = cat?.name ?? '';
+      const key = normalizeCategoryWithMap(catName);
+      const movieCount = dbCountsByNormalized.get(key) || 0;
+      return { ...cat, movieCount };
+    });
 
     return res.json(categoriesWithCount);
   } catch (error) {
