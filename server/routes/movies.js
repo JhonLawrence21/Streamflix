@@ -79,7 +79,8 @@ router.get('/categories', async (req, res) => {
             views: 100,
             featured: 'true',
             trending: 'true',
-            status: 'released'
+            status: 'released',
+            thumbnail: 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=400'
           },
           {
             title: 'Sample Comedy Night',
@@ -127,7 +128,7 @@ router.get('/categories', async (req, res) => {
               ) VALUES (
                 '${m.title.replace(/'/g, "''")}',
                 '${m.description.replace(/'/g, "''")}',
-                '', '', '', '',
+                '', '', '', '${m.thumbnail}',
                 '${m.category.replace(/'/g, "''")}',
                 '', '',
                 ${m.genre ? `'${m.genre.replace(/'/g, "''")}'` : "'[]'"},
@@ -147,7 +148,9 @@ router.get('/categories', async (req, res) => {
           } catch (e) {
             console.log('seed movie insert failed:', e.message);
           }
+
         }
+
       }
 
       // Ensure categories exist
