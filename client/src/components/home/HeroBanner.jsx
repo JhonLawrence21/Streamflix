@@ -38,7 +38,7 @@ if (!movie) {
     );
   }
 
-  const bgSrc = bgError ? getThumbnailUrl(null, 'hero') : getThumbnailUrl(movie.thumbnail, 'hero');
+  const bgSrc = bgError ? getThumbnailUrl(null, 'hero') : getThumbnailUrl(movie.thumbnail, 'hero', movie.title);
 
   return (
     <div className="relative h-[85vh] overflow-hidden">

@@ -373,12 +373,13 @@ const AdminMoviesPage = () => {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <img
-                          src={getThumbnailUrl(movie.thumbnail)}
-                          alt={movie.title}
-                          className="w-12 h-12 object-cover rounded"
-                          onError={handleImageError}
-                        />
+<img
+                           src={getThumbnailUrl(movie.thumbnail, 'small', movie.title)}
+                           alt={movie.title}
+                           className="w-12 h-12 object-cover rounded"
+                           referrerPolicy="no-referrer"
+                           onError={(e) => handleImageError(e, 'small', movie.title)}
+                         />
                         <div>
                           <p className="text-white font-medium">{movie.title}</p>
                           <div className="flex gap-1 flex-wrap">
@@ -537,12 +538,13 @@ const AdminMoviesPage = () => {
                 />
                 {formData.thumbnail && (
                   <div className="mt-2">
-                    <img
-                      src={formData.thumbnail}
-                      alt="Thumbnail preview"
-                      className="w-24 h-36 object-cover rounded border border-netflix-bg-tertiary"
-                      onError={(e) => { e.target.src = getThumbnailUrl(null); }}
-                    />
+<img
+                       src={getThumbnailUrl(formData.thumbnail, 'detail', 'Preview')}
+                       alt="Thumbnail preview"
+                       className="w-24 h-36 object-cover rounded border border-netflix-bg-tertiary"
+                       referrerPolicy="no-referrer"
+                       onError={(e) => { e.target.src = getThumbnailUrl(null, 'detail', 'Preview'); }}
+                     />
                     <p className="text-xs text-netflix-text-muted mt-1">Preview</p>
                   </div>
                 )}
