@@ -79,9 +79,13 @@ const Navbar = () => {
               
               {user && (
                 <Link to="/watchlist" className="text-gray-300 hover:text-white">
-                  <div style={{width: '24px', height: '24px'}}>+</div>
+                  <span className="sr-only">My List</span>
+                  <span aria-hidden className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-netflix-bg-tertiary text-white/80 text-lg leading-none">
+                    +
+                  </span>
                 </Link>
               )}
+
               
               {!user ? (
                 <Link to="/login" className="text-xs md:text-sm text-white hover:text-netflix-text-secondary">Sign In</Link>
