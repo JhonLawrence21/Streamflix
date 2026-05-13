@@ -149,6 +149,7 @@ const MovieDetailsPage = () => {
           src={bgError ? getThumbnailUrl(null, 'hero') : getThumbnailUrl(movie.thumbnail, 'hero')}
           alt={movie.title}
           className="absolute inset-0 w-full h-[40vh] md:h-[60vh] object-cover"
+          referrerPolicy="no-referrer"
           onError={() => setBgError(true)}
         />
         <div className="absolute inset-0 h-[40vh] md:h-[60vh] bg-gradient-to-r from-netflix-bg via-netflix-bg/80 to-transparent"></div>
@@ -167,6 +168,7 @@ const MovieDetailsPage = () => {
                 src={getThumbnailUrl(movie.thumbnail, 'detail')} 
                 alt={movie.title}
                 className="w-full rounded-lg shadow-2xl"
+                referrerPolicy="no-referrer"
                 onError={handleImageError}
               />
             </div>

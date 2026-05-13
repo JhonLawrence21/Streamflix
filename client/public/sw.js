@@ -1,6 +1,6 @@
-const CACHE_NAME = 'streamflix-v3';
-const DATA_CACHE_NAME = 'streamflix-data-v2';
-const VIDEO_CACHE_NAME = 'streamflix-videos-v2';
+const CACHE_NAME = 'streamflix-v4';
+const DATA_CACHE_NAME = 'streamflix-data-v3';
+const VIDEO_CACHE_NAME = 'streamflix-videos-v3';
 const urlsToCache = [
   '/',
   '/index.html',

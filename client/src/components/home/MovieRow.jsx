@@ -216,6 +216,7 @@ const MovieRow = ({ title, movies, onWatchlist = [] }) => {
                     alt={movie.title}
                     className="w-full h-full object-cover transition-all duration-500 ease-out group-hover/card:scale-110 group-hover/card:brightness-75"
                     loading="lazy"
+                    referrerPolicy="no-referrer"
                     onError={(e) => handleImageError(e)}
                   />
 
