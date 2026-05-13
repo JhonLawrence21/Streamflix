@@ -84,12 +84,13 @@ exports.loginUser = async (req, res) => {
 
 exports.getMe = async (req, res) => {
   try {
-    const user = await User.findByPk(req.user.id, { raw: true });
+    const user = await User.findByPk(req.user.id);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    delete user.password;
-    res.json(user);
+    const data = user.get({ plain: true });
+    delete data.password;
+    res.json(data);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -129,11 +130,12 @@ exports.updateProfile = async (req, res) => {
     
     console.log('[Profile] Profile updated successfully');
 
-    const freshUser = await User.findByPk(user.id, { raw: true });
-    delete freshUser.password;
-    delete freshUser.otp;
-    delete freshUser.otpExpiry;
-    res.json(freshUser);
+    const freshUser = await User.findByPk(user.id);
+    const data = freshUser.get({ plain: true });
+    delete data.password;
+    delete data.otp;
+    delete data.otpExpiry;
+    res.json(data);
   } catch (error) {
     console.error('[Profile] Error updating profile:', error.message);
     res.status(500).json({ message: error.message });
