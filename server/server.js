@@ -132,6 +132,41 @@ app.use('/api/watchlist', generalLimiter, watchlistRoutes);
 app.use('/api/admin', generalLimiter, adminRoutes);
 app.use('/api/recommendations', generalLimiter, recommendationRoutes);
 
+// Image proxy for blocked CDNs (Pinterest, etc)
+app.get('/api/thumb', async (req, res) => {
+   const url = req.query.url;
+   if (!url) {
+     return res.status(400).json({ error: 'Missing url param' });
+   }
+   try {
+     const https = require('https');
+     const http = require('http');
+     const client = url.startsWith('https') ? https : http;
+     client.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 10000 }, (proxyRes) => {
+       if (proxyRes.statusCode >= 400) {
+         return servePlaceholder(res);
+       }
+       const contentType = proxyRes.headers['content-type'] || 'image/jpeg';
+       if (!contentType.startsWith('image/')) {
+         return servePlaceholder(res);
+       }
+       res.setHeader('Content-Type', contentType);
+       res.setHeader('Cache-Control', 'public, max-age=86400');
+       res.setHeader('Access-Control-Allow-Origin', '*');
+       proxyRes.pipe(res);
+     }).on('error', () => servePlaceholder(res));
+   } catch {
+     servePlaceholder(res);
+   }
+ });
+
+ function servePlaceholder(res) {
+   const svg = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 450"><rect fill="#1C1C1C" width="300" height="450"/><text x="150" y="225" text-anchor="middle" fill="white" font-size="64" font-weight="bold" font-family="sans-serif">🎬</text></svg>`).toString('base64');
+   res.setHeader('Content-Type', 'image/svg+xml');
+   res.setHeader('Cache-Control', 'public, max-age=86400');
+   res.status(200).send(`data:image/svg+xml;base64,${svg}`);
+ }
+
 // User report submission endpoint
 const { optionalAuth } = require('./middleware/auth');
 app.post('/api/reports', optionalAuth, async (req, res) => {

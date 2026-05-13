@@ -212,12 +212,12 @@ const MovieRow = ({ title, movies, onWatchlist = [] }) => {
               <div className="transition-all duration-300 ease-out hover:-translate-y-2 hover:shadow-2xl hover:shadow-black/50 rounded overflow-hidden">
                 <div className="relative aspect-[2/3] rounded overflow-hidden bg-netflix-bg-tertiary">
                   <img
-                    src={movie.thumbnail ? getThumbnailUrl(movie.thumbnail) : getThumbnailUrl(null)}
+                    src={getThumbnailUrl(movie.thumbnail, 'small', movie.title)}
                     alt={movie.title}
                     className="w-full h-full object-cover transition-all duration-500 ease-out group-hover/card:scale-110 group-hover/card:brightness-75"
                     loading="lazy"
-                    
-                    onError={(e) => handleImageError(e)}
+                    referrerPolicy="no-referrer"
+                    onError={(e) => handleImageError(e, 'small', movie.title)}
                   />
 
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover/card:opacity-100 transition-all duration-500 flex flex-col items-center justify-center gap-3">

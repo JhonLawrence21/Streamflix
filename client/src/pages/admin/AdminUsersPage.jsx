@@ -162,10 +162,11 @@ const UserDetailModal = ({ user, onClose }) => {
                       {watchlist.map((movie) => (
                         <div key={movie.id} className="relative group">
                           <img
-                            src={getThumbnailUrl(movie.thumbnail)}
+                            src={getThumbnailUrl(movie.thumbnail, 'small', movie.title)}
                             alt={movie.title}
                             className="w-full h-40 object-cover rounded-lg"
-                            onError={handleImageError}
+                            referrerPolicy="no-referrer"
+                            onError={(e) => handleImageError(e, 'small', movie.title)}
                           />
                           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2 rounded-b-lg">
                             <p className="text-white text-sm font-medium truncate">{movie.title}</p>
@@ -189,10 +190,11 @@ const UserDetailModal = ({ user, onClose }) => {
                       {viewHistory.map((item, index) => (
                         <div key={index} className="flex items-center gap-4 p-3 bg-netflix-bg-tertiary rounded-lg">
                           <img
-                            src={getThumbnailUrl(item.movie?.thumbnail)}
+                            src={getThumbnailUrl(item.movie?.thumbnail, 'small', item.movie?.title)}
                             alt={item.movie?.title || 'Movie'}
                             className="w-16 h-20 object-cover rounded"
-                            onError={handleImageError}
+                            referrerPolicy="no-referrer"
+                            onError={(e) => handleImageError(e, 'small', item.movie?.title)}
                           />
                           <div className="flex-1">
                             <p className="text-white font-medium">{item.movie?.title || 'Unknown Movie'}</p>

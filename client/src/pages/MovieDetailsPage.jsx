@@ -171,10 +171,10 @@ const MovieDetailsPage = () => {
       {/* Header with thumbnail background */}
       <div className="relative">
         <img
-          src={bgError ? getThumbnailUrl(null, 'hero') : getThumbnailUrl(movie.thumbnail, 'hero')}
+          src={bgError ? getThumbnailUrl(null, 'hero', movie.title) : getThumbnailUrl(movie.thumbnail, 'hero', movie.title)}
           alt={movie.title}
           className="absolute inset-0 w-full h-[40vh] md:h-[60vh] object-cover"
-          
+          referrerPolicy="no-referrer"
           onError={() => setBgError(true)}
         />
         <div className="absolute inset-0 h-[40vh] md:h-[60vh] bg-gradient-to-r from-netflix-bg via-netflix-bg/80 to-transparent"></div>
@@ -190,11 +190,11 @@ const MovieDetailsPage = () => {
             {/* Thumbnail */}
             <div className="w-full lg:w-80 flex-shrink-0 mx-auto lg:mx-0">
               <img 
-                src={getThumbnailUrl(movie.thumbnail, 'detail')} 
+                src={getThumbnailUrl(movie.thumbnail, 'detail', movie.title)} 
                 alt={movie.title}
                 className="w-full rounded-lg shadow-2xl"
-                
-                onError={handleImageError}
+                referrerPolicy="no-referrer"
+                onError={(e) => handleImageError(e, 'detail', movie.title)}
               />
             </div>
             

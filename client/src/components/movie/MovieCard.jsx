@@ -23,7 +23,7 @@ const MovieCard = ({ movie, onWatchlist = [] }) => {
     e.preventDefault();
     e.stopPropagation();
     if (!user) return;
-    
+
     try {
       if (isInWatchlist) {
         await watchlistService.remove(movie.id);
@@ -51,32 +51,32 @@ const MovieCard = ({ movie, onWatchlist = [] }) => {
     : getThumbnailUrl(movie.thumbnail);
 
   return (
-    <div 
+    <div
       onClick={handleCardClick}
       className="block group cursor-pointer"
     >
       <div className="relative aspect-[2/3] rounded overflow-hidden bg-netflix-bg-tertiary">
-        <img 
+        <img
           src={thumbnailSrc}
           alt={movie.title}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-          loading="lazy"
-          
+          loading="eager"
+          referrerPolicy="no-referrer"
           onError={(e) => {
             setImageError(true);
             handleImageError(e);
           }}
         />
-        
+
         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-          <button 
+          <button
             onClick={handlePlay}
             className="w-12 h-12 rounded-full bg-white flex items-center justify-center hover:scale-110 transition-transform"
           >
             <Play size={20} className="text-black ml-1" />
           </button>
           {user && (
-            <button 
+            <button
               onClick={handleAddToWatchlist}
               className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-colors ${isInWatchlist ? 'bg-netflix-red border-netflix-red' : 'border-white hover:border-netflix-red'}`}
             >
@@ -99,4 +99,3 @@ const MovieCard = ({ movie, onWatchlist = [] }) => {
 };
 
 export default MovieCard;
-

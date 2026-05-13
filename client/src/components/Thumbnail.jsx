@@ -4,7 +4,7 @@ const FALLBACK = 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.
 const DEFAULT_IMAGE = FALLBACK;
 const PLACEHOLDER_IMAGE = FALLBACK;
 
-const Thumbnail = ({ src, alt, className }) => {
+const Thumbnail = ({ src, alt, className, referrer = 'no-referrer' }) => {
   const [imageError, setImageError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -34,6 +34,7 @@ const Thumbnail = ({ src, alt, className }) => {
         alt={alt || 'Movie thumbnail'}
         className={className}
         loading="lazy"
+        referrerPolicy={referrer}
         onLoad={handleLoad}
         onError={handleError}
         style={{ opacity: isLoading ? 0 : 1 }}

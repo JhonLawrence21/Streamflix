@@ -61,6 +61,9 @@ export const getThumbnailUrl = (url, size = 'small', title) => {
     }
     const trimmed = url.trim();
     if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('data:')) {
+      if (trimmed.includes('pinimg.com') || trimmed.includes('pinterest')) {
+        return `/api/thumb?url=${encodeURIComponent(trimmed)}`;
+      }
       return trimmed;
     }
     return title ? makePlaceholder(title) : DEFAULT_THUMBNAIL;
@@ -71,8 +74,8 @@ export const getThumbnailUrl = (url, size = 'small', title) => {
 
 export const handleImageError = (event, size = 'small', title) => {
   if (event && event.target) {
-    const alt = event.target.getAttribute('alt') || title || '';
-    event.target.src = getThumbnailUrl(null, size, alt);
+    event.target.src = getThumbnailUrl(null, size, title || event.target.alt || '');
+    event.target.style.backgroundColor = '#1C1C1C';
   }
 };
 
