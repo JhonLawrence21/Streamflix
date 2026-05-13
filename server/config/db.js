@@ -204,6 +204,20 @@ const connectDB = async (retries = 5, delay = 3000) => {
           } else {
             console.log('[DB] Migration check: country column already exists');
           }
+
+          // Set type='tv' for existing movies in TV Shows categories
+          try {
+            const [tvMovies] = await sequelize.query(`SELECT COUNT(*) as cnt FROM movies WHERE LOWER(category) IN ('tv shows', 'tv show', 'tv series') AND (type IS NULL OR type = '' OR type = 'movie')`);
+            if (tvMovies?.[0]?.cnt > 0) {
+              console.log(`[DB] Migrating: setting type='tv' for ${tvMovies[0].cnt} movies in TV categories...`);
+              await sequelize.query(`UPDATE movies SET type = 'tv' WHERE LOWER(category) IN ('tv shows', 'tv show', 'tv series') AND (type IS NULL OR type = '' OR type = 'movie')`);
+              console.log('[DB] Migration complete: TV Shows type updated');
+            } else {
+              console.log('[DB] Migration check: no TV Shows need type update');
+            }
+          } catch (e) {
+            console.log('[DB] TV type migration error (non-fatal):', e.message);
+          }
         }
       } catch (migrateErr) {
         console.error('[DB] Migration warning (non-fatal):', migrateErr.message);
