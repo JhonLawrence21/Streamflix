@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Play, ExternalLink, Volume2, VolumeX, SkipForward, Settings, Maximize, Minimize } from 'lucide-react';
+import { ArrowLeft, Play, ExternalLink, Volume2, VolumeX, SkipForward, Settings, Maximize, Minimize, Flag, CheckCircle, X } from 'lucide-react';
 import Navbar from '../components/layout/Navbar';
-import { movieService } from '../services/api';
+import { movieService, adminService, recommendationService } from '../services/api';
 import { isDirectVideoUrl } from '../utils/imageUtils';
 
 const WatchPage = () => {
@@ -19,6 +19,10 @@ const WatchPage = () => {
   const [skipIntro, setSkipIntro] = useState(false);
   const [introDuration] = useState(10);
   const [skipCountdown, setSkipCountdown] = useState(null);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportType, setReportType] = useState('broken_video');
+  const [reportMessage, setReportMessage] = useState('');
+  const [reportSubmitted, setReportSubmitted] = useState(false);
   const videoRef = useRef(null);
   const controlsTimeoutRef = useRef(null);
 
@@ -30,6 +34,12 @@ const WatchPage = () => {
         setVideoError(false);
         const data = await movieService.watchMovie(id);
         setMovie(data);
+
+        // Track watch in viewing history
+        const token = localStorage.getItem('token');
+        if (token) {
+          recommendationService.trackWatch(id, { duration: 0, completed: false }).catch(() => {});
+        }
       } catch (err) {
         setError(err.response?.data?.message || 'Movie not found');
       } finally {
@@ -196,6 +206,13 @@ const WatchPage = () => {
               YouTube
             </a>
           )}
+          <button
+            onClick={() => setShowReportModal(true)}
+            className="flex items-center gap-2 text-white/80 hover:text-white transition-colors bg-black/50 hover:bg-black/70 px-3 py-2 rounded"
+          >
+            <Flag size={16} />
+            Report
+          </button>
         </div>
       </div>
 
@@ -308,6 +325,82 @@ const WatchPage = () => {
           </div>
         )}
       </div>
+      {/* Report Modal */}
+      {showReportModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100]" onClick={(e) => { if (e.target === e.currentTarget) setShowReportModal(false); }}>
+          <div className="bg-netflix-bg-secondary rounded-lg p-6 w-full max-w-md mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                <Flag size={20} className="text-netflix-warning" />
+                Report Issue
+              </h3>
+              <button onClick={() => { setShowReportModal(false); setReportSubmitted(false); }} className="text-netflix-text-muted hover:text-white">
+                <X size={20} />
+              </button>
+            </div>
+
+            {reportSubmitted ? (
+              <div className="text-center py-8">
+                <CheckCircle size={48} className="mx-auto text-green-500 mb-4" />
+                <p className="text-white text-lg font-semibold">Report Submitted</p>
+                <p className="text-netflix-text-secondary mt-2">Thank you for helping us improve.</p>
+                <button onClick={() => { setShowReportModal(false); setReportSubmitted(false); }} className="mt-6 px-6 py-2 bg-netflix-red text-white rounded hover:bg-red-700 transition-colors">
+                  Close
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={async (e) => {
+                e.preventDefault();
+                try {
+                  await adminService.submitReport({
+                    type: reportType,
+                    movieId: movie.id,
+                    movieTitle: movie.title,
+                    message: reportMessage
+                  });
+                  setReportSubmitted(true);
+                  setReportMessage('');
+                } catch (err) {
+                  alert('Failed to submit report');
+                }
+              }}>
+                <div className="mb-4">
+                  <label className="block text-sm text-netflix-text-secondary mb-2">Issue Type</label>
+                  <select
+                    value={reportType}
+                    onChange={(e) => setReportType(e.target.value)}
+                    className="w-full bg-netflix-bg-tertiary border border-netflix-text-muted rounded px-4 py-3 text-white focus:outline-none focus:border-netflix-red"
+                  >
+                    <option value="broken_video">Broken Video</option>
+                    <option value="inappropriate_content">Inappropriate Content</option>
+                    <option value="missing_subtitles">Missing Subtitles</option>
+                    <option value="broken_link">Broken Link</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm text-netflix-text-secondary mb-2">Description</label>
+                  <textarea
+                    value={reportMessage}
+                    onChange={(e) => setReportMessage(e.target.value)}
+                    className="w-full bg-netflix-bg-tertiary border border-netflix-text-muted rounded px-4 py-3 text-white placeholder-netflix-text-muted focus:outline-none focus:border-netflix-red min-h-[100px]"
+                    placeholder="Describe the issue..."
+                    required
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button type="button" onClick={() => setShowReportModal(false)} className="flex-1 py-3 rounded bg-netflix-bg-tertiary text-white hover:bg-gray-600 transition-colors">
+                    Cancel
+                  </button>
+                  <button type="submit" className="flex-1 py-3 rounded bg-netflix-red text-white hover:bg-red-700 transition-colors">
+                    Submit Report
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

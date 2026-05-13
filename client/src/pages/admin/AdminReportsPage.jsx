@@ -20,59 +20,13 @@ const AdminReportsPage = () => {
   const fetchReports = async () => {
     setLoading(true);
     try {
-      const mockReports = [
-        {
-          id: 1,
-          type: 'broken_video',
-          movieId: 5,
-          movieTitle: 'The Matrix',
-          userId: 23,
-          userName: 'John Doe',
-          message: 'Video playback freezes at 45:30 mark',
-          status: 'pending',
-          createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
-        },
-        {
-          id: 2,
-          type: 'inappropriate_content',
-          movieId: 12,
-          movieTitle: 'Sample Movie',
-          userId: 45,
-          userName: 'Jane Smith',
-          message: 'Description contains inappropriate language',
-          status: 'pending',
-          createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString()
-        },
-        {
-          id: 3,
-          type: 'missing_subtitles',
-          movieId: 8,
-          movieTitle: 'Inception',
-          userId: 67,
-          userName: 'Bob Wilson',
-          message: 'No English subtitles available',
-          status: 'resolved',
-          createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-        },
-        {
-          id: 4,
-          type: 'broken_link',
-          movieId: 15,
-          movieTitle: 'Breaking Bad S01',
-          userId: 89,
-          userName: 'Alice Brown',
-          message: 'External link is not working',
-          status: 'dismissed',
-          createdAt: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString()
-        }
-      ];
-
-      setReports(mockReports);
+      const data = await adminService.getReports(filter);
+      setReports(data);
       setStats({
-        total: mockReports.length,
-        pending: mockReports.filter(r => r.status === 'pending').length,
-        resolved: mockReports.filter(r => r.status === 'resolved').length,
-        dismissed: mockReports.filter(r => r.status === 'dismissed').length
+        total: data.length,
+        pending: data.filter(r => r.status === 'pending').length,
+        resolved: data.filter(r => r.status === 'resolved').length,
+        dismissed: data.filter(r => r.status === 'dismissed').length
       });
     } catch (error) {
       console.error('Error fetching reports:', error);
@@ -83,15 +37,11 @@ const AdminReportsPage = () => {
 
   const handleStatusChange = async (reportId, newStatus) => {
     try {
+      await adminService.updateReport(reportId, newStatus);
       setReports(reports.map(r =>
         r.id === reportId ? { ...r, status: newStatus } : r
       ));
-      setStats(prev => ({
-        ...prev,
-        pending: reports.filter(r => r.status === 'pending' || (r.id === reportId && newStatus === 'pending')).length,
-        resolved: reports.filter(r => r.status === 'resolved' || (r.id === reportId && newStatus === 'resolved')).length,
-        dismissed: reports.filter(r => r.status === 'dismissed' || (r.id === reportId && newStatus === 'dismissed')).length
-      }));
+      fetchReports();
     } catch (error) {
       console.error('Error updating report:', error);
     }

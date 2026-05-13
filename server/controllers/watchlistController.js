@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const { logActivity } = require('../services/activityLogger');
 
 exports.getWatchlist = async (req, res) => {
   try {
@@ -63,6 +64,12 @@ exports.addToWatchlist = async (req, res) => {
     user.watchlist = watchlist;
     await user.save();
     
+    try {
+      const [movieRows] = await sequelize.query(`SELECT title FROM movies WHERE id = ${movieIdInt} LIMIT 1`);
+      if (movieRows.length > 0) {
+        logActivity(req.user.id, req.user.name, 'watchlist', `Added "${movieRows[0].title}" to watchlist`, { movieId: movieIdInt, movieTitle: movieRows[0].title });
+      }
+    } catch (e) { /* ignore */ }
 
     res.json({ message: 'Movie added to watchlist' });
   } catch (error) {
@@ -83,6 +90,13 @@ exports.removeFromWatchlist = async (req, res) => {
 
     user.watchlist = watchlist.filter(id => id !== movieIdInt);
     await user.save();
+
+    try {
+      const [movieRows] = await sequelize.query(`SELECT title FROM movies WHERE id = ${movieIdInt} LIMIT 1`);
+      if (movieRows.length > 0) {
+        logActivity(req.user.id, req.user.name, 'watchlist', `Removed "${movieRows[0].title}" from watchlist`, { movieId: movieIdInt, movieTitle: movieRows[0].title });
+      }
+    } catch (e) { /* ignore */ }
 
     res.json({ message: 'Movie removed from watchlist' });
   } catch (error) {

@@ -45,6 +45,20 @@ const SimpleBarChart = ({ data, title }) => {
   );
 };
 
+const timeAgo = (dateStr) => {
+  const now = new Date();
+  const date = new Date(dateStr);
+  const diffMs = now - date;
+  const diffSec = Math.floor(diffMs / 1000);
+  if (diffSec < 60) return 'just now';
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr}h ago`;
+  const diffDay = Math.floor(diffHr / 24);
+  return `${diffDay}d ago`;
+};
+
 const ActivityFeed = ({ activities }) => (
   <div className="bg-netflix-bg-secondary p-6 rounded-lg">
     <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
@@ -56,7 +70,7 @@ const ActivityFeed = ({ activities }) => (
         <p className="text-netflix-text-muted text-center py-4">No recent activity</p>
       ) : (
         activities.map((activity, index) => (
-          <div key={index} className="flex items-start gap-3 pb-3 border-b border-netflix-bg-tertiary last:border-0">
+          <div key={activity.id || index} className="flex items-start gap-3 pb-3 border-b border-netflix-bg-tertiary last:border-0">
             <div className={`w-2 h-2 rounded-full mt-2 ${
               activity.type === 'view' ? 'bg-blue-500' :
               activity.type === 'watchlist' ? 'bg-green-500' :
@@ -64,7 +78,9 @@ const ActivityFeed = ({ activities }) => (
             }`} />
             <div className="flex-1">
               <p className="text-white text-sm">{activity.message}</p>
-              <p className="text-netflix-text-muted text-xs mt-1">{activity.time}</p>
+              <p className="text-netflix-text-muted text-xs mt-1">
+                {activity.userName ? `${activity.userName} - ` : ''}{timeAgo(activity.createdAt)}
+              </p>
             </div>
           </div>
         ))
@@ -108,17 +124,12 @@ const AdminDashboardPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const data = await adminService.getAnalytics();
+        const [data, activityData] = await Promise.all([
+          adminService.getAnalytics(),
+          adminService.getActivity(20)
+        ]);
         setAnalytics(data);
-
-        const mockActivities = [
-          { type: 'view', message: 'Someone watched The Shawshank Redemption', time: '2 minutes ago' },
-          { type: 'watchlist', message: 'New movie added to watchlist', time: '15 minutes ago' },
-          { type: 'signup', message: 'New user registered: John Doe', time: '1 hour ago' },
-          { type: 'view', message: 'Breaking Bad episode played', time: '2 hours ago' },
-          { type: 'watchlist', message: 'Inception added to watchlist', time: '3 hours ago' },
-        ];
-        setActivities(mockActivities);
+        setActivities(activityData || []);
       } catch (error) {
         console.error('Error fetching analytics:', error);
       } finally {
@@ -127,6 +138,15 @@ const AdminDashboardPage = () => {
     };
 
     fetchData();
+
+    const interval = setInterval(async () => {
+      try {
+        const activityData = await adminService.getActivity(20);
+        setActivities(activityData || []);
+      } catch (e) { /* ignore */ }
+    }, 15000);
+
+    return () => clearInterval(interval);
   }, []);
 
   if (loading) {

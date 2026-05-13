@@ -72,6 +72,15 @@ exports.watchMovie = async (req, res) => {
     if (movies.length === 0) {
       return res.status(404).json({ message: 'Movie not found' });
     }
+
+    if (req.user) {
+      try {
+        const { logActivity } = require('../services/activityLogger');
+        const movie = movies[0];
+        logActivity(req.user.id, req.user.name, 'view', `Watched "${movie.title}"`, { movieId: movie.id, movieTitle: movie.title });
+      } catch (e) { console.error('[watchMovie] activity log error:', e.message); }
+    }
+
     res.json(processMovie(movies[0]));
   } catch (error) {
     res.status(500).json({ message: error.message });

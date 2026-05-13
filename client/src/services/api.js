@@ -269,6 +269,26 @@ export const adminService = {
   getUserViewHistory: async (userId) => {
     const response = await api.get(`/admin/users/${userId}/history`);
     return response.data;
+  },
+
+  getActivity: async (limit = 50) => {
+    const response = await api.get(`/admin/activity?limit=${limit}`);
+    return response.data;
+  },
+
+  getReports: async (status = 'all') => {
+    const response = await api.get(`/admin/reports?status=${status}`);
+    return response.data;
+  },
+
+  updateReport: async (id, status) => {
+    const response = await api.put(`/admin/reports/${id}`, { status });
+    return response.data;
+  },
+
+  submitReport: async (data) => {
+    const response = await api.post('/reports', data);
+    return response.data;
   }
 };
 

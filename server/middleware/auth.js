@@ -39,3 +39,17 @@ exports.admin = async (req, res, next) => {
     return res.status(403).json({ message: 'Not authorized as admin' });
   }
 };
+
+exports.optionalAuth = async (req, res, next) => {
+  let token;
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    token = req.headers.authorization.split(' ')[1];
+  }
+  if (token) {
+    try {
+      const decoded = verifyToken(token);
+      req.user = await User.findByPk(decoded.id);
+    } catch (e) { /* ignore invalid tokens */ }
+  }
+  next();
+};

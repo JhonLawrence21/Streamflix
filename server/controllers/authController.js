@@ -36,6 +36,12 @@ const registerUser = async (req, res) => {
     });
     const userData = user.toJSON();
     delete userData.password;
+
+    try {
+      const { logActivity } = require('../services/activityLogger');
+      logActivity(userData.id, userData.name, 'signup', `New user registered: ${name}`, { email });
+    } catch (e) { /* ignore */ }
+
     res.status(201).json({
       ...userData,
       watchlist: [],
@@ -91,7 +97,7 @@ exports.getMe = async (req, res) => {
 
 exports.updateProfile = async (req, res) => {
   try {
-    const { name, email, profileImage } = req.body;
+    const { name, email, profileImage, profiles, activeProfile, parentalControlPin } = req.body;
     
     console.log('[Profile] Updating profile, image length:', profileImage ? profileImage.length : 0);
 
@@ -115,6 +121,9 @@ exports.updateProfile = async (req, res) => {
       }
       user.profileImage = profileImage;
     }
+    if (profiles !== undefined) user.profiles = profiles;
+    if (activeProfile !== undefined) user.activeProfile = activeProfile;
+    if (parentalControlPin !== undefined) user.parentalControlPin = parentalControlPin;
 
     await user.save();
     

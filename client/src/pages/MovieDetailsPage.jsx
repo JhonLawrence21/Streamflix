@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Play, Star, Calendar, Clock, Plus, Check, ExternalLink, X, Download, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Play, Star, Calendar, Clock, Plus, Check, ExternalLink, X, Download, CheckCircle, Flag } from 'lucide-react';
 import Navbar from '../components/layout/Navbar';
 import MovieCard from '../components/movie/MovieCard';
-import { movieService, watchlistService } from '../services/api';
+import { movieService, watchlistService, adminService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { getYouTubeVideoId, getYouTubeEmbedUrl, getYouTubeWatchUrl, getThumbnailUrl, handleImageError, isYouTubeUrl } from '../utils/imageUtils';
 
@@ -21,6 +21,11 @@ const MovieDetailsPage = () => {
   const [bgError, setBgError] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isDownloaded, setIsDownloaded] = useState(false);
+
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportType, setReportType] = useState('broken_video');
+  const [reportMessage, setReportMessage] = useState('');
+  const [reportSubmitted, setReportSubmitted] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -283,6 +288,15 @@ const MovieDetailsPage = () => {
                     )}
                   </button>
                 )}
+
+                {/* Report */}
+                <button
+                  onClick={() => setShowReportModal(true)}
+                  className="flex items-center justify-center gap-2 bg-gray-800/70 text-gray-400 px-4 py-3 rounded font-semibold hover:text-white hover:bg-gray-700 transition-colors"
+                >
+                  <Flag size={20} />
+                  Report
+                </button>
               </div>
 
               {/* Director */}
@@ -319,6 +333,83 @@ const MovieDetailsPage = () => {
             {similar.map(m => (
               <MovieCard key={m.id} movie={m} onWatchlist={watchlistIds} />
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Report Modal */}
+      {showReportModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50" onClick={(e) => { if (e.target === e.currentTarget) setShowReportModal(false); }}>
+          <div className="bg-netflix-bg-secondary rounded-lg p-6 w-full max-w-md mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                <Flag size={20} className="text-netflix-warning" />
+                Report Issue
+              </h3>
+              <button onClick={() => { setShowReportModal(false); setReportSubmitted(false); }} className="text-netflix-text-muted hover:text-white">
+                <X size={20} />
+              </button>
+            </div>
+
+            {reportSubmitted ? (
+              <div className="text-center py-8">
+                <CheckCircle size={48} className="mx-auto text-green-500 mb-4" />
+                <p className="text-white text-lg font-semibold">Report Submitted</p>
+                <p className="text-netflix-text-secondary mt-2">Thank you for helping us improve.</p>
+                <button onClick={() => { setShowReportModal(false); setReportSubmitted(false); }} className="mt-6 px-6 py-2 bg-netflix-red text-white rounded hover:bg-red-700 transition-colors">
+                  Close
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={async (e) => {
+                e.preventDefault();
+                try {
+                  await adminService.submitReport({
+                    type: reportType,
+                    movieId: movie.id,
+                    movieTitle: movie.title,
+                    message: reportMessage
+                  });
+                  setReportSubmitted(true);
+                  setReportMessage('');
+                } catch (err) {
+                  alert('Failed to submit report');
+                }
+              }}>
+                <div className="mb-4">
+                  <label className="block text-sm text-netflix-text-secondary mb-2">Issue Type</label>
+                  <select
+                    value={reportType}
+                    onChange={(e) => setReportType(e.target.value)}
+                    className="w-full bg-netflix-bg-tertiary border border-netflix-text-muted rounded px-4 py-3 text-white focus:outline-none focus:border-netflix-red"
+                  >
+                    <option value="broken_video">Broken Video</option>
+                    <option value="inappropriate_content">Inappropriate Content</option>
+                    <option value="missing_subtitles">Missing Subtitles</option>
+                    <option value="broken_link">Broken Link</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm text-netflix-text-secondary mb-2">Description</label>
+                  <textarea
+                    value={reportMessage}
+                    onChange={(e) => setReportMessage(e.target.value)}
+                    className="w-full bg-netflix-bg-tertiary border border-netflix-text-muted rounded px-4 py-3 text-white placeholder-netflix-text-muted focus:outline-none focus:border-netflix-red min-h-[100px]"
+                    placeholder="Describe the issue..."
+                    required
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button type="button" onClick={() => setShowReportModal(false)} className="flex-1 py-3 rounded bg-netflix-bg-tertiary text-white hover:bg-gray-600 transition-colors">
+                    Cancel
+                  </button>
+                  <button type="submit" className="flex-1 py-3 rounded bg-netflix-red text-white hover:bg-red-700 transition-colors">
+                    Submit Report
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}

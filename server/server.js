@@ -24,7 +24,8 @@ const authRoutes = require('./routes/auth');
 const movieRoutes = require('./routes/movies');
 const watchlistRoutes = require('./routes/watchlist');
 const adminRoutes = require('./routes/admin');
-// const recommendationRoutes = require('./routes/recommendations');
+const db = require('./config/db');
+const recommendationRoutes = require('./routes/recommendations');
 
 const app = express();
 
@@ -129,7 +130,71 @@ app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/movies', generalLimiter, movieRoutes);
 app.use('/api/watchlist', generalLimiter, watchlistRoutes);
 app.use('/api/admin', generalLimiter, adminRoutes);
-// app.use('/api/recommendations', generalLimiter, recommendationRoutes);
+app.use('/api/recommendations', generalLimiter, recommendationRoutes);
+
+// User report submission endpoint
+const { optionalAuth } = require('./middleware/auth');
+app.post('/api/reports', optionalAuth, async (req, res) => {
+  try {
+    const { type, movieId, movieTitle, message } = req.body;
+    if (!type || !message) {
+      return res.status(400).json({ message: 'Type and message are required' });
+    }
+    const { sequelize } = db;
+    const now = new Date().toISOString();
+    const userId = req.user ? req.user.id : null;
+    const userName = req.user ? req.user.name : 'Anonymous';
+    const safeType = `'${String(type).replace(/'/g, "''")}'`;
+    const safeMsg = `'${String(message).replace(/'/g, "''")}'`;
+    const safeTitle = movieTitle ? `'${String(movieTitle).replace(/'/g, "''")}'` : 'NULL';
+    const safeMovieId = movieId != null ? movieId : 'NULL';
+    const safeUserId = userId != null ? userId : 'NULL';
+    const safeName = `'${String(userName).replace(/'/g, "''")}'`;
+
+    try {
+      await sequelize.query(`
+        CREATE TABLE IF NOT EXISTS user_reports (
+          id SERIAL PRIMARY KEY,
+          type VARCHAR(50) NOT NULL,
+          "movieId" INTEGER,
+          "movieTitle" VARCHAR(255),
+          "userId" INTEGER,
+          "userName" VARCHAR(255),
+          message TEXT,
+          status VARCHAR(20) DEFAULT 'pending',
+          "createdAt" TIMESTAMP DEFAULT NOW(),
+          "updatedAt" TIMESTAMP DEFAULT NOW()
+        )
+      `);
+    } catch (e) {
+      try {
+        await sequelize.query(`
+          CREATE TABLE IF NOT EXISTS user_reports (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            type VARCHAR(50) NOT NULL,
+            "movieId" INTEGER,
+            "movieTitle" VARCHAR(255),
+            "userId" INTEGER,
+            "userName" VARCHAR(255),
+            message TEXT,
+            status VARCHAR(20) DEFAULT 'pending',
+            "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          )
+        `);
+      } catch (e2) {}
+    }
+
+    await sequelize.query(`
+      INSERT INTO user_reports (type, "movieId", "movieTitle", "userId", "userName", message, status, "createdAt", "updatedAt")
+      VALUES (${safeType}, ${safeMovieId}, ${safeTitle}, ${safeUserId}, ${safeName}, ${safeMsg}, 'pending', '${now}', '${now}')
+    `);
+
+    res.status(201).json({ message: 'Report submitted successfully' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 
 // Frontend static serve with fallbacks (client/build preferred over public/)
 const possiblePaths = [
@@ -231,6 +296,9 @@ connectDB()
     console.log('✓ DB connected successfully');
     await createDefaultAdmin();
     
+    const { ensureTable } = require('./services/activityLogger');
+    await ensureTable();
+
     const movieCount = await Movie.count();
     console.log(`✓ Current movies in DB: ${movieCount}`);
     if (movieCount === 0) {

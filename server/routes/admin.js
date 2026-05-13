@@ -17,6 +17,8 @@ const {
 const { protect, admin } = require('../middleware/auth');
 const User = require('../models/User');
 const Movie = require('../models/Movie');
+const { getRecentActivity } = require('../services/activityLogger');
+const db = require('../config/db');
 
 router.use(protect);
 router.use(admin);
@@ -70,6 +72,89 @@ router.get('/users/:id/history', async (req, res) => {
       })
     );
     res.json(historyWithMovies);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+router.get('/activity', async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 50;
+    const activities = await getRecentActivity(limit);
+    res.json(activities);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+router.get('/reports', async (req, res) => {
+  try {
+    const { sequelize } = db;
+    try {
+      await sequelize.query(`
+        CREATE TABLE IF NOT EXISTS user_reports (
+          id SERIAL PRIMARY KEY,
+          type VARCHAR(50) NOT NULL,
+          "movieId" INTEGER,
+          "movieTitle" VARCHAR(255),
+          "userId" INTEGER,
+          "userName" VARCHAR(255),
+          message TEXT,
+          status VARCHAR(20) DEFAULT 'pending',
+          "createdAt" TIMESTAMP DEFAULT NOW(),
+          "updatedAt" TIMESTAMP DEFAULT NOW()
+        )
+      `);
+    } catch (e) {
+      try {
+        await sequelize.query(`
+          CREATE TABLE IF NOT EXISTS user_reports (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            type VARCHAR(50) NOT NULL,
+            "movieId" INTEGER,
+            "movieTitle" VARCHAR(255),
+            "userId" INTEGER,
+            "userName" VARCHAR(255),
+            message TEXT,
+            status VARCHAR(20) DEFAULT 'pending',
+            "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          )
+        `);
+      } catch (e2) {}
+    }
+
+    const filter = req.query.status || 'all';
+    let query = 'SELECT * FROM user_reports';
+    if (filter !== 'all') {
+      query += ` WHERE status = '${filter.replace(/'/g, "''")}'`;
+    }
+    query += ' ORDER BY "createdAt" DESC';
+
+    const [reports] = await sequelize.query(query);
+    res.json(reports || []);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+router.put('/reports/:id', async (req, res) => {
+  try {
+    const { sequelize } = db;
+    const { status } = req.body;
+    const id = parseInt(req.params.id);
+
+    if (!['pending', 'resolved', 'dismissed'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status' });
+    }
+
+    const now = new Date().toISOString();
+    await sequelize.query(`
+      UPDATE user_reports SET status = '${status}', "updatedAt" = '${now}' WHERE id = ${id}
+    `);
+
+    const [reports] = await sequelize.query(`SELECT * FROM user_reports WHERE id = ${id} LIMIT 1`);
+    res.json(reports[0] || { message: 'Updated' });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { auth } = require('../middleware/auth');
+const { protect } = require('../middleware/auth');
 
 console.log('[ROUTES] Loading recommendations routes...');
 
@@ -13,19 +13,19 @@ try {
 }
 
 if (recommendationController && recommendationController.getForYou) {
-  router.get('/for-you', auth, recommendationController.getForYou);
+  router.get('/for-you', protect, recommendationController.getForYou);
 }
 if (recommendationController && recommendationController.getSimilar) {
   router.get('/similar/:movieId', recommendationController.getSimilar);
 }
 if (recommendationController && recommendationController.trackWatch) {
-  router.post('/track/:movieId', auth, recommendationController.trackWatch);
+  router.post('/track/:movieId', protect, recommendationController.trackWatch);
 }
 if (recommendationController && recommendationController.getHistory) {
-  router.get('/history', auth, recommendationController.getHistory);
+  router.get('/history', protect, recommendationController.getHistory);
 }
 if (recommendationController && recommendationController.clearHistory) {
-  router.delete('/history', auth, recommendationController.clearHistory);
+  router.delete('/history', protect, recommendationController.clearHistory);
 }
 
 module.exports = router;
