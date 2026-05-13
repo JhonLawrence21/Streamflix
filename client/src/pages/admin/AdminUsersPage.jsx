@@ -199,16 +199,11 @@ const UserDetailModal = ({ user, onClose }) => {
                             <p className="text-netflix-text-muted text-sm">
                               Watched: {new Date(item.watchedAt).toLocaleString()}
                             </p>
-                            {item.progress && (
-                              <div className="mt-2 flex items-center gap-2">
-                                <div className="flex-1 h-1 bg-netflix-bg-secondary rounded-full overflow-hidden">
-                                  <div
-                                    className="h-full bg-netflix-red"
-                                    style={{ width: `${item.progress}%` }}
-                                  />
-                                </div>
-                                <span className="text-netflix-text-muted text-xs">{item.progress}%</span>
-                              </div>
+                            {item.completed && (
+                              <span className="text-xs text-green-400 mt-1 inline-block">Completed</span>
+                            )}
+                            {item.duration > 0 && !item.completed && (
+                              <span className="text-xs text-netflix-text-muted mt-1 inline-block">{Math.floor(item.duration / 60)}m watched</span>
                             )}
                           </div>
                         </div>
@@ -402,7 +397,7 @@ const AdminUsersPage = () => {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2 text-netflix-text-secondary">
                           <Heart size={14} />
-                          {user.watchlistCount || 0}
+                          {user.watchlistCount ?? (Array.isArray(user.watchlist) ? user.watchlist.length : 0)}
                         </div>
                       </td>
                       <td className="px-6 py-4 text-netflix-text-secondary">

@@ -289,6 +289,11 @@ export const adminService = {
   submitReport: async (data) => {
     const response = await api.post('/reports', data);
     return response.data;
+  },
+
+  deleteReport: async (id) => {
+    const response = await api.delete(`/admin/reports/${id}`);
+    return response.data;
   }
 };
 

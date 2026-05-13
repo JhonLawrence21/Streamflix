@@ -467,7 +467,12 @@ exports.getCategories = async (req, res) => {
 exports.getUsers = async (req, res) => {
   try {
     const users = await User.findAll({ attributes: { exclude: ['password'] }, raw: true });
-    res.json(users);
+    const usersWithCounts = users.map(u => ({
+      ...u,
+      watchlistCount: Array.isArray(u.watchlist) ? u.watchlist.length : 0,
+      historyCount: Array.isArray(u.viewingHistory) ? u.viewingHistory.length : 0
+    }));
+    res.json(usersWithCounts);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

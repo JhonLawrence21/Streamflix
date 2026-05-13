@@ -46,7 +46,7 @@ if (!movie) {
         src={bgSrc}
         alt={movie.title}
         className="absolute inset-0 w-full h-full object-cover"
-        referrerPolicy="no-referrer"
+        
         onError={() => setBgError(true)}
       />
       <div className="absolute inset-0 bg-gradient-to-r from-netflix-bg via-transparent to-transparent"></div>

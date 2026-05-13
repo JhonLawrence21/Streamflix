@@ -1,7 +1,8 @@
 import { useState } from 'react';
 
-const DEFAULT_IMAGE = 'https://placehold.co/400x600/1a1a1a/ffffff?text=No+Image';
-const PLACEHOLDER_IMAGE = 'https://placehold.co/400x600/1a1a1a/ffffff?text=Loading...';
+const FALLBACK = 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 450"><rect fill="#1a1a2e" width="300" height="450"/><text x="150" y="225" text-anchor="middle" fill="#444" font-size="16" font-family="sans-serif">No Image</text></svg>');
+const DEFAULT_IMAGE = FALLBACK;
+const PLACEHOLDER_IMAGE = FALLBACK;
 
 const Thumbnail = ({ src, alt, className }) => {
   const [imageError, setImageError] = useState(false);

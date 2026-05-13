@@ -86,28 +86,48 @@ const MovieDetailsPage = () => {
     if (!movie.videoUrl || isDownloaded) return;
     
     setIsDownloading(true);
+
+    const fallbackDownload = () => {
+      const a = document.createElement('a');
+      a.href = movie.videoUrl;
+      a.download = movie.title ? movie.title.replace(/[^a-zA-Z0-9]/g, '_') + '.mp4' : 'video.mp4';
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setIsDownloading(false);
+      setIsDownloaded(true);
+    };
+
     if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      let settled = false;
+      const handler = (event) => {
+        if (event.data.movieId === movie.id) {
+          settled = true;
+          navigator.serviceWorker.removeEventListener('message', handler);
+          if (event.data.type === 'DOWNLOAD_COMPLETE') {
+            setIsDownloading(false);
+            setIsDownloaded(true);
+          } else if (event.data.type === 'DOWNLOAD_ERROR') {
+            fallbackDownload();
+          }
+        }
+      };
+      navigator.serviceWorker.addEventListener('message', handler);
       navigator.serviceWorker.controller.postMessage({
         type: 'DOWNLOAD_VIDEO',
         url: movie.videoUrl,
         movieId: movie.id
       });
-
-      navigator.serviceWorker.addEventListener('message', function handler(event) {
-        if (event.data.type === 'DOWNLOAD_COMPLETE' && event.data.movieId === movie.id) {
-          setIsDownloading(false);
-          setIsDownloaded(true);
+      setTimeout(() => {
+        if (!settled) {
           navigator.serviceWorker.removeEventListener('message', handler);
+          fallbackDownload();
         }
-        if (event.data.type === 'DOWNLOAD_ERROR' && event.data.movieId === movie.id) {
-          setIsDownloading(false);
-          alert('Download failed: ' + event.data.error);
-          navigator.serviceWorker.removeEventListener('message', handler);
-        }
-      });
+      }, 5000);
     } else {
-      setIsDownloading(false);
-      alert('Download not supported in this browser');
+      fallbackDownload();
     }
   };
 
@@ -154,7 +174,7 @@ const MovieDetailsPage = () => {
           src={bgError ? getThumbnailUrl(null, 'hero') : getThumbnailUrl(movie.thumbnail, 'hero')}
           alt={movie.title}
           className="absolute inset-0 w-full h-[40vh] md:h-[60vh] object-cover"
-          referrerPolicy="no-referrer"
+          
           onError={() => setBgError(true)}
         />
         <div className="absolute inset-0 h-[40vh] md:h-[60vh] bg-gradient-to-r from-netflix-bg via-netflix-bg/80 to-transparent"></div>
@@ -173,7 +193,7 @@ const MovieDetailsPage = () => {
                 src={getThumbnailUrl(movie.thumbnail, 'detail')} 
                 alt={movie.title}
                 className="w-full rounded-lg shadow-2xl"
-                referrerPolicy="no-referrer"
+                
                 onError={handleImageError}
               />
             </div>

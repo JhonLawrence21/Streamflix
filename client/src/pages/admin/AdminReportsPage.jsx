@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Flag, Eye, CheckCircle, XCircle, Clock, AlertTriangle, Filter } from 'lucide-react';
+import { Flag, Eye, CheckCircle, XCircle, Clock, AlertTriangle, Filter, Trash2 } from 'lucide-react';
 import { adminService } from '../../services/api';
 
 const AdminReportsPage = () => {
@@ -44,6 +44,16 @@ const AdminReportsPage = () => {
       fetchReports();
     } catch (error) {
       console.error('Error updating report:', error);
+    }
+  };
+
+  const handleDeleteReport = async (reportId) => {
+    if (!window.confirm('Delete this report permanently?')) return;
+    try {
+      await adminService.deleteReport(reportId);
+      fetchReports();
+    } catch (error) {
+      console.error('Error deleting report:', error);
     }
   };
 
@@ -165,24 +175,34 @@ const AdminReportsPage = () => {
                   </div>
                 </div>
 
-                {report.status === 'pending' && (
-                  <div className="flex gap-2 flex-shrink-0">
-                    <button
-                      onClick={() => handleStatusChange(report.id, 'resolved')}
-                      className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-sm flex items-center gap-2"
-                    >
-                      <CheckCircle size={16} />
-                      Resolve
-                    </button>
-                    <button
-                      onClick={() => handleStatusChange(report.id, 'dismissed')}
-                      className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors text-sm flex items-center gap-2"
-                    >
-                      <XCircle size={16} />
-                      Dismiss
-                    </button>
-                  </div>
-                )}
+                <div className="flex gap-2 flex-shrink-0">
+                  {report.status === 'pending' && (
+                    <>
+                      <button
+                        onClick={() => handleStatusChange(report.id, 'resolved')}
+                        className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-sm flex items-center gap-2"
+                      >
+                        <CheckCircle size={16} />
+                        Resolve
+                      </button>
+                      <button
+                        onClick={() => handleStatusChange(report.id, 'dismissed')}
+                        className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors text-sm flex items-center gap-2"
+                      >
+                        <XCircle size={16} />
+                        Dismiss
+                      </button>
+                    </>
+                  )}
+                  <button
+                    onClick={() => handleDeleteReport(report.id)}
+                    className="px-4 py-2 bg-red-600/20 text-red-400 rounded hover:bg-red-600 hover:text-white transition-colors text-sm flex items-center gap-2 border border-red-600/30"
+                    title="Delete"
+                  >
+                    <Trash2 size={16} />
+                    Delete
+                  </button>
+                </div>
               </div>
             </div>
           ))}

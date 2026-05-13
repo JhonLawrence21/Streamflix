@@ -42,11 +42,17 @@ router.get('/users/:id/watchlist', async (req, res) => {
     const user = await User.findByPk(req.params.id);
     if (!user) return res.status(404).json({ message: 'User not found' });
     
-    const watchlistIds = user.watchlist || [];
-    const movies = await Movie.findAll({
-      where: { id: watchlistIds }
-    });
-    res.json(movies);
+    let watchlistIds = user.watchlist;
+    if (typeof watchlistIds === 'string') { try { watchlistIds = JSON.parse(watchlistIds); } catch { watchlistIds = []; } }
+    if (!Array.isArray(watchlistIds)) watchlistIds = [];
+
+    const validIds = watchlistIds.filter(id => id != null);
+    if (validIds.length === 0) return res.json([]);
+
+    const [movies] = await require('../config/db').sequelize.query(
+      `SELECT * FROM movies WHERE id IN (${validIds.join(',')})`
+    );
+    res.json(movies || []);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -57,18 +63,24 @@ router.get('/users/:id/history', async (req, res) => {
     const user = await User.findByPk(req.params.id);
     if (!user) return res.status(404).json({ message: 'User not found' });
     
-    const history = user.viewingHistory || [];
+    let history = user.viewingHistory;
+    if (typeof history === 'string') { try { history = JSON.parse(history); } catch { history = []; } }
+    if (!Array.isArray(history)) history = [];
+
     const historyWithMovies = await Promise.all(
       history.map(async (item) => {
-        const movie = await Movie.findByPk(item.movieId);
-        return {
-          ...item,
-          movie: movie ? {
-            id: movie.id,
-            title: movie.title,
-            thumbnail: movie.thumbnail
-          } : null
-        };
+        if (!item || !item.movieId) return item;
+        try {
+          const movie = await Movie.findByPk(item.movieId);
+          return {
+            ...item,
+            movie: movie ? {
+              id: movie.id,
+              title: movie.title,
+              thumbnail: movie.thumbnail
+            } : null
+          };
+        } catch { return item; }
       })
     );
     res.json(historyWithMovies);
@@ -155,6 +167,17 @@ router.put('/reports/:id', async (req, res) => {
 
     const [reports] = await sequelize.query(`SELECT * FROM user_reports WHERE id = ${id} LIMIT 1`);
     res.json(reports[0] || { message: 'Updated' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+router.delete('/reports/:id', async (req, res) => {
+  try {
+    const { sequelize } = db;
+    const id = parseInt(req.params.id);
+    await sequelize.query(`DELETE FROM user_reports WHERE id = ${id}`);
+    res.json({ message: 'Report deleted' });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
