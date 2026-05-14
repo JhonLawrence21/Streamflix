@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import MovieCard from '../components/movie/MovieCard';
@@ -41,20 +41,20 @@ const BrowsePage = () => {
     fetchMovies();
   }, [contentType, genre, country, year, contentLabel]);
 
-  useEffect(() => {
-    const fetchWatchlist = async () => {
-      if (user) {
-        try {
-          const data = await watchlistService.get();
-          setWatchlist(data.map(m => m.id));
-        } catch (error) {
-          console.error('Error fetching watchlist:', error);
-        }
+  const fetchWatchlist = useCallback(async () => {
+    if (user) {
+      try {
+        const data = await watchlistService.get();
+        setWatchlist(Array.isArray(data) ? data.map(m => m.id) : []);
+      } catch (error) {
+        console.error('Error fetching watchlist:', error);
       }
-    };
-
-    fetchWatchlist();
+    }
   }, [user]);
+
+  useEffect(() => {
+    fetchWatchlist();
+  }, [fetchWatchlist]);
 
   return (
     <div className="min-h-screen bg-netflix-bg">
@@ -126,6 +126,7 @@ const BrowsePage = () => {
                 key={movie.id}
                 movie={movie}
                 onWatchlist={watchlist}
+                onWatchlistChange={fetchWatchlist}
               />
             ))}
           </div>

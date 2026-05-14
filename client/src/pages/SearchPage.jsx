@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import MovieCard from '../components/movie/MovieCard';
@@ -19,8 +19,6 @@ const SearchPage = () => {
     const fetchMovies = async () => {
       setLoading(true);
       try {
-        // Category filtering must call the category endpoint.
-        // /api/movies ignores category params, so /api/movies?category=... won’t filter.
         if (category) {
           const data = await movieService.getByCategory(category);
           setMovies(data || []);
@@ -42,21 +40,20 @@ const SearchPage = () => {
     fetchMovies();
   }, [query, category]);
 
+  const fetchWatchlist = useCallback(async () => {
+    if (user) {
+      try {
+        const data = await watchlistService.get();
+        setWatchlist(Array.isArray(data) ? data.map(m => m.id) : []);
+      } catch (error) {
+        console.error('Error fetching watchlist:', error);
+      }
+    }
+  }, [user]);
 
   useEffect(() => {
-    const fetchWatchlist = async () => {
-      if (user) {
-        try {
-          const data = await watchlistService.get();
-          setWatchlist(data.map(m => m.id));
-        } catch (error) {
-          console.error('Error fetching watchlist:', error);
-        }
-      }
-    };
-
     fetchWatchlist();
-  }, [user]);
+  }, [fetchWatchlist]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -139,6 +136,7 @@ const SearchPage = () => {
                   key={movie.id} 
                   movie={movie} 
                   onWatchlist={watchlist}
+                  onWatchlistChange={fetchWatchlist}
                 />
               ))}
             </div>

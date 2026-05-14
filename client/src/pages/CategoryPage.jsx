@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import MovieCard from '../components/movie/MovieCard';
@@ -34,20 +34,20 @@ const CategoryPage = () => {
     }
   }, [name]);
 
-  useEffect(() => {
-    const fetchWatchlist = async () => {
-      if (user) {
-        try {
-          const data = await watchlistService.get();
-          setWatchlist(data.map(m => m.id));
-        } catch (error) {
-          console.error('Error fetching watchlist:', error);
-        }
+  const fetchWatchlist = useCallback(async () => {
+    if (user) {
+      try {
+        const data = await watchlistService.get();
+        setWatchlist(Array.isArray(data) ? data.map(m => m.id) : []);
+      } catch (error) {
+        console.error('Error fetching watchlist:', error);
       }
-    };
-
-    fetchWatchlist();
+    }
   }, [user]);
+
+  useEffect(() => {
+    fetchWatchlist();
+  }, [fetchWatchlist]);
 
   const filteredMovies = useMemo(() => {
     return movies.filter(m => {
@@ -134,6 +134,7 @@ const CategoryPage = () => {
                   key={movie.id}
                   movie={movie}
                   onWatchlist={watchlist}
+                  onWatchlistChange={fetchWatchlist}
                 />
               ))}
             </div>

@@ -21,6 +21,7 @@ const MovieDetailsPage = () => {
   const [bgError, setBgError] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isDownloaded, setIsDownloaded] = useState(false);
+  const [watchlistRefresh, setWatchlistRefresh] = useState(0);
 
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportType, setReportType] = useState('broken_video');
@@ -66,7 +67,7 @@ const MovieDetailsPage = () => {
       }
     };
     fetchData();
-  }, [id, user]);
+  }, [id, user, watchlistRefresh]);
 
   const handleWatchlist = async () => {
     try {
@@ -355,7 +356,7 @@ const MovieDetailsPage = () => {
           <h2 className="text-xl md:text-2xl font-semibold text-white mb-6">Similar Movies</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
             {similar.map(m => (
-              <MovieCard key={m.id} movie={m} onWatchlist={watchlistIds} />
+              <MovieCard key={m.id} movie={m} onWatchlist={watchlistIds} onWatchlistChange={() => setWatchlistRefresh(v => v + 1)} />
             ))}
           </div>
         </div>
