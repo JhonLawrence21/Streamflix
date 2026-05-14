@@ -71,7 +71,7 @@ if (process.env.DATABASE_URL) {
   });
 }
 
-const connectDB = async (retries = 5, delay = 3000) => {
+const connectDB = async (retries = 3, delay = 2000) => {
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       const dbType = process.env.DATABASE_URL ? 'postgresql' : (process.env.MYSQL_HOST ? 'mysql' : (process.env.PGHOST ? 'postgres' : 'sqlite'));
@@ -227,11 +227,11 @@ const connectDB = async (retries = 5, delay = 3000) => {
     } catch (error) {
       console.error(`[DB] Attempt ${attempt}/${retries} failed: ${error.message}`);
       if (attempt === retries) {
-        console.error('[DB] All retries exhausted. Server will exit.');
-        throw error;
+        console.error('[DB] All retries exhausted. Continuing without database.');
+        return null;
       }
-      console.log(`[DB] Retrying in 3 seconds...`);
-      await new Promise(r => setTimeout(r, 3000));
+      console.log(`[DB] Retrying in ${delay}ms...`);
+      await new Promise(r => setTimeout(r, delay));
     }
   }
 };

@@ -142,11 +142,18 @@ const MovieRow = ({ title, movies, onWatchlist = [] }) => {
     navigate(`/watch/${movieId}`);
   };
 
-const handleMouseEnter = (e, movie) => {
+  const handleMouseEnter = (e, movie) => {
+     if (!e || !e.currentTarget) return;
      const timeout = setTimeout(() => {
        if (!e.currentTarget || !rowRef.current) return;
-       const card = e.currentTarget.getBoundingClientRect();
-       const row = rowRef.current.getBoundingClientRect();
+       let card, row;
+       try {
+         card = e.currentTarget.getBoundingClientRect();
+         row = rowRef.current.getBoundingClientRect();
+       } catch {
+         return;
+       }
+       if (!card || !row) return;
 
        let left = card.left - row.left + card.width / 2 - 170;
        const maxLeft = row.width - 340;
@@ -216,7 +223,7 @@ const handleMouseEnter = (e, movie) => {
                     src={getThumbnailUrl(movie.thumbnail, 'small', movie.title)}
                     alt={movie.title}
                     className="w-full h-full object-cover transition-all duration-500 ease-out group-hover/card:scale-110 group-hover/card:brightness-75"
-loading="eager"
+                    loading="lazy"
                      referrerPolicy="no-referrer"
                     onError={(e) => handleImageError(e, 'small', movie.title)}
                   />
@@ -254,7 +261,7 @@ loading="eager"
                 </div>
               </div>
 
-              {hoveredMovie && hoveredMovie.id === movie.id && (
+              {hoveredMovie && hoveredMovie.id === movie.id && hoverPosition && typeof hoverPosition.top === 'number' && (
                 <VideoPreview
                   movie={hoveredMovie}
                   position={hoverPosition}

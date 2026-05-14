@@ -107,14 +107,14 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:", "http:"],
-      mediaSrc: ["'self'", "https:", "http:"],
-      frameSrc: ["'self'", "https://www.youtube.com", "https://youtube.com"],
+      imgSrc: ["*", "data:", "https:"],
+      mediaSrc: ["*", "data:", "https:"],
+      frameSrc: ["'self'", "https://www.youtube.com", "https://youtube.com", "*"],
       scriptSrc: ["'self'", "'unsafe-inline'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       styleSrcElem: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      connectSrc: ["'self'", "https://fonts.googleapis.com", "https://fonts.gstatic.com"],
+      connectSrc: ["'self'", "*"],
       scriptSrcElem: ["'self'", "'unsafe-inline'"]
     }
   }
@@ -136,7 +136,7 @@ app.use('/api/recommendations', generalLimiter, recommendationRoutes);
 app.get('/api/thumb', async (req, res) => {
    const url = req.query.url;
    if (!url) {
-     return res.status(400).json({ error: 'Missing url param' });
+     return servePlaceholder(res);
    }
    try {
      const https = require('https');
@@ -161,11 +161,11 @@ app.get('/api/thumb', async (req, res) => {
  });
 
  function servePlaceholder(res) {
-   const svg = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 450"><rect fill="#1C1C1C" width="300" height="450"/><text x="150" y="225" text-anchor="middle" fill="white" font-size="64" font-weight="bold" font-family="sans-serif">🎬</text></svg>`).toString('base64');
-   res.setHeader('Content-Type', 'image/svg+xml');
-   res.setHeader('Cache-Control', 'public, max-age=86400');
-   res.status(200).send(`data:image/svg+xml;base64,${svg}`);
- }
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 450"><rect fill="#1C1C1C" width="300" height="450"/><text x="150" y="225" text-anchor="middle" fill="white" font-size="64" font-weight="bold" font-family="sans-serif">NP</text></svg>`;
+    res.setHeader('Content-Type', 'image/svg+xml');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.status(200).send(svg);
+  }
 
 // User report submission endpoint
 const { optionalAuth } = require('./middleware/auth');
@@ -327,18 +327,30 @@ app.listen(PORT, '0.0.0.0', () => {
 });
 
 connectDB()
-  .then(async () => {
+  .then(async (db) => {
+    if (!db) {
+      console.log('✓ Server running without database (API endpoints will be limited)');
+      return;
+    }
     console.log('✓ DB connected successfully');
-    await createDefaultAdmin();
+    await createDefaultAdmin().catch(e => console.error('Admin creation error:', e.message));
     
-    const { ensureTable } = require('./services/activityLogger');
-    await ensureTable();
+    try {
+      const { ensureTable } = require('./services/activityLogger');
+      await ensureTable();
+    } catch (e) {
+      console.log('Activity logger setup skipped:', e.message);
+    }
 
-    const movieCount = await Movie.count();
-    console.log(`✓ Current movies in DB: ${movieCount}`);
-    if (movieCount === 0) {
-      console.log('Seeding initial data...');
-      await seedInitialData();
+    try {
+      const movieCount = await Movie.count();
+      console.log(`✓ Current movies in DB: ${movieCount}`);
+      if (movieCount === 0) {
+        console.log('Seeding initial data...');
+        await seedInitialData();
+      }
+    } catch (e) {
+      console.log('Movie count check skipped:', e.message);
     }
   })
   .catch(err => {

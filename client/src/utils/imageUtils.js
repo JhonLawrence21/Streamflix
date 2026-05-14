@@ -1,8 +1,13 @@
+const encodeSvg = (svg) => {
+  return 'data:image/svg+xml,' + encodeURIComponent(svg);
+};
+
 const makePlaceholder = (title) => {
   const name = (title || 'No Image').substring(0, 2).toUpperCase();
+  const safe = name.replace(/[&<>"]/g, '');
   const colors = ['#E50914', '#FFA500', '#4169E1', '#8B0000', '#00CED1', '#1C1C1C', '#FF69B4', '#32CD32', '#6A0DAD', '#008080'];
   const bg = colors[Math.abs((title || '').length || 0) % colors.length];
-  return 'data:image/svg+xml;base64,' + btoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 450"><rect fill="${bg}" width="300" height="450"/><text x="150" y="225" text-anchor="middle" fill="white" font-size="64" font-weight="bold" font-family="sans-serif">${name}</text></svg>`);
+  return encodeSvg(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 450"><rect fill="${bg}" width="300" height="450"/><text x="150" y="225" text-anchor="middle" fill="white" font-size="64" font-weight="bold" font-family="sans-serif">${safe}</text></svg>`);
 };
 
 const DEFAULT_THUMBNAIL = makePlaceholder();

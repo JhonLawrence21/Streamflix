@@ -60,7 +60,7 @@ const MovieCard = ({ movie, onWatchlist = [] }) => {
           src={thumbnailSrc}
           alt={movie.title}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-          loading="eager"
+          loading="lazy"
           referrerPolicy="no-referrer"
           onError={(e) => {
             setImageError(true);

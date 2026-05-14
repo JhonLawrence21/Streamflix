@@ -232,10 +232,17 @@ exports.browseMovies = async (req, res) => {
 
 exports.getReleasesByMonth = async (req, res) => {
   try {
-    const { year, month } = req.params;
+    const year = parseInt(req.params.year) || 0;
+    const month = parseInt(req.params.month) || 0;
     const { sequelize } = require('../config/db');
-    const [movies] = await sequelize.query(`SELECT * FROM movies WHERE EXTRACT(YEAR FROM "releaseDate") = ${year} AND EXTRACT(MONTH FROM "releaseDate") = ${month} ORDER BY "releaseDate" ASC`);
-    
+    const isPG = process.env.DATABASE_URL && (process.env.DATABASE_URL.startsWith('postgres://') || process.env.DATABASE_URL.startsWith('postgresql://'));
+    let query;
+    if (isPG) {
+      query = `SELECT * FROM movies WHERE EXTRACT(YEAR FROM "releaseDate") = ? AND EXTRACT(MONTH FROM "releaseDate") = ? ORDER BY "releaseDate" ASC`;
+    } else {
+      query = `SELECT * FROM movies WHERE strftime('%Y', "releaseDate") = ? AND strftime('%m', "releaseDate") = ? ORDER BY "releaseDate" ASC`;
+    }
+    const [movies] = await sequelize.query(query, { replacements: [String(year), String(month).padStart(2, '0')] });
     res.json(processMovies(movies));
   } catch (error) {
     res.status(500).json({ message: error.message });

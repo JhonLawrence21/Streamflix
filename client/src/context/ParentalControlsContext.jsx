@@ -22,16 +22,20 @@ export const ParentalControlsProvider = ({ children }) => {
   const [blockedRatings, setBlockedRatings] = useState([]);
 
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      const user = JSON.parse(userData);
-      const profiles = user.profiles || [];
-      const activeProfile = profiles.find(p => p.id === user.activeProfile);
+    try {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        const user = JSON.parse(userData);
+        const profiles = user.profiles || [];
+        const activeProfile = profiles.find(p => p.id === user.activeProfile);
 
-      if (activeProfile?.isKid) {
-        setIsKidMode(true);
-        setBlockedRatings(['R', 'NC-17', 'TV-MA']);
+        if (activeProfile?.isKid) {
+          setIsKidMode(true);
+          setBlockedRatings(['R', 'NC-17', 'TV-MA']);
+        }
       }
+    } catch (e) {
+      console.warn('ParentalControls: failed to parse user data', e);
     }
   }, []);
 
@@ -52,13 +56,15 @@ export const ParentalControlsProvider = ({ children }) => {
   };
 
   const verifyPin = (pin) => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      const user = JSON.parse(userData);
-      const profiles = user.profiles || [];
-      const activeProfile = profiles.find(p => p.id === user.activeProfile);
-      return activeProfile?.pin === pin;
-    }
+    try {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        const user = JSON.parse(userData);
+        const profiles = user.profiles || [];
+        const activeProfile = profiles.find(p => p.id === user.activeProfile);
+        return activeProfile?.pin === pin;
+      }
+    } catch (e) {}
     return false;
   };
 

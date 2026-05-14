@@ -103,7 +103,7 @@ const MovieDetailsPage = () => {
     if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
       let settled = false;
       const handler = (event) => {
-        if (event.data.movieId === movie.id) {
+        if (event.data && event.data.movieId === movie.id) {
           settled = true;
           navigator.serviceWorker.removeEventListener('message', handler);
           if (event.data.type === 'DOWNLOAD_COMPLETE') {
@@ -115,11 +115,15 @@ const MovieDetailsPage = () => {
         }
       };
       navigator.serviceWorker.addEventListener('message', handler);
-      navigator.serviceWorker.controller.postMessage({
-        type: 'DOWNLOAD_VIDEO',
-        url: movie.videoUrl,
-        movieId: movie.id
-      });
+      try {
+        navigator.serviceWorker.controller.postMessage({
+          type: 'DOWNLOAD_VIDEO',
+          url: movie.videoUrl,
+          movieId: movie.id
+        });
+      } catch (e) {
+        fallbackDownload();
+      }
       setTimeout(() => {
         if (!settled) {
           navigator.serviceWorker.removeEventListener('message', handler);
