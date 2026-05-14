@@ -20,7 +20,13 @@ ls -la build/
 cat build/index.html | head -5
 cd ..
 
-echo "=== Step 3: Verify build output ==="
+echo "=== Step 3: Copy build to public/ ==="
+mkdir -p public
+cp -r client/build/* public/
+echo "Copied to public/:"
+ls -la public/
+
+echo "=== Step 4: Verify build output ==="
 ls -la client/build/ || (echo "ERROR: client/build not found!" && exit 1)
 ls -la client/build/index.html || (echo "ERROR: index.html not found!" && exit 1)
 echo "=== Build completed successfully ==="
