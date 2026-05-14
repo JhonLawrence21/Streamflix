@@ -666,10 +666,13 @@ const AdminMoviesPage = () => {
                     type="checkbox"
                     id="trending"
                     checked={formData.trending}
-                    onChange={(e) => setFormData({ ...formData, trending: e.target.checked })}
-                    className="w-4 h-4"
+                    onChange={(e) => {
+                      const val = e.target.checked;
+                      setFormData(prev => ({ ...prev, trending: val }));
+                    }}
+                    className="w-4 h-4 accent-netflix-red cursor-pointer"
                   />
-                  <label htmlFor="trending" className="text-white">Show in Trending Now</label>
+                  <label htmlFor="trending" className="text-white cursor-pointer select-none">Show in Trending Now</label>
                 </div>
               </div>
 
