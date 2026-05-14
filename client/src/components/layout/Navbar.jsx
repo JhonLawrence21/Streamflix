@@ -53,10 +53,10 @@ const Navbar = () => {
   const isAdmin = user && user.role === 'admin';
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-netflix-bg' : 'bg-gradient-to-b from-black/80 to-transparent'}`}>
-      <div className="flex items-center justify-between px-4 md:px-8 py-4">
-        <div className="flex items-center gap-4 md:gap-8">
-          <Link to="/" className="text-netflix-red text-xl md:text-3xl font-bold tracking-tight">
+    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-netflix-bg shadow-lg' : 'bg-gradient-to-b from-black/90 to-transparent'}`}>
+      <div className="flex items-center justify-between px-3 md:px-8 py-3 md:py-4">
+        <div className="flex items-center gap-2 md:gap-8">
+          <Link to="/" className="text-netflix-red text-lg md:text-3xl font-bold tracking-tight">
             STREAMFLIX
           </Link>
           

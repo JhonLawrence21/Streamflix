@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import MovieCard from '../components/movie/MovieCard';
@@ -11,25 +11,31 @@ const WatchlistPage = () => {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
-  useEffect(() => {
-    const fetchWatchlist = async () => {
-      if (!user) {
-        setLoading(false);
-        return;
-      }
-      
-      try {
-        const data = await watchlistService.get();
-        setMovies(data);
-      } catch (error) {
-        console.error('Error fetching watchlist:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchWatchlist();
+  const fetchWatchlist = useCallback(async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+    try {
+      const data = await watchlistService.get();
+      setMovies(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Error fetching watchlist:', error);
+      setMovies([]);
+    } finally {
+      setLoading(false);
+    }
   }, [user]);
+
+  useEffect(() => {
+    setLoading(true);
+    fetchWatchlist();
+  }, [fetchWatchlist]);
+
+  const handleWatchlistChange = () => {
+    setLoading(true);
+    fetchWatchlist();
+  };
 
   if (!user) {
     return (
@@ -49,11 +55,11 @@ const WatchlistPage = () => {
     <div className="min-h-screen bg-netflix-bg">
       <Navbar />
       
-      <div className="pt-24 px-4 md:px-12 pb-8">
-        <h1 className="text-3xl font-bold text-white mb-8">My Watchlist</h1>
+      <div className="pt-20 px-4 md:px-12 pb-8">
+        <h1 className="text-2xl md:text-3xl font-bold text-white mb-6">My Watchlist</h1>
 
         {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
             {[...Array(6)].map((_, i) => (
               <div key={i} className="animate-pulse bg-netflix-bg-tertiary aspect-[2/3] rounded-lg"></div>
             ))}
@@ -68,9 +74,9 @@ const WatchlistPage = () => {
             <Link to="/" className="btn-primary">Browse Movies</Link>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
             {movies.map(movie => (
-              <MovieCard key={movie.id} movie={movie} onWatchlist={movies.map(m => m.id)} />
+              <MovieCard key={movie.id} movie={movie} onWatchlist={movies.map(m => m.id)} onWatchlistChange={handleWatchlistChange} />
             ))}
           </div>
         )}

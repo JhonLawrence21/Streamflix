@@ -93,7 +93,7 @@ const VideoPreview = ({ movie, position, onClose }) => {
   );
 };
 
-const MovieRow = ({ title, movies, onWatchlist = [] }) => {
+const MovieRow = ({ title, movies, onWatchlist = [], onWatchlistChange }) => {
   const navigate = useNavigate();
   const rowRef = useRef(null);
   const [showButtons, setShowButtons] = useState(false);
@@ -131,6 +131,7 @@ const MovieRow = ({ title, movies, onWatchlist = [] }) => {
     } catch (error) {
       console.error('Error updating watchlist:', error);
     }
+    if (onWatchlistChange) onWatchlistChange();
   };
 
   const handleCardClick = (movieId) => {
@@ -180,14 +181,14 @@ const MovieRow = ({ title, movies, onWatchlist = [] }) => {
 
   return (
     <div
-      className="py-8 px-4 md:px-12 animate-fade-in-up"
+      className="py-6 md:py-8 px-4 md:px-12 animate-fade-in-up"
       onMouseEnter={() => setShowButtons(true)}
       onMouseLeave={() => {
         setShowButtons(false);
         setHoveredMovie(null);
       }}
     >
-      <h2 className="text-xl md:text-2xl font-semibold text-white mb-4 netflix-row-title hover:text-netflix-red transition-colors cursor-pointer">{title}</h2>
+      <h2 className="text-lg md:text-2xl font-semibold text-white mb-3 md:mb-4 netflix-row-title hover:text-netflix-red transition-colors cursor-pointer">{title}</h2>
 
       <div className="relative group">
         {showButtons && movies.length > 4 && (
@@ -207,12 +208,12 @@ const MovieRow = ({ title, movies, onWatchlist = [] }) => {
           </>
         )}
 
-        <div ref={rowRef} className="flex gap-2 md:gap-3 overflow-x-auto scrollbar-hide pb-4 relative">
+        <div ref={rowRef} className="flex gap-1.5 md:gap-3 overflow-x-auto scrollbar-hide pb-4 relative -mx-4 px-4 md:mx-0 md:px-0">
           {movies.map((movie, index) => (
             <div
               key={movie.id}
               onClick={() => handleCardClick(movie.id)}
-              className="flex-shrink-0 w-24 sm:w-28 md:w-36 lg:w-48 group/card relative cursor-pointer animate-card-entrance"
+              className="flex-shrink-0 w-28 sm:w-32 md:w-36 lg:w-48 group/card relative cursor-pointer animate-card-entrance"
               style={{ animationDelay: `${index * 80}ms` }}
               onMouseEnter={(e) => handleMouseEnter(e, movie)}
               onMouseLeave={handleMouseLeave}

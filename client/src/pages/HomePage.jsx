@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Navbar from '../components/layout/Navbar';
 import HeroBanner from '../components/home/HeroBanner';
 import MovieRow from '../components/home/MovieRow';
@@ -56,23 +56,23 @@ const HomePage = () => {
     fetchData();
   }, [user]);
 
-  useEffect(() => {
-    const fetchWatchlist = async () => {
-      if (user) {
-        try {
-          const data = await watchlistService.get();
-          if (Array.isArray(data)) {
-            setWatchlist(data.map(m => m.id));
-            setMyList(data.slice(0, 10));
-          }
-        } catch (error) {
-          console.error('Error fetching watchlist:', error);
+  const fetchWatchlist = useCallback(async () => {
+    if (user) {
+      try {
+        const data = await watchlistService.get();
+        if (Array.isArray(data)) {
+          setWatchlist(data.map(m => m.id));
+          setMyList(data.slice(0, 10));
         }
+      } catch (error) {
+        console.error('Error fetching watchlist:', error);
       }
-    };
-
-    fetchWatchlist();
+    }
   }, [user]);
+
+  useEffect(() => {
+    fetchWatchlist();
+  }, [fetchWatchlist]);
 
   if (loading) {
     return (
@@ -112,6 +112,7 @@ const HomePage = () => {
             title="Because You Watched" 
             movies={forYou} 
             onWatchlist={watchlist}
+            onWatchlistChange={fetchWatchlist}
           />
         )}
 
@@ -120,6 +121,7 @@ const HomePage = () => {
             title="Upcoming Releases" 
             movies={upcoming} 
             onWatchlist={watchlist}
+            onWatchlistChange={fetchWatchlist}
           />
         )}
         
@@ -127,12 +129,14 @@ const HomePage = () => {
           title="Trending Now" 
           movies={trending} 
           onWatchlist={watchlist}
+          onWatchlistChange={fetchWatchlist}
         />
         
         <MovieRow 
           title="Popular on StreamFlix" 
           movies={popular} 
           onWatchlist={watchlist}
+          onWatchlistChange={fetchWatchlist}
         />
         
         {user && myList.length > 0 && (
@@ -140,6 +144,7 @@ const HomePage = () => {
             title="My List" 
             movies={myList} 
             onWatchlist={watchlist}
+            onWatchlistChange={fetchWatchlist}
           />
         )}
       </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { Play, Info } from 'lucide-react';
 import { movieService } from '../../services/api';
 import { getThumbnailUrl } from '../../utils/imageUtils';
 
@@ -41,7 +42,7 @@ if (!movie) {
   const bgSrc = bgError ? getThumbnailUrl(null, 'hero') : getThumbnailUrl(movie.thumbnail, 'hero', movie.title);
 
   return (
-    <div className="relative h-[85vh] overflow-hidden">
+    <div className="relative h-[70vh] md:h-[85vh] overflow-hidden">
       <img
         src={bgSrc}
         alt={movie.title}
@@ -52,33 +53,33 @@ if (!movie) {
       <div className="absolute inset-0 bg-gradient-to-r from-netflix-bg via-transparent to-transparent"></div>
       <div className="absolute inset-0 bg-gradient-to-t from-netflix-bg via-transparent to-transparent"></div>
 
-      <div className="relative h-full flex items-center px-4 md:px-12">
+      <div className="relative h-full flex items-center px-4 md:px-12 pt-16">
         <div className="max-w-xl">
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">{movie.title}</h1>
+          <h1 className="text-3xl md:text-6xl font-bold text-white mb-3 md:mb-4">{movie.title}</h1>
           
-          <div className="flex items-center gap-3 mb-4">
+          <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-3 md:mb-4">
             {movie.rating > 0 && (
-              <span className="text-netflix-success font-semibold">{movie.rating.toFixed(1)} Rating</span>
+              <span className="text-netflix-success font-semibold text-sm md:text-base">{movie.rating.toFixed(1)} Rating</span>
             )}
             {movie.releaseYear && (
-              <span className="text-netflix-text-secondary">{movie.releaseYear}</span>
+              <span className="text-netflix-text-secondary text-sm md:text-base">{movie.releaseYear}</span>
             )}
             {movie.duration && (
-              <span className="text-netflix-text-secondary">{movie.duration}</span>
+              <span className="text-netflix-text-secondary text-sm md:text-base">{movie.duration}</span>
             )}
             {movie.featured && (
               <span className="px-2 py-0.5 bg-netflix-red text-xs text-white rounded">Featured</span>
             )}
           </div>
 
-          <p className="text-netflix-text mb-6 line-clamp-3">{movie.description}</p>
+          <p className="text-netflix-text mb-4 md:mb-6 line-clamp-2 md:line-clamp-3 text-sm md:text-base">{movie.description}</p>
 
-<div className="flex flex-col sm:flex-row gap-3">
-            <Link to={`/watch/${movie.id}`} className="flex items-center justify-center gap-2 bg-white text-black px-4 md:px-6 py-2.5 md:py-3 rounded font-semibold hover:bg-gray-200 transition-colors text-sm md:text-base">
- ▶ Play
+          <div className="flex flex-col sm:flex-row gap-2 md:gap-3">
+            <Link to={`/watch/${movie.id}`} className="flex items-center justify-center gap-2 bg-white text-black px-5 md:px-6 py-3 md:py-3 rounded font-semibold hover:bg-gray-200 transition-colors text-sm md:text-base">
+              <Play size={18} /> Play
             </Link>
-            <Link to={`/movie/${movie.id}`} className="flex items-center justify-center gap-2 bg-netflix-bg-tertiary/70 text-white px-4 md:px-6 py-2.5 md:py-3 rounded font-semibold hover:bg-netflix-bg-tertiary transition-colors text-sm md:text-base">
- ℹ More Info
+            <Link to={`/movie/${movie.id}`} className="flex items-center justify-center gap-2 bg-netflix-bg-tertiary/70 text-white px-5 md:px-6 py-3 md:py-3 rounded font-semibold hover:bg-netflix-bg-tertiary transition-colors text-sm md:text-base">
+              <Info size={18} /> More Info
             </Link>
           </div>
         </div>

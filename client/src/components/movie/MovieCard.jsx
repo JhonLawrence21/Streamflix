@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { watchlistService } from '../../services/api';
 import { getThumbnailUrl, handleImageError } from '../../utils/imageUtils';
 
-const MovieCard = ({ movie, onWatchlist = [] }) => {
+const MovieCard = ({ movie, onWatchlist = [], onWatchlistChange }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isInWatchlist, setIsInWatchlist] = useState(onWatchlist.includes(movie.id));
@@ -32,6 +32,7 @@ const MovieCard = ({ movie, onWatchlist = [] }) => {
         await watchlistService.add(movie.id);
         setIsInWatchlist(true);
       }
+      if (onWatchlistChange) onWatchlistChange();
     } catch (error) {
       console.error('Error updating watchlist:', error);
     }
