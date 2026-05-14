@@ -8,6 +8,7 @@ import { getThumbnailUrl, handleImageError } from '../../utils/imageUtils';
 const VideoPreview = ({ movie, position, onClose }) => {
   const [isMuted, setIsMuted] = useState(true);
   const [showInfo, setShowInfo] = useState(false);
+  const previewRef = useRef(null);
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -21,16 +22,32 @@ const VideoPreview = ({ movie, position, onClose }) => {
     navigate(`/movie/${movie.id}`);
   };
 
+  const [adjustedLeft, setAdjustedLeft] = useState(position.left);
+
+  useEffect(() => {
+    if (previewRef.current) {
+      const rect = previewRef.current.getBoundingClientRect();
+      if (rect.right > window.innerWidth) {
+        setAdjustedLeft(position.left - (rect.right - window.innerWidth) - 10);
+      } else if (rect.left < 0) {
+        setAdjustedLeft(position.left - rect.left + 10);
+      } else {
+        setAdjustedLeft(position.left);
+      }
+    }
+  }, [position.left]);
+
   const style = {
     position: 'absolute',
     top: position.top,
-    left: position.left,
+    left: adjustedLeft,
     width: '340px',
     zIndex: 1000,
   };
 
   return (
     <div
+      ref={previewRef}
       style={style}
       className="animate-scale-in bg-netflix-bg-secondary rounded-lg shadow-2xl overflow-hidden border border-netflix-bg-tertiary"
       onClick={(e) => e.stopPropagation()}
@@ -213,7 +230,7 @@ const MovieRow = ({ title, movies, onWatchlist = [], onWatchlistChange }) => {
             <div
               key={movie.id}
               onClick={() => handleCardClick(movie.id)}
-              className="flex-shrink-0 w-28 sm:w-32 md:w-36 lg:w-48 group/card relative cursor-pointer animate-card-entrance"
+              className="flex-shrink-0 w-36 sm:w-40 md:w-44 lg:w-56 group/card cursor-pointer animate-card-entrance"
               style={{ animationDelay: `${index * 80}ms` }}
               onMouseEnter={(e) => handleMouseEnter(e, movie)}
               onMouseLeave={handleMouseLeave}
@@ -261,17 +278,17 @@ const MovieRow = ({ title, movies, onWatchlist = [], onWatchlistChange }) => {
                   </div>
                 </div>
               </div>
-
-              {hoveredMovie && hoveredMovie.id === movie.id && hoverPosition && typeof hoverPosition.top === 'number' && (
-                <VideoPreview
-                  movie={hoveredMovie}
-                  position={hoverPosition}
-                  onClose={() => setHoveredMovie(null)}
-                />
-              )}
             </div>
           ))}
         </div>
+
+        {hoveredMovie && hoverPosition && typeof hoverPosition.top === 'number' && (
+          <VideoPreview
+            movie={hoveredMovie}
+            position={hoverPosition}
+            onClose={() => setHoveredMovie(null)}
+          />
+        )}
       </div>
     </div>
   );

@@ -172,7 +172,7 @@ const Navbar = () => {
           )}
           
           <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden text-netflix-text">
-            <Menu size={24} />
+            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
       </div>

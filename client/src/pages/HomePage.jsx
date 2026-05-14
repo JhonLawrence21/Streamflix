@@ -106,7 +106,7 @@ const HomePage = () => {
       <Navbar />
       <HeroBanner />
       
-      <div className="relative -mt-32 z-10 pb-8">
+      <div className="relative -mt-16 md:-mt-32 z-10 pb-8">
         {forYou.length > 0 && user && (
           <MovieRow 
             title="Because You Watched" 
