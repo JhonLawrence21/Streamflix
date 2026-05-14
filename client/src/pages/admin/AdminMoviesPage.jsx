@@ -179,7 +179,6 @@ const AdminMoviesPage = () => {
   };
 
   const handleEdit = (movie) => {
-    console.log('[handleEdit] movie.trending:', movie.trending, 'typeof:', typeof movie.trending);
     setEditingMovie(movie);
     setFormData({
       title: movie.title || '',
@@ -199,8 +198,8 @@ const AdminMoviesPage = () => {
       releaseDate: movie.releaseDate ? movie.releaseDate.split('T')[0] : '',
       director: movie.director || '',
       status: movie.status || 'released',
-      featured: !!movie.featured,
-      trending: !!movie.trending
+      featured: movie.featured === true || movie.featured === 1 || movie.featured === '1',
+      trending: movie.trending === true || movie.trending === 1 || movie.trending === '1'
     });
     setFormError('');
     setShowModal(true);
@@ -667,11 +666,7 @@ const AdminMoviesPage = () => {
                     type="checkbox"
                     id="trending"
                     checked={formData.trending}
-                    onChange={(e) => {
-                      console.log('[trending] onChange fired, e.target.checked:', e.target.checked, 'prev formData.trending:', formData.trending);
-                      const val = e.target.checked;
-                      setFormData(prev => ({ ...prev, trending: val }));
-                    }}
+                    onChange={(e) => setFormData({ ...formData, trending: e.target.checked })}
                     className="w-4 h-4 cursor-pointer"
                   />
                   <label htmlFor="trending" className="text-white cursor-pointer select-none">Show in Trending Now</label>

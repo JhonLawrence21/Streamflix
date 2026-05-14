@@ -6,6 +6,7 @@ const {
   getMovie,
   watchMovie,
   getFeaturedMovie,
+  getFeaturedMovies,
   getTrendingMovies,
   getPopularMovies,
   getMoviesByCategory,
@@ -25,6 +26,7 @@ router.get('/test', async (req, res) => {
   }
 });
 
+router.get('/featured/all', getFeaturedMovies);
 router.get('/featured', getFeaturedMovie);
 router.get('/trending', getTrendingMovies);
 router.get('/popular', getPopularMovies);

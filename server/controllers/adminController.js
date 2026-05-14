@@ -27,11 +27,11 @@ exports.createMovie = async (req, res) => {
     const rating = parseFloat(otherData.rating) || 0;
     const releaseYear = parseInt(otherData.releaseYear) || null;
     const views = parseInt(otherData.views) || 0;
-    const featured = otherData.featured ? 'true' : 'false';
+    const featured = otherData.featured === true || otherData.featured === 1 || otherData.featured === '1' || otherData.featured === 'true' ? 'true' : 'false';
     const ageRatingVal = ageRating || 'PG-13';
     const statusVal = status || 'released';
     const releaseDateVal = releaseDate || 'NULL';
-    const trendingVal = trending ? 'true' : 'false';
+    const trendingVal = trending === true || trending === 1 || trending === '1' || trending === 'true' ? 'true' : 'false';
     
     const { sequelize } = require('../config/db');
     const now = new Date().toISOString();
@@ -81,13 +81,13 @@ exports.updateMovie = async (req, res) => {
     if (otherData.rating !== undefined) updates.push(`rating = ${parseFloat(otherData.rating) || 0}`);
     if (otherData.releaseYear !== undefined) updates.push(`"releaseYear" = ${parseInt(otherData.releaseYear) || null}`);
     if (otherData.views !== undefined) updates.push(`views = ${parseInt(otherData.views) || 0}`);
-    if (otherData.featured !== undefined) updates.push(`featured = ${otherData.featured ? 'true' : 'false'}`);
+    if (otherData.featured !== undefined) updates.push(`featured = ${otherData.featured === true || otherData.featured === 1 || otherData.featured === '1' || otherData.featured === 'true' ? 'true' : 'false'}`);
     if (genreStr) updates.push(`genre = '${genreStr.replace(/'/g, "''")}'`);
     if (castStr) updates.push(`"cast" = '${castStr.replace(/'/g, "''")}'`);
     if (ageRating) updates.push(`"ageRating" = '${ageRating}'`);
     if (status) updates.push(`status = '${status}'`);
     if (releaseDate) updates.push(`"releaseDate" = '${releaseDate}'`);
-    if (trending !== undefined) updates.push(`trending = ${trending ? 'true' : 'false'}`);
+    if (trending !== undefined) updates.push(`trending = ${trending === true || trending === 1 || trending === '1' || trending === 'true' ? 'true' : 'false'}`);
     
     updates.push(`"updatedAt" = '${new Date().toISOString()}'`);
     

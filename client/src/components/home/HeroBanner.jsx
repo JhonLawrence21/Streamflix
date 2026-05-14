@@ -1,26 +1,45 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Play, Info } from 'lucide-react';
+import { Play, Info, ChevronLeft, ChevronRight } from 'lucide-react';
 import { movieService } from '../../services/api';
 import { getThumbnailUrl } from '../../utils/imageUtils';
 
 const HeroBanner = () => {
-  const [movie, setMovie] = useState(null);
-  const [bgError, setBgError] = useState(false);
+  const [movies, setMovies] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [bgErrors, setBgErrors] = useState({});
 
   useEffect(() => {
-    const fetchFeatured = async () => {
+    const fetchSlides = async () => {
       try {
-        const data = await movieService.getFeatured();
-        setMovie(data);
+        const data = await movieService.getFeaturedAll();
+        setMovies(Array.isArray(data) ? data : []);
       } catch (error) {
-        console.error('Error fetching featured movie:', error);
+        console.error('Error fetching featured movies:', error);
       }
     };
-    fetchFeatured();
+    fetchSlides();
   }, []);
 
-if (!movie) {
+  const goTo = useCallback((index) => {
+    setCurrentIndex(index);
+  }, []);
+
+  const goNext = useCallback(() => {
+    setCurrentIndex(prev => (prev + 1) % movies.length);
+  }, [movies.length]);
+
+  const goPrev = useCallback(() => {
+    setCurrentIndex(prev => (prev - 1 + movies.length) % movies.length);
+  }, [movies.length]);
+
+  useEffect(() => {
+    if (movies.length < 2) return;
+    const timer = setInterval(goNext, 6000);
+    return () => clearInterval(timer);
+  }, [movies.length, goNext]);
+
+  if (movies.length === 0) {
     return (
       <div className="h-[85vh] bg-netflix-bg flex items-center justify-center">
         <div className="text-center px-4">
@@ -39,19 +58,43 @@ if (!movie) {
     );
   }
 
-  const bgSrc = bgError ? getThumbnailUrl(null, 'hero') : getThumbnailUrl(movie.thumbnail, 'hero', movie.title);
+  const movie = movies[currentIndex];
 
   return (
     <div className="relative h-[70vh] md:h-[85vh] overflow-hidden">
-      <img
-        src={bgSrc}
-        alt={movie.title}
-        className="absolute inset-0 w-full h-full object-cover"
-        referrerPolicy="no-referrer"
-        onError={() => setBgError(true)}
-      />
+      {movies.map((m, i) => (
+        <div
+          key={m.id}
+          className={`absolute inset-0 transition-opacity duration-700 ${i === currentIndex ? 'opacity-100' : 'opacity-0'}`}
+        >
+          <img
+            src={bgErrors[m.id] ? getThumbnailUrl(null, 'hero') : getThumbnailUrl(m.thumbnail, 'hero', m.title)}
+            alt={m.title}
+            className="absolute inset-0 w-full h-full object-cover"
+            referrerPolicy="no-referrer"
+            onError={() => setBgErrors(prev => ({ ...prev, [m.id]: true }))}
+          />
+        </div>
+      ))}
       <div className="absolute inset-0 bg-gradient-to-r from-netflix-bg via-transparent to-transparent"></div>
       <div className="absolute inset-0 bg-gradient-to-t from-netflix-bg via-transparent to-transparent"></div>
+
+      {movies.length > 1 && (
+        <>
+          <button
+            onClick={goPrev}
+            className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-black/40 hover:bg-black/60 text-white transition-colors"
+          >
+            <ChevronLeft size={28} />
+          </button>
+          <button
+            onClick={goNext}
+            className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-black/40 hover:bg-black/60 text-white transition-colors"
+          >
+            <ChevronRight size={28} />
+          </button>
+        </>
+      )}
 
       <div className="relative h-full flex items-center px-4 md:px-12 pt-16">
         <div className="max-w-xl">
@@ -84,9 +127,22 @@ if (!movie) {
           </div>
         </div>
       </div>
+
+      {movies.length > 1 && (
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+          {movies.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => goTo(i)}
+              className={`h-2 rounded-full transition-all duration-300 ${
+                i === currentIndex ? 'w-8 bg-netflix-red' : 'w-2 bg-white/50 hover:bg-white/80'
+              }`}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 };
 
 export default HeroBanner;
-

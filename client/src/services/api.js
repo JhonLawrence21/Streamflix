@@ -120,6 +120,11 @@ export const movieService = {
     return response.data;
   },
   
+  getFeaturedAll: async () => {
+    const response = await api.get('/movies/featured/all');
+    return response.data;
+  },
+  
   getTrending: async () => {
     const response = await api.get('/movies/trending');
     return response.data;

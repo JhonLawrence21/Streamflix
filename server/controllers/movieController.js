@@ -103,6 +103,21 @@ exports.getFeaturedMovie = async (req, res) => {
   }
 };
 
+exports.getFeaturedMovies = async (req, res) => {
+  try {
+    const { sequelize } = require('../config/db');
+    let [movies] = await sequelize.query(`SELECT * FROM movies WHERE featured = true ORDER BY "createdAt" DESC LIMIT 10`);
+    
+    if (movies.length === 0) {
+      [movies] = await sequelize.query(`SELECT * FROM movies ORDER BY views DESC LIMIT 10`);
+    }
+    
+    res.json(processMovies(movies));
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 exports.getTrendingMovies = async (req, res) => {
   try {
     const { sequelize } = require('../config/db');
