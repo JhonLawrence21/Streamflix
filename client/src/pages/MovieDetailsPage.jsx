@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Play, Star, Calendar, Clock, Plus, Check, ExternalLink, X, CheckCircle, Flag } from 'lucide-react';
 import Navbar from '../components/layout/Navbar';
@@ -20,6 +20,9 @@ const MovieDetailsPage = () => {
 
   const [bgError, setBgError] = useState(false);
   const [watchlistRefresh, setWatchlistRefresh] = useState(0);
+
+  const [ytError, setYtError] = useState(false);
+  const ytPlayerRef = useRef(null);
 
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportType, setReportType] = useState('broken_video');
@@ -90,6 +93,64 @@ const MovieDetailsPage = () => {
     ? getYouTubeWatchUrl(externalYouTubeId) 
     : externalUrl;
 
+  useEffect(() => {
+    if (!trailerId) return;
+    let destroyed = false;
+    setYtError(false);
+    const createPlayer = () => {
+      if (destroyed) return;
+      if (!window.YT?.Player) {
+        setTimeout(createPlayer, 300);
+        return;
+      }
+      if (ytPlayerRef.current) {
+        ytPlayerRef.current.destroy();
+        ytPlayerRef.current = null;
+      }
+      ytPlayerRef.current = new window.YT.Player('youtube-bg-player', {
+        videoId: trailerId,
+        height: '100%',
+        width: '100%',
+        playerVars: {
+          autoplay: 1, mute: 1, controls: 0,
+          modestbranding: 1, rel: 0, playsinline: 1,
+        },
+        events: {
+          onReady: (e) => { if (!destroyed) e.target.playVideo(); },
+          onError: () => {
+            if (!destroyed) {
+              setYtError(true);
+              if (ytPlayerRef.current) {
+                ytPlayerRef.current.destroy();
+                ytPlayerRef.current = null;
+              }
+            }
+          },
+        },
+      });
+    };
+    if (!window.YT) {
+      const existingScript = document.querySelector('script[src*="youtube.com/iframe_api"]');
+      if (!existingScript) {
+        window.onYouTubeIframeAPIReady = createPlayer;
+        const tag = document.createElement('script');
+        tag.src = 'https://www.youtube.com/iframe_api';
+        document.head.appendChild(tag);
+      } else {
+        window.onYouTubeIframeAPIReady = createPlayer;
+      }
+    } else {
+      createPlayer();
+    }
+    return () => {
+      destroyed = true;
+      if (ytPlayerRef.current) {
+        ytPlayerRef.current.destroy();
+        ytPlayerRef.current = null;
+      }
+    };
+  }, [trailerId]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-netflix-bg">
@@ -128,13 +189,10 @@ const MovieDetailsPage = () => {
           referrerPolicy="no-referrer"
           onError={() => setBgError(true)}
         />
-        {trailerId && (
-          <iframe
-            src={`https://www.youtube.com/embed/${trailerId}?autoplay=1&mute=1`}
+        {trailerId && !ytError && (
+          <div
+            id="youtube-bg-player"
             className="absolute inset-0 w-full h-[40vh] md:h-[60vh] pointer-events-none"
-            style={{ border: 'none' }}
-            allow="autoplay; encrypted-media"
-            title={`${movie.title} trailer`}
           />
         )}
         <div className="absolute inset-0 h-[40vh] md:h-[60vh] bg-gradient-to-r from-netflix-bg via-netflix-bg/80 to-transparent"></div>

@@ -278,8 +278,8 @@ const AdminMoviesPage = () => {
       releaseDate: movie.releaseDate ? movie.releaseDate.split('T')[0] : '',
       director: movie.director || '',
       status: movie.status || 'released',
-      featured: movie.featured === true || movie.featured === 1 || movie.featured === '1',
-      trending: movie.trending === true || movie.trending === 1 || movie.trending === '1'
+      featured: movie.featured === true || movie.featured === 1 || movie.featured === '1' || movie.featured === 'true',
+      trending: movie.trending === true || movie.trending === 1 || movie.trending === '1' || movie.trending === 'true'
     });
     setFormError('');
     setShowModal(true);
