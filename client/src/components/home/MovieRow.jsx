@@ -55,7 +55,7 @@ const VideoPreview = ({ movie, position, onClose }) => {
       onClick={(e) => e.stopPropagation()}
     >
       <div className="relative">
-        <div className="aspect-video bg-black flex items-center justify-center">
+        <div className="relative aspect-video bg-black flex items-center justify-center overflow-hidden">
           {trailerId ? (
             <iframe
               src={`https://www.youtube.com/embed/${trailerId}?autoplay=1&mute=${isMuted ? 1 : 0}&loop=1&playlist=${trailerId}&rel=0&modestbranding=1&controls=0&showinfo=0&iv_load_policy=3`}
