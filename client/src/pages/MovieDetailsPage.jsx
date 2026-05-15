@@ -81,7 +81,7 @@ const MovieDetailsPage = () => {
     }
   };
 
-  const trailerId = getYouTubeVideoId(movie?.trailerUrl);
+  const trailerId = getYouTubeVideoId(movie?.trailerUrl) || getYouTubeVideoId(movie?.videoUrl);
   const externalUrl = movie?.externalUrl?.trim() || '';
   const externalIsYouTube = isYouTubeUrl(externalUrl);
   const externalYouTubeId = externalIsYouTube ? getYouTubeVideoId(externalUrl) : null;
@@ -118,15 +118,25 @@ const MovieDetailsPage = () => {
     <div className="min-h-screen bg-netflix-bg">
       <Navbar />
       
-      {/* Header with thumbnail background */}
-      <div className="relative">
-        <img
-          src={bgError ? getThumbnailUrl(null, 'hero', movie.title) : getThumbnailUrl(movie.thumbnail, 'hero', movie.title)}
-          alt={movie.title}
-          className="absolute inset-0 w-full h-[40vh] md:h-[60vh] object-cover"
-          referrerPolicy="no-referrer"
-          onError={() => setBgError(true)}
-        />
+      {/* Header with trailer/thumbnail background */}
+      <div className="relative overflow-hidden">
+        {trailerId ? (
+          <iframe
+            src={`https://www.youtube.com/embed/${trailerId}?autoplay=1&mute=1&loop=1&playlist=${trailerId}&rel=0&modestbranding=1&controls=0&showinfo=0&iv_load_policy=3&playsinline=1&disablekb=1`}
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[177.78vh] h-[56.25vw] min-w-full min-h-full pointer-events-none"
+            style={{ border: 'none' }}
+            allow="autoplay; encrypted-media"
+            title={`${movie.title} trailer`}
+          />
+        ) : (
+          <img
+            src={bgError ? getThumbnailUrl(null, 'hero', movie.title) : getThumbnailUrl(movie.thumbnail, 'hero', movie.title)}
+            alt={movie.title}
+            className="absolute inset-0 w-full h-[40vh] md:h-[60vh] object-cover"
+            referrerPolicy="no-referrer"
+            onError={() => setBgError(true)}
+          />
+        )}
         <div className="absolute inset-0 h-[40vh] md:h-[60vh] bg-gradient-to-r from-netflix-bg via-netflix-bg/80 to-transparent"></div>
         <div className="absolute inset-0 h-[40vh] md:h-[60vh] bg-gradient-to-t from-netflix-bg via-transparent to-netflix-bg"></div>
 
