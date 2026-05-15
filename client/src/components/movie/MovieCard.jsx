@@ -14,7 +14,7 @@ const MovieCard = ({ movie, onWatchlist = [], onWatchlistChange }) => {
   const hoverTimer = useRef(null);
   const cardRef = useRef(null);
 
-  const trailerId = getYouTubeVideoId(movie.trailerUrl);
+  const trailerId = getYouTubeVideoId(movie.trailerUrl) || getYouTubeVideoId(movie.videoUrl);
 
   useEffect(() => {
     setIsInWatchlist(onWatchlist.includes(movie.id));

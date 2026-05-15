@@ -12,7 +12,7 @@ const VideoPreview = ({ movie, position, onClose }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const trailerId = getYouTubeVideoId(movie.trailerUrl);
+  const trailerId = getYouTubeVideoId(movie.trailerUrl) || getYouTubeVideoId(movie.videoUrl);
 
   const handlePlay = (e) => {
     e.stopPropagation();
