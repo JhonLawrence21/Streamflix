@@ -121,6 +121,10 @@ const Movie = sequelize.define('Movie', {
   ageRating: {
     type: DataTypes.ENUM('G', 'PG', 'PG-13', 'R', 'NC-17', 'TV-Y', 'TV-G', 'TV-PG', 'TV-14', 'TV-MA'),
     defaultValue: 'PG-13'
+  },
+  deletedAt: {
+    type: DataTypes.DATE,
+    allowNull: true
   }
 }, {
   tableName: 'movies',

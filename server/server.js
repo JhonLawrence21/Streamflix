@@ -57,6 +57,7 @@ const createDefaultAdmin = async () => {
     
     await sequelize.query('ALTER TABLE movies ADD COLUMN IF NOT EXISTS "ageRating" VARCHAR(20) DEFAULT \'PG-13\'');
     await sequelize.query('ALTER TABLE movies ADD COLUMN IF NOT EXISTS "cast" JSONB DEFAULT \'[]\'');
+    await sequelize.query('ALTER TABLE movies ADD COLUMN IF NOT EXISTS "deletedAt" TIMESTAMP DEFAULT NULL');
     
     await sequelize.query(`CREATE TABLE IF NOT EXISTS categories (
       id SERIAL PRIMARY KEY,
@@ -352,6 +353,25 @@ connectDB()
     } catch (e) {
       console.log('Movie count check skipped:', e.message);
     }
+
+    // Scheduled publishing: auto-release movies whose releaseDate has passed
+    const checkScheduledPublishing = async () => {
+      try {
+        const { sequelize } = require('./config/db');
+        const now = new Date().toISOString();
+        const [released] = await sequelize.query(
+          `UPDATE movies SET status = 'released', "updatedAt" = '${now}' WHERE status = 'upcoming' AND "deletedAt" IS NULL AND "releaseDate" IS NOT NULL AND "releaseDate" <= '${now}'`
+        );
+        if (released?.affectedRows > 0 || released?.rowCount > 0) {
+          const count = released?.affectedRows || released?.rowCount || 0;
+          console.log(`[Scheduler] Auto-released ${count} movie(s)`);
+        }
+      } catch (e) {
+        // silent
+      }
+    };
+    checkScheduledPublishing();
+    setInterval(checkScheduledPublishing, 60000); // check every minute
   })
   .catch(err => {
     console.error('✗ Database connection failed:', err.message);

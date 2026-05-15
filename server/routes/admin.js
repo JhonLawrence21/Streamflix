@@ -12,7 +12,10 @@ const {
   getUsers,
   updateUser,
   deleteUser,
-  getAnalytics
+  getAnalytics,
+  restoreMovie,
+  getTrashedMovies,
+  permanentDelete
 } = require('../controllers/adminController');
 const { protect, admin } = require('../middleware/auth');
 const User = require('../models/User');
@@ -24,9 +27,12 @@ router.use(protect);
 router.use(admin);
 
 router.get('/movies', getAllMovies);
+router.get('/movies/trash', getTrashedMovies);
 router.post('/movies', createMovie);
 router.put('/movies/:id', updateMovie);
 router.delete('/movies/:id', deleteMovie);
+router.post('/movies/:id/restore', restoreMovie);
+router.delete('/movies/:id/permanent', permanentDelete);
 
 router.get('/categories', getCategories);
 router.post('/categories', createCategory);

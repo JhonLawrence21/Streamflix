@@ -29,8 +29,8 @@ exports.getMovies = async (req, res) => {
     const offset = (page - 1) * limit;
 
     const { sequelize } = require('../config/db');
-    const [movies] = await sequelize.query(`SELECT * FROM movies ORDER BY id DESC LIMIT ${limit} OFFSET ${offset}`);
-    const [[{ count }]] = await sequelize.query('SELECT COUNT(*) as count FROM movies');
+    const [movies] = await sequelize.query(`SELECT * FROM movies WHERE "deletedAt" IS NULL ORDER BY id DESC LIMIT ${limit} OFFSET ${offset}`);
+    const [[{ count }]] = await sequelize.query('SELECT COUNT(*) as count FROM movies WHERE "deletedAt" IS NULL');
     
 
     res.json({
@@ -48,7 +48,7 @@ exports.getMovie = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     const { sequelize } = require('../config/db');
-    const [movies] = await sequelize.query(`SELECT * FROM movies WHERE id = ${id} LIMIT 1`);
+    const [movies] = await sequelize.query(`SELECT * FROM movies WHERE id = ${id} AND "deletedAt" IS NULL LIMIT 1`);
     
     
     if (movies.length === 0) {
@@ -65,8 +65,8 @@ exports.watchMovie = async (req, res) => {
     const id = parseInt(req.params.id);
     const { sequelize } = require('../config/db');
     
-    await sequelize.query(`UPDATE movies SET views = views + 1 WHERE id = ${id}`);
-    const [movies] = await sequelize.query(`SELECT * FROM movies WHERE id = ${id} LIMIT 1`);
+    await sequelize.query(`UPDATE movies SET views = views + 1 WHERE id = ${id} AND "deletedAt" IS NULL`);
+    const [movies] = await sequelize.query(`SELECT * FROM movies WHERE id = ${id} AND "deletedAt" IS NULL LIMIT 1`);
     
     
     if (movies.length === 0) {
@@ -90,10 +90,10 @@ exports.watchMovie = async (req, res) => {
 exports.getFeaturedMovie = async (req, res) => {
   try {
     const { sequelize } = require('../config/db');
-    let [movies] = await sequelize.query(`SELECT * FROM movies WHERE featured = true ORDER BY "createdAt" DESC LIMIT 1`);
+    let [movies] = await sequelize.query(`SELECT * FROM movies WHERE "deletedAt" IS NULL AND featured = true ORDER BY "createdAt" DESC LIMIT 1`);
     
     if (movies.length === 0) {
-      [movies] = await sequelize.query(`SELECT * FROM movies ORDER BY views DESC LIMIT 1`);
+      [movies] = await sequelize.query(`SELECT * FROM movies WHERE "deletedAt" IS NULL ORDER BY views DESC LIMIT 1`);
     }
     
     
@@ -106,10 +106,10 @@ exports.getFeaturedMovie = async (req, res) => {
 exports.getFeaturedMovies = async (req, res) => {
   try {
     const { sequelize } = require('../config/db');
-    let [movies] = await sequelize.query(`SELECT * FROM movies WHERE featured = true ORDER BY "createdAt" DESC LIMIT 10`);
+    let [movies] = await sequelize.query(`SELECT * FROM movies WHERE "deletedAt" IS NULL AND featured = true ORDER BY "createdAt" DESC LIMIT 10`);
     
     if (movies.length === 0) {
-      [movies] = await sequelize.query(`SELECT * FROM movies ORDER BY views DESC LIMIT 10`);
+      [movies] = await sequelize.query(`SELECT * FROM movies WHERE "deletedAt" IS NULL ORDER BY views DESC LIMIT 10`);
     }
     
     res.json(processMovies(movies));
@@ -121,10 +121,10 @@ exports.getFeaturedMovies = async (req, res) => {
 exports.getTrendingMovies = async (req, res) => {
   try {
     const { sequelize } = require('../config/db');
-    let [movies] = await sequelize.query(`SELECT * FROM movies WHERE trending = true ORDER BY "createdAt" DESC LIMIT 10`);
+    let [movies] = await sequelize.query(`SELECT * FROM movies WHERE "deletedAt" IS NULL AND trending = true ORDER BY "createdAt" DESC LIMIT 10`);
     
     if (movies.length === 0) {
-      [movies] = await sequelize.query(`SELECT * FROM movies ORDER BY views DESC LIMIT 10`);
+      [movies] = await sequelize.query(`SELECT * FROM movies WHERE "deletedAt" IS NULL ORDER BY views DESC LIMIT 10`);
     }
     
     
@@ -138,7 +138,7 @@ exports.getPopularMovies = async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 20;
     const { sequelize } = require('../config/db');
-    const [movies] = await sequelize.query(`SELECT * FROM movies ORDER BY views DESC, rating DESC LIMIT ${limit}`);
+    const [movies] = await sequelize.query(`SELECT * FROM movies WHERE "deletedAt" IS NULL ORDER BY views DESC, rating DESC LIMIT ${limit}`);
     
     res.json(processMovies(movies));
   } catch (error) {
@@ -153,7 +153,7 @@ exports.getMoviesByCategory = async (req, res) => {
     console.log(`[getMoviesByCategory] Fetching movies for category: "${category}"`);
     
     const [movies] = await sequelize.query(
-      `SELECT * FROM movies WHERE LOWER(category) = LOWER(?) ORDER BY "createdAt" DESC`,
+      `SELECT * FROM movies WHERE "deletedAt" IS NULL AND LOWER(category) = LOWER(?) ORDER BY "createdAt" DESC`,
       { replacements: [category] }
     );
     console.log(`[getMoviesByCategory] Found ${movies?.length} movies for "${category}"`);
@@ -169,7 +169,7 @@ exports.getSimilarMovies = async (req, res) => {
     const id = parseInt(req.params.id);
     const { sequelize } = require('../config/db');
     
-    const [movies] = await sequelize.query(`SELECT * FROM movies WHERE id != ${id} ORDER BY rating DESC LIMIT 10`);
+    const [movies] = await sequelize.query(`SELECT * FROM movies WHERE "deletedAt" IS NULL AND id != ${id} ORDER BY rating DESC LIMIT 10`);
     
     
     res.json(processMovies(movies));
@@ -181,7 +181,7 @@ exports.getSimilarMovies = async (req, res) => {
 exports.getUpcomingReleases = async (req, res) => {
   try {
     const { sequelize } = require('../config/db');
-    const [movies] = await sequelize.query(`SELECT * FROM movies WHERE status = 'upcoming' OR "releaseDate" > NOW() ORDER BY "releaseDate" ASC LIMIT 20`);
+    const [movies] = await sequelize.query(`SELECT * FROM movies WHERE "deletedAt" IS NULL AND (status = 'upcoming' OR "releaseDate" > NOW()) ORDER BY "releaseDate" ASC LIMIT 20`);
     
     res.json(processMovies(movies));
   } catch (error) {
@@ -194,7 +194,7 @@ exports.browseMovies = async (req, res) => {
     const { type, genre, country, year } = req.query;
     const { sequelize } = require('../config/db');
 
-    let query = 'SELECT * FROM movies WHERE 1=1';
+    let query = 'SELECT * FROM movies WHERE "deletedAt" IS NULL';
     const replacements = [];
 
     if (type) {
@@ -253,9 +253,9 @@ exports.getReleasesByMonth = async (req, res) => {
     const isPG = process.env.DATABASE_URL && (process.env.DATABASE_URL.startsWith('postgres://') || process.env.DATABASE_URL.startsWith('postgresql://'));
     let query;
     if (isPG) {
-      query = `SELECT * FROM movies WHERE EXTRACT(YEAR FROM "releaseDate") = ? AND EXTRACT(MONTH FROM "releaseDate") = ? ORDER BY "releaseDate" ASC`;
+      query = `SELECT * FROM movies WHERE "deletedAt" IS NULL AND EXTRACT(YEAR FROM "releaseDate") = ? AND EXTRACT(MONTH FROM "releaseDate") = ? ORDER BY "releaseDate" ASC`;
     } else {
-      query = `SELECT * FROM movies WHERE strftime('%Y', "releaseDate") = ? AND strftime('%m', "releaseDate") = ? ORDER BY "releaseDate" ASC`;
+      query = `SELECT * FROM movies WHERE "deletedAt" IS NULL AND strftime('%Y', "releaseDate") = ? AND strftime('%m', "releaseDate") = ? ORDER BY "releaseDate" ASC`;
     }
     const [movies] = await sequelize.query(query, { replacements: [String(year), String(month).padStart(2, '0')] });
     res.json(processMovies(movies));

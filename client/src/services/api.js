@@ -225,6 +225,21 @@ export const adminService = {
     const response = await api.delete(`/admin/movies/${id}`);
     return response.data;
   },
+
+  getTrashedMovies: async () => {
+    const response = await api.get('/admin/movies/trash');
+    return response.data;
+  },
+
+  restoreMovie: async (id) => {
+    const response = await api.post(`/admin/movies/${id}/restore`);
+    return response.data;
+  },
+
+  permanentDeleteMovie: async (id) => {
+    const response = await api.delete(`/admin/movies/${id}/permanent`);
+    return response.data;
+  },
   
   getCategories: async () => {
     const response = await api.get('/admin/categories');

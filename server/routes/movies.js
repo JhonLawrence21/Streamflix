@@ -65,7 +65,7 @@ router.get('/categories', async (req, res) => {
       // This prevents “categories still 0 movies” situations.
       let movieCount = 0;
       try {
-        const [movieCountRows] = await sequelize.query('SELECT COUNT(*) as cnt FROM movies');
+        const [movieCountRows] = await sequelize.query('SELECT COUNT(*) as cnt FROM movies WHERE "deletedAt" IS NULL');
         movieCount = movieCountRows?.[0]?.cnt ?? 0;
       } catch (e) {
         console.log('movies count check failed:', e.message);

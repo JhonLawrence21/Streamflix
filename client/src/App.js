@@ -18,7 +18,6 @@ import AdminReportsPage from './pages/admin/AdminReportsPage';
 import ProfilePage from './pages/ProfilePage';
 import UpcomingReleasesPage from './pages/UpcomingReleasesPage';
 import ProfilesPage from './pages/ProfilesPage';
-import DownloadsPage from './pages/DownloadsPage';
 import CategoryPage from './pages/CategoryPage';
 import BrowsePage from './pages/BrowsePage';
 
@@ -38,8 +37,7 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/profiles" element={<ProfilesPage />} />
-          <Route path="/downloads" element={<DownloadsPage />} />
-           <Route path="/upcoming" element={<UpcomingReleasesPage />} />
+            <Route path="/upcoming" element={<UpcomingReleasesPage />} />
            <Route path="/movies" element={<BrowsePage />} />
            <Route path="/tv-shows" element={<BrowsePage />} />
            <Route path="/category/:name" element={<CategoryPage />} />

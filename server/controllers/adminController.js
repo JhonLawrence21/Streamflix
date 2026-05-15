@@ -112,9 +112,58 @@ exports.deleteMovie = async (req, res) => {
       return res.status(404).json({ message: 'Movie not found' });
     }
     
+    const now = new Date().toISOString();
+    await sequelize.query(`UPDATE movies SET "deletedAt" = '${now}', "updatedAt" = '${now}' WHERE id = ${id}`);
+    
+    res.json({ message: 'Movie moved to trash' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.restoreMovie = async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const { sequelize } = require('../config/db');
+    
+    const [movies] = await sequelize.query(`SELECT * FROM movies WHERE id = ${id} AND "deletedAt" IS NOT NULL LIMIT 1`);
+    if (movies.length === 0) {
+      return res.status(404).json({ message: 'Movie not found in trash' });
+    }
+    
+    const now = new Date().toISOString();
+    await sequelize.query(`UPDATE movies SET "deletedAt" = NULL, "updatedAt" = '${now}' WHERE id = ${id}`);
+    
+    const [restored] = await sequelize.query(`SELECT * FROM movies WHERE id = ${id} LIMIT 1`);
+    res.json(restored[0]);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getTrashedMovies = async (req, res) => {
+  try {
+    const { sequelize } = require('../config/db');
+    const [movies] = await sequelize.query('SELECT * FROM movies WHERE "deletedAt" IS NOT NULL ORDER BY "deletedAt" DESC');
+    res.json(movies);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.permanentDelete = async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const { sequelize } = require('../config/db');
+    
+    const [movies] = await sequelize.query(`SELECT * FROM movies WHERE id = ${id} AND "deletedAt" IS NOT NULL LIMIT 1`);
+    if (movies.length === 0) {
+      return res.status(404).json({ message: 'Movie not found in trash' });
+    }
+    
     await sequelize.query(`DELETE FROM movies WHERE id = ${id}`);
     
-    res.json({ message: 'Movie deleted successfully' });
+    res.json({ message: 'Movie permanently deleted' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -123,8 +172,11 @@ exports.deleteMovie = async (req, res) => {
 exports.getAllMovies = async (req, res) => {
   try {
     const { sequelize } = require('../config/db');
-    const [movies] = await sequelize.query('SELECT * FROM movies ORDER BY "createdAt" DESC');
-    console.log('[getAllMovies] Found', movies.length, 'movies');
+    const includeTrash = req.query.trash === 'true';
+    const query = includeTrash
+      ? 'SELECT * FROM movies ORDER BY "createdAt" DESC'
+      : 'SELECT * FROM movies WHERE "deletedAt" IS NULL ORDER BY "createdAt" DESC';
+    const [movies] = await sequelize.query(query);
     res.json(movies);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -271,7 +323,7 @@ exports.getCategories = async (req, res) => {
       // movies seed only if movies table empty
       let movieCount = 0;
       try {
-        const [movieCountRows] = await sequelize.query('SELECT COUNT(*) as cnt FROM movies');
+        const [movieCountRows] = await sequelize.query('SELECT COUNT(*) as cnt FROM movies WHERE "deletedAt" IS NULL');
         movieCount = movieCountRows?.[0]?.cnt ?? 0;
       } catch (e) {
         console.log('[admin getCategories] movies count check failed:', e.message);
@@ -432,7 +484,7 @@ exports.getCategories = async (req, res) => {
       const [rows] = await sequelize.query(`
         SELECT category, COUNT(*)::int as cnt
         FROM movies
-        WHERE category IS NOT NULL
+        WHERE category IS NOT NULL AND "deletedAt" IS NULL
         GROUP BY category
       `);
       dbCategoryCounts = rows || [];
@@ -535,52 +587,52 @@ exports.getAnalytics = async (req, res) => {
     } catch (e) { console.log('users query error:', e.message); }
     
     try {
-      const [movieResult] = await sequelize.query('SELECT COUNT(*) as cnt FROM movies');
+      const [movieResult] = await sequelize.query('SELECT COUNT(*) as cnt FROM movies WHERE "deletedAt" IS NULL');
       movieCount = movieResult[0]?.cnt || 0;
     } catch (e) { console.log('movies query error:', e.message); }
     
     try {
-      const [viewsResult] = await sequelize.query('SELECT COALESCE(SUM(views), 0) as total FROM movies');
+      const [viewsResult] = await sequelize.query('SELECT COALESCE(SUM(views), 0) as total FROM movies WHERE "deletedAt" IS NULL');
       totalViews = viewsResult[0]?.total || 0;
     } catch (e) { console.log('views query error:', e.message); }
     
     try {
-      const [ratingResult] = await sequelize.query('SELECT COALESCE(AVG(rating), 0) as avg FROM movies WHERE rating IS NOT NULL');
+      const [ratingResult] = await sequelize.query('SELECT COALESCE(AVG(rating), 0) as avg FROM movies WHERE rating IS NOT NULL AND "deletedAt" IS NULL');
       avgRating = ratingResult[0]?.avg || 0;
     } catch (e) { console.log('rating query error:', e.message); }
     
     try {
-      const [catResult] = await sequelize.query(`SELECT category, COUNT(*) as count FROM movies WHERE category IS NOT NULL GROUP BY category`);
+      const [catResult] = await sequelize.query(`SELECT category, COUNT(*) as count FROM movies WHERE category IS NOT NULL AND "deletedAt" IS NULL GROUP BY category`);
       categoryCounts = catResult || [];
     } catch (e) { console.log('category query error:', e.message); }
     
     try {
-      const [relResult] = await sequelize.query(`SELECT COUNT(*) as cnt FROM movies WHERE status = 'released'`);
+      const [relResult] = await sequelize.query(`SELECT COUNT(*) as cnt FROM movies WHERE "deletedAt" IS NULL AND status = 'released'`);
       releasedCount = relResult[0]?.cnt || 0;
     } catch (e) { console.log('released query error:', e.message); }
     
     try {
-      const [upcResult] = await sequelize.query(`SELECT COUNT(*) as cnt FROM movies WHERE status = 'upcoming'`);
+      const [upcResult] = await sequelize.query(`SELECT COUNT(*) as cnt FROM movies WHERE "deletedAt" IS NULL AND status = 'upcoming'`);
       upcomingCount = upcResult[0]?.cnt || 0;
     } catch (e) { console.log('upcoming query error:', e.message); }
     
     try {
-      const [prodResult] = await sequelize.query(`SELECT COUNT(*) as cnt FROM movies WHERE status = 'in-production'`);
+      const [prodResult] = await sequelize.query(`SELECT COUNT(*) as cnt FROM movies WHERE "deletedAt" IS NULL AND status = 'in-production'`);
       inProductionCount = prodResult[0]?.cnt || 0;
     } catch (e) { console.log('in-production query error:', e.message); }
     
     try {
-      const [recentResult] = await sequelize.query('SELECT * FROM movies ORDER BY "createdAt" DESC LIMIT 5');
+      const [recentResult] = await sequelize.query('SELECT * FROM movies WHERE "deletedAt" IS NULL ORDER BY "createdAt" DESC LIMIT 5');
       recentMovies = recentResult || [];
     } catch (e) { console.log('recent query error:', e.message); }
     
     try {
-      const [topResult] = await sequelize.query('SELECT * FROM movies ORDER BY views DESC LIMIT 10');
+      const [topResult] = await sequelize.query('SELECT * FROM movies WHERE "deletedAt" IS NULL ORDER BY views DESC LIMIT 10');
       topMovies = topResult || [];
     } catch (e) { console.log('top query error:', e.message); }
     
     try {
-      const [trendingResult] = await sequelize.query('SELECT * FROM movies WHERE trending = true ORDER BY views DESC LIMIT 5');
+      const [trendingResult] = await sequelize.query('SELECT * FROM movies WHERE "deletedAt" IS NULL AND trending = true ORDER BY views DESC LIMIT 5');
       trending = trendingResult || [];
     } catch (e) { console.log('trending query error:', e.message); }
     

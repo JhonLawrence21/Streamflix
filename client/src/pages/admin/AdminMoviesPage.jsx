@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Film, X, Search, Filter, CheckSquare, Square, Trash } from 'lucide-react';
+import { Plus, Edit, Trash2, Film, X, Search, Filter, CheckSquare, Square, Trash, RotateCcw, AlertTriangle, Clock } from 'lucide-react';
 import { adminService } from '../../services/api';
 import { getThumbnailUrl, handleImageError } from '../../utils/imageUtils';
 import { COUNTRIES } from '../../utils/filterOptions';
@@ -17,6 +17,8 @@ const AdminMoviesPage = () => {
   const [selectedMovies, setSelectedMovies] = useState([]);
   const [showBulkActions, setShowBulkActions] = useState(false);
   const [categories, setCategories] = useState([]);
+  const [activeTab, setActiveTab] = useState('all');
+  const [trashedMovies, setTrashedMovies] = useState([]);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -42,7 +44,7 @@ const AdminMoviesPage = () => {
   useEffect(() => {
     fetchMovies();
     fetchCategories();
-  }, []);
+  }, [activeTab]);
 
   const fetchCategories = async () => {
     try {
@@ -54,12 +56,25 @@ const AdminMoviesPage = () => {
   };
 
   useEffect(() => {
+    if (activeTab === 'scheduled') {
+      setStatusFilter('upcoming');
+    } else if (activeTab === 'all') {
+      setStatusFilter('all');
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
     filterMovies();
-  }, [searchQuery, statusFilter, categoryFilter, movies]);
+  }, [searchQuery, statusFilter, categoryFilter, movies, activeTab]);
 
   const filterMovies = () => {
     let filtered = [...movies];
     
+    if (activeTab === 'trash') {
+      setFilteredMovies(movies);
+      return;
+    }
+
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(movie => 
@@ -110,10 +125,75 @@ const AdminMoviesPage = () => {
     }
   };
 
-  const fetchMovies = async () => {
+  const bulkRestore = async () => {
+    if (window.confirm(`Restore ${selectedMovies.length} selected movies?`)) {
+      try {
+        await Promise.all(selectedMovies.map(id => adminService.restoreMovie(id)));
+        setSelectedMovies([]);
+        setShowBulkActions(false);
+        fetchMovies();
+      } catch (error) {
+        console.error('Error bulk restoring movies:', error);
+      }
+    }
+  };
+
+  const bulkPermanentDelete = async () => {
+    if (window.confirm(`Permanently delete ${selectedMovies.length} selected movies? This cannot be undone!`)) {
+      try {
+        await Promise.all(selectedMovies.map(id => adminService.permanentDeleteMovie(id)));
+        setSelectedMovies([]);
+        setShowBulkActions(false);
+        fetchMovies();
+      } catch (error) {
+        console.error('Error bulk permanently deleting movies:', error);
+      }
+    }
+  };
+
+  const handleRestore = async (id) => {
     try {
-      const data = await adminService.getMovies();
-      setMovies(data);
+      await adminService.restoreMovie(id);
+      fetchMovies();
+    } catch (error) {
+      console.error('Error restoring movie:', error);
+    }
+  };
+
+  const handlePermanentDelete = async (id) => {
+    if (window.confirm('Permanently delete this movie? This cannot be undone!')) {
+      try {
+        await adminService.permanentDeleteMovie(id);
+        fetchMovies();
+      } catch (error) {
+        console.error('Error permanently deleting movie:', error);
+      }
+    }
+  };
+
+  const handleEmptyTrash = async () => {
+    if (window.confirm(`Permanently delete ALL ${trashedMovies.length} movies in trash? This cannot be undone!`)) {
+      try {
+        await Promise.all(trashedMovies.map(m => adminService.permanentDeleteMovie(m.id)));
+        fetchMovies();
+      } catch (error) {
+        console.error('Error emptying trash:', error);
+      }
+    }
+  };
+
+  const fetchMovies = async () => {
+    setLoading(true);
+    try {
+      if (activeTab === 'trash') {
+        const data = await adminService.getTrashedMovies();
+        setMovies(data);
+        setTrashedMovies(data);
+      } else {
+        const data = await adminService.getMovies();
+        setMovies(data);
+        setTrashedMovies([]);
+      }
     } catch (error) {
       console.error('Error fetching movies:', error);
     } finally {
@@ -253,65 +333,133 @@ const AdminMoviesPage = () => {
 
   return (
     <div className="p-8">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-white">Movies</h1>
-        <button
-          onClick={() => { resetForm(); setEditingMovie(null); setShowModal(true); }}
-          className="flex items-center gap-2 btn-primary"
-        >
-          <Plus size={20} />
-          Add Movie
-        </button>
+        {activeTab !== 'trash' && (
+          <button
+            onClick={() => { resetForm(); setEditingMovie(null); setShowModal(true); }}
+            className="flex items-center gap-2 btn-primary"
+          >
+            <Plus size={20} />
+            Add Movie
+          </button>
+        )}
+        {activeTab === 'trash' && trashedMovies.length > 0 && (
+          <button
+            onClick={handleEmptyTrash}
+            className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors text-sm"
+          >
+            <Trash size={16} />
+            Empty Trash
+          </button>
+        )}
       </div>
 
-      <div className="mb-6 flex flex-col lg:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-netflix-text-muted" size={20} />
-          <input
-            type="text"
-            placeholder="Search movies by title, director, or category..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-netflix-bg-tertiary border border-transparent rounded-lg text-white placeholder-netflix-text-muted focus:outline-none focus:border-netflix-red transition-colors"
-          />
-        </div>
-        
-        <div className="flex gap-3">
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-3 bg-netflix-bg-tertiary rounded-lg text-white border border-transparent focus:outline-none focus:border-netflix-red cursor-pointer"
+      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+        {[
+          { key: 'all', label: 'All Movies', icon: Film },
+          { key: 'scheduled', label: 'Scheduled', icon: Clock },
+          { key: 'trash', label: `Trash${trashedMovies.length > 0 ? ` (${trashedMovies.length})` : ''}`, icon: AlertTriangle },
+        ].map(tab => (
+          <button
+            key={tab.key}
+            onClick={() => { setActiveTab(tab.key); setSelectedMovies([]); setShowBulkActions(false); }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
+              activeTab === tab.key
+                ? 'bg-netflix-red text-white'
+                : 'bg-netflix-bg-secondary text-netflix-text-secondary hover:text-white'
+            }`}
           >
-            <option value="all">All Status</option>
-            <option value="released">Released</option>
-            <option value="upcoming">Upcoming</option>
-            <option value="in-production">In Production</option>
-          </select>
-          
-          <select
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            className="px-4 py-3 bg-netflix-bg-tertiary rounded-lg text-white border border-transparent focus:outline-none focus:border-netflix-red cursor-pointer"
-          >
-            <option value="all">All Categories</option>
-            {categories.map((cat) => (
-              <option key={cat.id} value={cat.name}>{cat.name}</option>
-            ))}
-          </select>
-        </div>
+            <tab.icon size={16} />
+            {tab.label}
+          </button>
+        ))}
       </div>
+
+      {activeTab !== 'trash' && (
+        <div className="mb-6 flex flex-col lg:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-netflix-text-muted" size={20} />
+            <input
+              type="text"
+              placeholder="Search movies by title, director, or category..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 bg-netflix-bg-tertiary border border-transparent rounded-lg text-white placeholder-netflix-text-muted focus:outline-none focus:border-netflix-red transition-colors"
+            />
+          </div>
+          
+          <div className="flex gap-3">
+            {activeTab === 'scheduled' ? (
+              <select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="px-4 py-3 bg-netflix-bg-tertiary rounded-lg text-white border border-transparent focus:outline-none focus:border-netflix-red cursor-pointer"
+              >
+                <option value="all">All Categories</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.name}>{cat.name}</option>
+                ))}
+              </select>
+            ) : (
+              <>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="px-4 py-3 bg-netflix-bg-tertiary rounded-lg text-white border border-transparent focus:outline-none focus:border-netflix-red cursor-pointer"
+                >
+                  <option value="all">All Status</option>
+                  <option value="released">Released</option>
+                  <option value="upcoming">Upcoming</option>
+                  <option value="in-production">In Production</option>
+                </select>
+                
+                <select
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  className="px-4 py-3 bg-netflix-bg-tertiary rounded-lg text-white border border-transparent focus:outline-none focus:border-netflix-red cursor-pointer"
+                >
+                  <option value="all">All Categories</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.name}>{cat.name}</option>
+                  ))}
+                </select>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {showBulkActions && selectedMovies.length > 0 && (
         <div className="mb-4 p-4 bg-netflix-bg-tertiary rounded-lg flex items-center justify-between">
           <span className="text-white">{selectedMovies.length} movie(s) selected</span>
           <div className="flex gap-2">
-            <button
-              onClick={bulkDelete}
-              className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
-            >
-              <Trash size={16} />
-              Delete Selected
-            </button>
+            {activeTab === 'trash' ? (
+              <>
+                <button
+                  onClick={bulkRestore}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                >
+                  <RotateCcw size={16} />
+                  Restore Selected
+                </button>
+                <button
+                  onClick={bulkPermanentDelete}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+                >
+                  <Trash size={16} />
+                  Delete Permanently
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={bulkDelete}
+                className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+              >
+                <Trash size={16} />
+                Delete Selected
+              </button>
+            )}
             <button
               onClick={() => { setSelectedMovies([]); setShowBulkActions(false); }}
               className="px-4 py-2 bg-netflix-bg-secondary hover:bg-netflix-bg-tertiary text-white rounded-lg transition-colors"
@@ -332,7 +480,7 @@ const AdminMoviesPage = () => {
         <div className="text-center py-16">
           <Film size={48} className="mx-auto text-netflix-text-muted mb-4" />
           <p className="text-netflix-text-secondary">
-            {movies.length === 0 ? 'No movies yet. Add your first movie!' : 'No movies match your filters.'}
+            {activeTab === 'trash' ? 'Trash is empty.' : activeTab === 'scheduled' ? 'No scheduled movies.' : movies.length === 0 ? 'No movies yet. Add your first movie!' : 'No movies match your filters.'}
           </p>
         </div>
       ) : (
@@ -354,6 +502,7 @@ const AdminMoviesPage = () => {
                   <th className="px-6 py-3 text-left text-netflix-text-secondary text-sm">Category</th>
                   <th className="px-6 py-3 text-left text-netflix-text-secondary text-sm">Genre</th>
                   <th className="px-6 py-3 text-left text-netflix-text-secondary text-sm">Status</th>
+                  {activeTab === 'scheduled' && <th className="px-6 py-3 text-left text-netflix-text-secondary text-sm">Release Date</th>}
                   <th className="px-6 py-3 text-left text-netflix-text-secondary text-sm">Rating</th>
                   <th className="px-6 py-3 text-left text-netflix-text-secondary text-sm">Views</th>
                   <th className="px-6 py-3 text-right text-netflix-text-secondary text-sm">Actions</th>
@@ -374,12 +523,12 @@ const AdminMoviesPage = () => {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
 <img
-                           src={getThumbnailUrl(movie.thumbnail, 'small', movie.title)}
-                           alt={movie.title}
-                           className="w-12 h-12 object-cover rounded"
-                           referrerPolicy="no-referrer"
-                           onError={(e) => handleImageError(e, 'small', movie.title)}
-                         />
+                            src={getThumbnailUrl(movie.thumbnail, 'small', movie.title)}
+                            alt={movie.title}
+                            className="w-12 h-12 object-cover rounded"
+                            referrerPolicy="no-referrer"
+                            onError={(e) => handleImageError(e, 'small', movie.title)}
+                          />
                         <div>
                           <p className="text-white font-medium">{movie.title}</p>
                           <div className="flex gap-1 flex-wrap">
@@ -388,6 +537,9 @@ const AdminMoviesPage = () => {
                             )}
                             {movie.trending && (
                               <span className="text-xs px-1.5 py-0.5 bg-amber-900/50 text-amber-200 rounded">Trending</span>
+                            )}
+                            {movie.deletedAt && (
+                              <span className="text-xs px-1.5 py-0.5 bg-gray-900/50 text-gray-300 rounded">Deleted</span>
                             )}
                           </div>
                         </div>
@@ -401,28 +553,55 @@ const AdminMoviesPage = () => {
                     </td>
                     <td className="px-6 py-4">
                       <span className={`text-xs px-2 py-1 rounded-full ${
+                        movie.deletedAt ? 'bg-gray-900/50 text-gray-300' :
                         movie.status === 'released' ? 'bg-green-900/50 text-green-200' :
                         movie.status === 'upcoming' ? 'bg-blue-900/50 text-blue-200' :
                         'bg-gray-900/50 text-gray-200'
                       }`}>
-                        {movie.status || 'released'}
+                        {movie.deletedAt ? 'Deleted' : (movie.status || 'released')}
                       </span>
                     </td>
+                    {activeTab === 'scheduled' && (
+                      <td className="px-6 py-4 text-netflix-text-secondary">
+                        {movie.releaseDate ? new Date(movie.releaseDate).toLocaleDateString() : 'N/A'}
+                      </td>
+                    )}
                     <td className="px-6 py-4 text-netflix-success">{movie.rating?.toFixed(1) || 'N/A'}</td>
                     <td className="px-6 py-4 text-netflix-text-secondary">{movie.views || 0}</td>
                     <td className="px-6 py-4 text-right">
-                      <button
-                        onClick={() => handleEdit(movie)}
-                        className="text-netflix-text-secondary hover:text-white p-2"
-                      >
-                        <Edit size={18} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(movie.id)}
-                        className="text-netflix-text-secondary hover:text-netflix-red p-2 ml-2"
-                      >
-                        <Trash2 size={18} />
-                      </button>
+                      {activeTab === 'trash' ? (
+                        <>
+                          <button
+                            onClick={() => handleRestore(movie.id)}
+                            className="text-netflix-success hover:text-green-400 p-2"
+                            title="Restore"
+                          >
+                            <RotateCcw size={18} />
+                          </button>
+                          <button
+                            onClick={() => handlePermanentDelete(movie.id)}
+                            className="text-netflix-text-secondary hover:text-netflix-red p-2 ml-2"
+                            title="Delete permanently"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => handleEdit(movie)}
+                            className="text-netflix-text-secondary hover:text-white p-2"
+                          >
+                            <Edit size={18} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(movie.id)}
+                            className="text-netflix-text-secondary hover:text-netflix-red p-2 ml-2"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -598,7 +777,7 @@ const AdminMoviesPage = () => {
                     className="input-field"
                   >
                     <option value="released">Released</option>
-                    <option value="upcoming">Upcoming</option>
+                    <option value="upcoming">Scheduled (Upcoming)</option>
                     <option value="in-production">In Production</option>
                   </select>
                 </div>
