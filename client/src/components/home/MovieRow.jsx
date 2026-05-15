@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Play, Plus, Check, Volume2, VolumeX, Info } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { watchlistService } from '../../services/api';
-import { getThumbnailUrl, handleImageError } from '../../utils/imageUtils';
+import { getThumbnailUrl, handleImageError, getYouTubeVideoId } from '../../utils/imageUtils';
 
 const VideoPreview = ({ movie, position, onClose }) => {
   const [isMuted, setIsMuted] = useState(true);
@@ -11,6 +11,8 @@ const VideoPreview = ({ movie, position, onClose }) => {
   const previewRef = useRef(null);
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  const trailerId = getYouTubeVideoId(movie.trailerUrl);
 
   const handlePlay = (e) => {
     e.stopPropagation();
@@ -54,19 +56,31 @@ const VideoPreview = ({ movie, position, onClose }) => {
     >
       <div className="relative">
         <div className="aspect-video bg-black flex items-center justify-center">
-          <div className="text-center">
-            <Play className="w-16 h-16 text-white/50 mx-auto mb-2" />
-            <p className="text-white/70 text-sm">Preview Playing...</p>
-          </div>
+          {trailerId ? (
+            <iframe
+              src={`https://www.youtube.com/embed/${trailerId}?autoplay=1&mute=${isMuted ? 1 : 0}&loop=1&playlist=${trailerId}&rel=0&modestbranding=1&controls=0&showinfo=0&iv_load_policy=3`}
+              className="absolute inset-0 w-full h-full"
+              style={{ border: 'none' }}
+              allow="autoplay; encrypted-media"
+              title={`${movie.title} preview`}
+            />
+          ) : (
+            <div className="text-center">
+              <Play className="w-16 h-16 text-white/50 mx-auto mb-2" />
+              <p className="text-white/70 text-sm">Preview</p>
+            </div>
+          )}
         </div>
 
         <div className="absolute top-2 right-2 flex gap-2">
-          <button
-            onClick={() => setIsMuted(!isMuted)}
-            className="w-8 h-8 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 transition-colors"
-          >
-            {isMuted ? <VolumeX size={16} className="text-white" /> : <Volume2 size={16} className="text-white" />}
-          </button>
+          {trailerId && (
+            <button
+              onClick={() => setIsMuted(!isMuted)}
+              className="w-8 h-8 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 transition-colors"
+            >
+              {isMuted ? <VolumeX size={16} className="text-white" /> : <Volume2 size={16} className="text-white" />}
+            </button>
+          )}
         </div>
 
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/50 to-transparent p-4">
