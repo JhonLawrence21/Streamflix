@@ -331,7 +331,65 @@ app.get('/api/tmdb/movie/:id', async (req, res) => {
       genre: genreNames.join(', '),
       cast: cast.join(', '),
       director,
-      country: (details.production_countries || [])[0]?.name || ''
+      country: (details.production_countries || [])[0]?.name || '',
+      type: 'movie'
+    });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+});
+
+app.get('/api/tmdb/tv/:id', async (req, res) => {
+  try {
+    const tvId = req.params.id;
+    const apiKey = req.query.api_key;
+    if (!apiKey) return res.status(400).json({ message: 'api_key required' });
+    const https = require('https');
+
+    const fetchJson = (url) => new Promise((resolve, reject) => {
+      https.get(url, (proxyRes) => {
+        let data = '';
+        proxyRes.on('data', chunk => data += chunk);
+        proxyRes.on('end', () => { try { resolve(JSON.parse(data)); } catch (e) { reject(e); } });
+      }).on('error', reject);
+    });
+
+    const [details, credits] = await Promise.all([
+      fetchJson(`https://api.themoviedb.org/3/tv/${tvId}?api_key=${apiKey}&language=en-US`),
+      fetchJson(`https://api.themoviedb.org/3/tv/${tvId}/credits?api_key=${apiKey}&language=en-US`)
+    ]);
+
+    if (details.success === false) {
+      return res.status(404).json({ message: details.status_message || 'TV show not found' });
+    }
+
+    const cast = (credits.cast || []).slice(0, 10).map(c => c.name);
+    const creators = (details.created_by || []).map(c => c.name).join(', ');
+    const genreNames = (details.genres || []).map(g => g.name);
+
+    const runtimeArr = details.episode_run_time || [];
+    const avgRuntime = runtimeArr.length > 0 ? runtimeArr.reduce((a, b) => a + b, 0) / runtimeArr.length : 0;
+    const hours = Math.floor(avgRuntime / 60);
+    const minutes = Math.round(avgRuntime % 60);
+    const durationStr = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+    const seasons = details.number_of_seasons || 0;
+    const episodes = details.number_of_episodes || 0;
+    const fullDuration = seasons > 0 ? `${seasons} Seasons, ${episodes} Episodes` : durationStr;
+
+    res.json({
+      title: details.name,
+      description: details.overview,
+      thumbnail: details.poster_path ? `${TMDB_IMAGE_BASE}/w500${details.poster_path}` : '',
+      backdrop: details.backdrop_path ? `${TMDB_IMAGE_BASE}/w1280${details.backdrop_path}` : '',
+      rating: details.vote_average ? (details.vote_average * 10 / 10).toFixed(1) : 0,
+      releaseYear: details.first_air_date ? parseInt(details.first_air_date.split('-')[0]) : null,
+      releaseDate: details.first_air_date || '',
+      duration: fullDuration,
+      genre: genreNames.join(', '),
+      cast: cast.join(', '),
+      director: creators,
+      country: (details.production_countries || [])[0]?.name || '',
+      type: 'tv'
     });
   } catch (e) {
     res.status(500).json({ message: e.message });

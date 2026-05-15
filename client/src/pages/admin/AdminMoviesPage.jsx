@@ -633,11 +633,20 @@ const AdminMoviesPage = () => {
               {!editingMovie && (
                 <div className="bg-netflix-bg-tertiary rounded-lg p-4 mb-4">
                   <label className="block text-netflix-text-secondary text-sm mb-2">Import from TMDB</label>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 mb-2">
+                    <select
+                      id="tmdbType"
+                      value={formData.type}
+                      onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                      className="px-3 py-2 bg-netflix-bg-secondary border border-netflix-bg-tertiary rounded-lg text-white focus:outline-none focus:border-netflix-red"
+                    >
+                      <option value="movie">Movie</option>
+                      <option value="tv">TV Show</option>
+                    </select>
                     <input
                       type="text"
                       id="tmdbImport"
-                      placeholder="TMDB Movie ID (e.g. 550)"
+                      placeholder={formData.type === 'tv' ? 'TMDB TV ID (e.g. 1399)' : 'TMDB Movie ID (e.g. 550)'}
                       className="flex-1 px-4 py-2 bg-netflix-bg-secondary border border-netflix-bg-tertiary rounded-lg text-white placeholder-netflix-text-muted focus:outline-none focus:border-netflix-red"
                     />
                     <button
@@ -647,16 +656,19 @@ const AdminMoviesPage = () => {
                         const tmdbId = input?.value?.trim();
                         if (!tmdbId) return;
                         const apiKey = '62f11c6a11cef8d3f992c361b9c482da';
+                        const type = document.getElementById('tmdbType')?.value || 'movie';
+                        const endpoint = type === 'tv' ? 'tv' : 'movie';
                         try {
-                          const res = await fetch(`/api/tmdb/movie/${tmdbId}?api_key=${apiKey}`);
+                          const res = await fetch(`/api/tmdb/${endpoint}/${tmdbId}?api_key=${apiKey}`);
                           if (!res.ok) {
                             const err = await res.json();
-                            alert(err.message || 'Failed to fetch from TMDB');
+                            alert(err.message || `Failed to fetch ${type} from TMDB`);
                             return;
                           }
                           const data = await res.json();
                           setFormData(prev => ({
                             ...prev,
+                            type: data.type || prev.type,
                             title: data.title || prev.title,
                             description: data.description || prev.description,
                             thumbnail: data.thumbnail || prev.thumbnail,
@@ -678,7 +690,7 @@ const AdminMoviesPage = () => {
                       Import
                     </button>
                   </div>
-                  <p className="text-netflix-text-muted text-xs mt-2">Enter a TMDB movie ID to auto-fill fields above.</p>
+                  <p className="text-netflix-text-muted text-xs">Enter a TMDB {formData.type === 'tv' ? 'TV show' : 'movie'} ID to auto-fill fields above.</p>
                 </div>
               )}
 
