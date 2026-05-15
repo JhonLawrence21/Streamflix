@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Play, Star, Calendar, Clock, Plus, Check, ExternalLink, X, Download, CheckCircle, Flag } from 'lucide-react';
+import { ArrowLeft, Play, Star, Calendar, Clock, Plus, Check, ExternalLink, X, CheckCircle, Flag } from 'lucide-react';
 import Navbar from '../components/layout/Navbar';
 import MovieCard from '../components/movie/MovieCard';
 import { movieService, watchlistService, adminService } from '../services/api';
@@ -19,8 +19,6 @@ const MovieDetailsPage = () => {
   const [watchlistIds, setWatchlistIds] = useState([]);
 
   const [bgError, setBgError] = useState(false);
-  const [isDownloading, setIsDownloading] = useState(false);
-  const [isDownloaded, setIsDownloaded] = useState(false);
   const [watchlistRefresh, setWatchlistRefresh] = useState(0);
 
   const [showReportModal, setShowReportModal] = useState(false);
@@ -80,59 +78,6 @@ const MovieDetailsPage = () => {
       }
     } catch (error) {
       console.error('Error:', error);
-    }
-  };
-
-  const handleDownload = () => {
-    if (!movie.videoUrl || isDownloaded) return;
-    
-    setIsDownloading(true);
-
-    const fallbackDownload = () => {
-      const a = document.createElement('a');
-      a.href = movie.videoUrl;
-      a.download = movie.title ? movie.title.replace(/[^a-zA-Z0-9]/g, '_') + '.mp4' : 'video.mp4';
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setIsDownloading(false);
-      setIsDownloaded(true);
-    };
-
-    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-      let settled = false;
-      const handler = (event) => {
-        if (event.data && event.data.movieId === movie.id) {
-          settled = true;
-          navigator.serviceWorker.removeEventListener('message', handler);
-          if (event.data.type === 'DOWNLOAD_COMPLETE') {
-            setIsDownloading(false);
-            setIsDownloaded(true);
-          } else if (event.data.type === 'DOWNLOAD_ERROR') {
-            fallbackDownload();
-          }
-        }
-      };
-      navigator.serviceWorker.addEventListener('message', handler);
-      try {
-        navigator.serviceWorker.controller.postMessage({
-          type: 'DOWNLOAD_VIDEO',
-          url: movie.videoUrl,
-          movieId: movie.id
-        });
-      } catch (e) {
-        fallbackDownload();
-      }
-      setTimeout(() => {
-        if (!settled) {
-          navigator.serviceWorker.removeEventListener('message', handler);
-          fallbackDownload();
-        }
-      }, 5000);
-    } else {
-      fallbackDownload();
     }
   };
 
@@ -282,37 +227,6 @@ const MovieDetailsPage = () => {
                   {inWatchlist ? <Check size={24} /> : <Plus size={24} />}
                   {inWatchlist ? 'In Watchlist' : 'Add to Watchlist'}
                 </button>
-
-                {movie.videoUrl && (
-                  <button 
-                    onClick={handleDownload}
-                    disabled={isDownloading || isDownloaded}
-                    className={`flex items-center justify-center gap-2 px-6 py-3 rounded font-semibold transition-colors ${
-                      isDownloaded 
-                        ? 'bg-green-600 text-white' 
-                        : isDownloading 
-                          ? 'bg-gray-600 text-gray-300 cursor-wait'
-                          : 'bg-blue-600 text-white hover:bg-blue-700'
-                    }`}
-                  >
-                    {isDownloaded ? (
-                      <>
-                        <CheckCircle size={24} />
-                        Downloaded
-                      </>
-                    ) : isDownloading ? (
-                      <>
-                        <div className="w-6 h-6 border-2 border-t-transparent border-white rounded-full animate-spin"></div>
-                        Downloading...
-                      </>
-                    ) : (
-                      <>
-                        <Download size={24} />
-                        Download
-                      </>
-                    )}
-                  </button>
-                )}
 
                 {/* Report */}
                 <button

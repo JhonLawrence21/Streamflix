@@ -630,6 +630,58 @@ const AdminMoviesPage = () => {
                 </div>
               )}
 
+              {!editingMovie && (
+                <div className="bg-netflix-bg-tertiary rounded-lg p-4 mb-4">
+                  <label className="block text-netflix-text-secondary text-sm mb-2">Import from TMDB</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      id="tmdbImport"
+                      placeholder="TMDB Movie ID (e.g. 550)"
+                      className="flex-1 px-4 py-2 bg-netflix-bg-secondary border border-netflix-bg-tertiary rounded-lg text-white placeholder-netflix-text-muted focus:outline-none focus:border-netflix-red"
+                    />
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const input = document.getElementById('tmdbImport');
+                        const tmdbId = input?.value?.trim();
+                        if (!tmdbId) return;
+                        const apiKey = '62f11c6a11cef8d3f992c361b9c482da';
+                        try {
+                          const res = await fetch(`/api/tmdb/movie/${tmdbId}?api_key=${apiKey}`);
+                          if (!res.ok) {
+                            const err = await res.json();
+                            alert(err.message || 'Failed to fetch from TMDB');
+                            return;
+                          }
+                          const data = await res.json();
+                          setFormData(prev => ({
+                            ...prev,
+                            title: data.title || prev.title,
+                            description: data.description || prev.description,
+                            thumbnail: data.thumbnail || prev.thumbnail,
+                            rating: data.rating ? String(parseFloat(data.rating)) : prev.rating,
+                            releaseYear: data.releaseYear ? String(data.releaseYear) : prev.releaseYear,
+                            releaseDate: data.releaseDate || prev.releaseDate,
+                            duration: data.duration || prev.duration,
+                            genre: data.genre || prev.genre,
+                            cast: data.cast || prev.cast,
+                            director: data.director || prev.director,
+                            country: data.country || prev.country
+                          }));
+                        } catch (e) {
+                          alert('Failed to connect to TMDB');
+                        }
+                      }}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
+                    >
+                      Import
+                    </button>
+                  </div>
+                  <p className="text-netflix-text-muted text-xs mt-2">Enter a TMDB movie ID to auto-fill fields above.</p>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-netflix-text-secondary text-sm mb-2">Title *</label>

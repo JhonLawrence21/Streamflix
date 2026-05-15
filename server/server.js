@@ -267,6 +267,77 @@ if (staticPath) {
   console.log('No static frontend path found, API only mode');
 }
 
+// TMDB proxy endpoint
+const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p';
+app.get('/api/tmdb/search', async (req, res) => {
+  try {
+    const query = req.query.q;
+    const apiKey = req.query.api_key;
+    if (!query || !apiKey) return res.status(400).json({ message: 'Query and api_key required' });
+    const https = require('https');
+    const url = `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${encodeURIComponent(query)}`;
+    https.get(url, (proxyRes) => {
+      let data = '';
+      proxyRes.on('data', chunk => data += chunk);
+      proxyRes.on('end', () => res.json(JSON.parse(data)));
+    }).on('error', (e) => res.status(500).json({ message: e.message }));
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+});
+
+app.get('/api/tmdb/movie/:id', async (req, res) => {
+  try {
+    const movieId = req.params.id;
+    const apiKey = req.query.api_key;
+    if (!apiKey) return res.status(400).json({ message: 'api_key required' });
+    const https = require('https');
+
+    const fetchJson = (url) => new Promise((resolve, reject) => {
+      https.get(url, (proxyRes) => {
+        let data = '';
+        proxyRes.on('data', chunk => data += chunk);
+        proxyRes.on('end', () => { try { resolve(JSON.parse(data)); } catch (e) { reject(e); } });
+      }).on('error', reject);
+    });
+
+    const [details, credits] = await Promise.all([
+      fetchJson(`https://api.themoviedb.org/3/movie/${movieId}?api_key=${apiKey}&language=en-US`),
+      fetchJson(`https://api.themoviedb.org/3/movie/${movieId}/credits?api_key=${apiKey}&language=en-US`)
+    ]);
+
+    if (details.success === false) {
+      return res.status(404).json({ message: details.status_message || 'Movie not found' });
+    }
+
+    const cast = (credits.cast || []).slice(0, 10).map(c => c.name);
+    const director = (credits.crew || []).find(c => c.job === 'Director')?.name || '';
+    const genreNames = (details.genres || []).map(g => g.name);
+
+    const runtime = details.runtime || 0;
+    const hours = Math.floor(runtime / 60);
+    const minutes = runtime % 60;
+    const durationStr = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+
+    res.json({
+      title: details.title,
+      description: details.overview,
+      thumbnail: details.poster_path ? `${TMDB_IMAGE_BASE}/w500${details.poster_path}` : '',
+      backdrop: details.backdrop_path ? `${TMDB_IMAGE_BASE}/w1280${details.backdrop_path}` : '',
+      rating: details.vote_average ? (details.vote_average * 10 / 10).toFixed(1) : 0,
+      releaseYear: details.release_date ? parseInt(details.release_date.split('-')[0]) : null,
+      releaseDate: details.release_date || '',
+      duration: durationStr,
+      genre: genreNames.join(', '),
+      cast: cast.join(', '),
+      director,
+      country: (details.production_countries || [])[0]?.name || ''
+    });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+});
+
 // Health check
 app.get('/api/health', async (req, res) => {
   try {
