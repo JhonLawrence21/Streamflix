@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Play, Star, Calendar, Clock, Plus, Check, ExternalLink, X, CheckCircle, Flag } from 'lucide-react';
+import ReactPlayer from 'react-player';
 import Navbar from '../components/layout/Navbar';
 import MovieCard from '../components/movie/MovieCard';
 import { movieService, watchlistService, adminService } from '../services/api';
@@ -25,6 +26,7 @@ const MovieDetailsPage = () => {
   const [reportType, setReportType] = useState('broken_video');
   const [reportMessage, setReportMessage] = useState('');
   const [reportSubmitted, setReportSubmitted] = useState(false);
+  const [bgTrailerError, setBgTrailerError] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -119,26 +121,31 @@ const MovieDetailsPage = () => {
       <Navbar />
       
       {/* Header with trailer/thumbnail background */}
-      <div className="relative overflow-hidden">
-        {trailerId ? (
-          <iframe
-            src={`https://www.youtube.com/embed/${trailerId}?autoplay=1&mute=1&loop=1&playlist=${trailerId}&rel=0&modestbranding=1&controls=0&playsinline=1`}
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[177.78vh] h-[56.25vw] min-w-full min-h-full pointer-events-none"
-            style={{ border: 'none' }}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            title={`${movie.title} trailer`}
-          />
+      <div className="relative h-[40vh] md:h-[60vh] overflow-hidden">
+        {trailerId && !bgTrailerError ? (
+          <div className="absolute inset-0 w-full h-full pointer-events-none">
+            <ReactPlayer
+              url={movie.trailerUrl || movie.videoUrl}
+              playing
+              muted
+              loop
+              width="100%"
+              height="100%"
+              config={{ youtube: { playerVars: { controls: 0, modestbranding: 1, rel: 0, iv_load_policy: 3 } } }}
+              onError={() => setBgTrailerError(true)}
+            />
+          </div>
         ) : (
           <img
             src={bgError ? getThumbnailUrl(null, 'hero', movie.title) : getThumbnailUrl(movie.thumbnail, 'hero', movie.title)}
             alt={movie.title}
-            className="absolute inset-0 w-full h-[40vh] md:h-[60vh] object-cover"
+            className="absolute inset-0 w-full h-full object-cover"
             referrerPolicy="no-referrer"
             onError={() => setBgError(true)}
           />
         )}
-        <div className="absolute inset-0 h-[40vh] md:h-[60vh] bg-gradient-to-r from-netflix-bg via-netflix-bg/80 to-transparent"></div>
-        <div className="absolute inset-0 h-[40vh] md:h-[60vh] bg-gradient-to-t from-netflix-bg via-transparent to-netflix-bg"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-netflix-bg via-netflix-bg/80 to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-netflix-bg via-transparent to-netflix-bg"></div>
 
         <div className="relative pt-[30vh] md:pt-[40vh] px-4 md:px-12 pb-8">
           <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-netflix-text-secondary hover:text-white mb-4 transition-colors">
