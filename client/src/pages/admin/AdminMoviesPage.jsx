@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Film, X, Search, Filter, CheckSquare, Square, Trash, RotateCcw, AlertTriangle, Clock } from 'lucide-react';
+import { Plus, Edit, Trash2, Film, X, Search, Filter, CheckSquare, Square, Trash, RotateCcw, AlertTriangle, Clock, Play } from 'lucide-react';
 import { adminService } from '../../services/api';
-import { getThumbnailUrl, handleImageError } from '../../utils/imageUtils';
+import { getThumbnailUrl, handleImageError, getYouTubeVideoId } from '../../utils/imageUtils';
 import { COUNTRIES } from '../../utils/filterOptions';
 
 const AdminMoviesPage = () => {
@@ -499,6 +499,7 @@ const AdminMoviesPage = () => {
                     </button>
                   </th>
                   <th className="px-6 py-3 text-left text-netflix-text-secondary text-sm">Title</th>
+                  <th className="px-6 py-3 text-left text-netflix-text-secondary text-sm">Trailer</th>
                   <th className="px-6 py-3 text-left text-netflix-text-secondary text-sm">Category</th>
                   <th className="px-6 py-3 text-left text-netflix-text-secondary text-sm">Genre</th>
                   <th className="px-6 py-3 text-left text-netflix-text-secondary text-sm">Status</th>
@@ -544,6 +545,13 @@ const AdminMoviesPage = () => {
                           </div>
                         </div>
                       </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      {getYouTubeVideoId(movie.trailerUrl) || getYouTubeVideoId(movie.videoUrl) ? (
+                        <Play size={16} className="text-green-400" />
+                      ) : (
+                        <span className="text-netflix-text-muted text-sm">—</span>
+                      )}
                     </td>
                     <td className="px-6 py-4 text-netflix-text-secondary">{movie.category || 'N/A'}</td>
                     <td className="px-6 py-4">
@@ -759,14 +767,30 @@ const AdminMoviesPage = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-netflix-text-secondary text-sm mb-2">Trailer URL</label>
+                  <label className="block text-netflix-text-secondary text-sm mb-2">Trailer URL (for hover preview &amp; details page background)</label>
                   <input
                     type="url"
                     value={formData.trailerUrl}
                     onChange={(e) => setFormData({ ...formData, trailerUrl: e.target.value })}
                     className="input-field"
-                    placeholder="https://www.youtube.com/embed/..."
+                    placeholder="https://www.youtube.com/watch?v=..."
                   />
+                  {(() => {
+                    const tid = getYouTubeVideoId(formData.trailerUrl);
+                    return tid ? (
+                      <div className="mt-2 relative aspect-video bg-black rounded overflow-hidden">
+                        <iframe
+                          src={`https://www.youtube.com/embed/${tid}?autoplay=0&rel=0&modestbranding=1&controls=1`}
+                          className="absolute inset-0 w-full h-full"
+                          style={{ border: 'none' }}
+                          allow="encrypted-media"
+                          title="Trailer preview"
+                        />
+                      </div>
+                    ) : formData.trailerUrl ? (
+                      <p className="text-xs text-netflix-warning mt-1">Not a valid YouTube URL</p>
+                    ) : null;
+                  })()}
                 </div>
               </div>
 
