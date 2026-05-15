@@ -1,20 +1,15 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Play, Plus, Check } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { watchlistService } from '../../services/api';
-import { getThumbnailUrl, handleImageError, getYouTubeVideoId } from '../../utils/imageUtils';
+import { getThumbnailUrl, handleImageError } from '../../utils/imageUtils';
 
 const MovieCard = ({ movie, onWatchlist = [], onWatchlistChange }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isInWatchlist, setIsInWatchlist] = useState(onWatchlist.includes(movie.id));
   const [imageError, setImageError] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
-  const hoverTimer = useRef(null);
-  const cardRef = useRef(null);
-
-  const trailerId = getYouTubeVideoId(movie.trailerUrl) || getYouTubeVideoId(movie.videoUrl);
 
   useEffect(() => {
     setIsInWatchlist(onWatchlist.includes(movie.id));
@@ -23,12 +18,6 @@ const MovieCard = ({ movie, onWatchlist = [], onWatchlistChange }) => {
   useEffect(() => {
     setImageError(false);
   }, [movie.id]);
-
-  useEffect(() => {
-    return () => {
-      if (hoverTimer.current) clearTimeout(hoverTimer.current);
-    };
-  }, []);
 
   const handleAddToWatchlist = async (e) => {
     e.preventDefault();
@@ -58,55 +47,27 @@ const MovieCard = ({ movie, onWatchlist = [], onWatchlistChange }) => {
     navigate(`/movie/${movie.id}`);
   };
 
-  const handleMouseEnter = () => {
-    if (!trailerId) return;
-    hoverTimer.current = setTimeout(() => {
-      setShowPreview(true);
-    }, 400);
-  };
-
-  const handleMouseLeave = () => {
-    if (hoverTimer.current) {
-      clearTimeout(hoverTimer.current);
-      hoverTimer.current = null;
-    }
-    setShowPreview(false);
-  };
-
   const thumbnailSrc = imageError
     ? getThumbnailUrl(null)
     : getThumbnailUrl(movie.thumbnail);
 
   return (
     <div
-      ref={cardRef}
       onClick={handleCardClick}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
       className="block group cursor-pointer"
     >
       <div className="relative aspect-[2/3] rounded overflow-hidden bg-netflix-bg-tertiary">
-        {showPreview && trailerId ? (
-          <iframe
-            src={`https://www.youtube.com/embed/${trailerId}?autoplay=1&mute=1&loop=1&playlist=${trailerId}&rel=0&modestbranding=1&controls=0&playsinline=1`}
-            className="absolute inset-0 w-full h-full pointer-events-none"
-            style={{ border: 'none' }}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            title={`${movie.title} preview`}
-          />
-        ) : (
-          <img
-            src={thumbnailSrc}
-            alt={movie.title}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-            loading="lazy"
-            referrerPolicy="no-referrer"
-            onError={(e) => {
-              setImageError(true);
-              handleImageError(e);
-            }}
-          />
-        )}
+        <img
+          src={thumbnailSrc}
+          alt={movie.title}
+          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          onError={(e) => {
+            setImageError(true);
+            handleImageError(e);
+          }}
+        />
 
         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 z-10">
           <button
