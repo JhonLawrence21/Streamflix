@@ -120,34 +120,25 @@ const MovieDetailsPage = () => {
       <Navbar />
       
       {/* Header with trailer/thumbnail background */}
-      <div className="relative h-[40vh] md:h-[60vh] overflow-hidden bg-netflix-bg">
+      <div className="relative">
         <img
           src={bgError ? getThumbnailUrl(null, 'hero', movie.title) : getThumbnailUrl(movie.thumbnail, 'hero', movie.title)}
           alt={movie.title}
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 w-full h-[40vh] md:h-[60vh] object-cover"
           referrerPolicy="no-referrer"
           onError={() => setBgError(true)}
         />
         {trailerId && (
-          <>
-            <iframe
-              src={`https://www.youtube.com/embed/${trailerId}?autoplay=1&mute=1&loop=1&playlist=${trailerId}&controls=0&modestbranding=1&rel=0&playsinline=1`}
-              className="absolute inset-0 w-full h-full pointer-events-none"
-              style={{ border: 'none' }}
-              allow="autoplay; encrypted-media"
-              title={`${movie.title} trailer`}
-            />
-            <button
-              onClick={() => setShowTrailer(true)}
-              className="absolute top-4 right-4 z-20 flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-4 py-2 rounded-full transition-all"
-            >
-              <Play size={16} fill="white" />
-              <span className="text-sm font-medium">Trailer</span>
-            </button>
-          </>
+          <iframe
+            src={`https://www.youtube.com/embed/${trailerId}?autoplay=1&mute=1&loop=1&playlist=${trailerId}&controls=0&modestbranding=1&rel=0&playsinline=1`}
+            className="absolute inset-0 w-full h-[40vh] md:h-[60vh] pointer-events-none"
+            style={{ border: 'none' }}
+            allow="autoplay; encrypted-media"
+            title={`${movie.title} trailer`}
+          />
         )}
-        <div className="absolute inset-0 bg-gradient-to-r from-netflix-bg via-netflix-bg/80 to-transparent"></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-netflix-bg via-transparent to-netflix-bg"></div>
+        <div className="absolute inset-0 h-[40vh] md:h-[60vh] bg-gradient-to-r from-netflix-bg via-netflix-bg/80 to-transparent"></div>
+        <div className="absolute inset-0 h-[40vh] md:h-[60vh] bg-gradient-to-t from-netflix-bg via-transparent to-netflix-bg"></div>
 
         <div className="relative pt-[30vh] md:pt-[40vh] px-4 md:px-12 pb-8">
           <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-netflix-text-secondary hover:text-white mb-4 transition-colors">
