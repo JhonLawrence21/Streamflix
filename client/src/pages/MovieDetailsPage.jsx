@@ -122,10 +122,10 @@ const MovieDetailsPage = () => {
       <div className="relative overflow-hidden">
         {trailerId ? (
           <iframe
-            src={`https://www.youtube.com/embed/${trailerId}?autoplay=1&mute=1&loop=1&playlist=${trailerId}&rel=0&modestbranding=1&controls=0&showinfo=0&iv_load_policy=3&playsinline=1&disablekb=1`}
+            src={`https://www.youtube.com/embed/${trailerId}?autoplay=1&mute=1&loop=1&playlist=${trailerId}&rel=0&modestbranding=1&controls=0&playsinline=1`}
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[177.78vh] h-[56.25vw] min-w-full min-h-full pointer-events-none"
             style={{ border: 'none' }}
-            allow="autoplay; encrypted-media"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             title={`${movie.title} trailer`}
           />
         ) : (

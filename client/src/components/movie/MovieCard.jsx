@@ -88,10 +88,10 @@ const MovieCard = ({ movie, onWatchlist = [], onWatchlistChange }) => {
       <div className="relative aspect-[2/3] rounded overflow-hidden bg-netflix-bg-tertiary">
         {showPreview && trailerId ? (
           <iframe
-            src={`https://www.youtube.com/embed/${trailerId}?autoplay=1&mute=1&loop=1&playlist=${trailerId}&rel=0&modestbranding=1&controls=0&showinfo=0&iv_load_policy=3`}
+            src={`https://www.youtube.com/embed/${trailerId}?autoplay=1&mute=1&loop=1&playlist=${trailerId}&rel=0&modestbranding=1&controls=0&playsinline=1`}
             className="absolute inset-0 w-full h-full pointer-events-none"
             style={{ border: 'none' }}
-            allow="autoplay; encrypted-media"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             title={`${movie.title} preview`}
           />
         ) : (

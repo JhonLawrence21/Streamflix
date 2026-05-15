@@ -58,10 +58,10 @@ const VideoPreview = ({ movie, position, onClose }) => {
         <div className="relative aspect-video bg-black flex items-center justify-center overflow-hidden">
           {trailerId ? (
             <iframe
-              src={`https://www.youtube.com/embed/${trailerId}?autoplay=1&mute=${isMuted ? 1 : 0}&loop=1&playlist=${trailerId}&rel=0&modestbranding=1&controls=0&showinfo=0&iv_load_policy=3`}
+              src={`https://www.youtube.com/embed/${trailerId}?autoplay=1&mute=${isMuted ? 1 : 0}&loop=1&playlist=${trailerId}&rel=0&modestbranding=1&controls=0&playsinline=1`}
               className="absolute inset-0 w-full h-full"
               style={{ border: 'none' }}
-              allow="autoplay; encrypted-media"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               title={`${movie.title} preview`}
             />
           ) : (
