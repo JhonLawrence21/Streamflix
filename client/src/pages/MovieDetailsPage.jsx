@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Play, Star, Calendar, Clock, Plus, Check, ExternalLink, X, CheckCircle, Flag, Volume2, VolumeX } from 'lucide-react';
-import ReactPlayer from 'react-player';
+
 import Navbar from '../components/layout/Navbar';
 import MovieCard from '../components/movie/MovieCard';
 import { movieService, watchlistService, adminService } from '../services/api';
@@ -22,6 +22,7 @@ const MovieDetailsPage = () => {
   const [bgError, setBgError] = useState(false);
   const [watchlistRefresh, setWatchlistRefresh] = useState(0);
   const [bgMuted, setBgMuted] = useState(true);
+  const [bgKey, setBgKey] = useState(0);
 
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportType, setReportType] = useState('broken_video');
@@ -124,36 +125,19 @@ const MovieDetailsPage = () => {
       {/* Header with trailer/thumbnail background */}
       <div className="relative">
         {trailerId && !bgError ? (
-          <div className="absolute inset-0 w-full h-[40vh] md:h-[60vh] overflow-hidden bg-black" style={{ filter: 'brightness(0.6)' }}>
-            <div className="absolute inset-0" style={{ transform: 'scale(1.4)', transformOrigin: 'center center' }}>
-              <ReactPlayer
-                url={`https://www.youtube.com/watch?v=${trailerId}`}
-                width="100%"
-                height="100%"
-                playing
-                muted={bgMuted}
-                loop
-                playsinline
-                onError={() => setBgError(true)}
-                config={{
-                  youtube: {
-                    playerVars: {
-                      controls: 0,
-                      disablekb: 1,
-                      fs: 0,
-                      modestbranding: 1,
-                      rel: 0,
-                      iv_load_policy: 3,
-                      loop: 1,
-                      playlist: trailerId
-                    }
-                  }
-                }}
-              />
-            </div>
+          <div className="absolute inset-0 w-full h-[40vh] md:h-[60vh] overflow-hidden bg-black">
+            <iframe
+              key={bgKey}
+              src={`https://www.youtube.com/embed/${trailerId}?autoplay=1&mute=${bgMuted ? 1 : 0}&loop=1&playlist=${trailerId}&controls=0&disablekb=1&modestbranding=1&rel=0&iv_load_policy=3&playsinline=1`}
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200%] h-[200%] pointer-events-none"
+              style={{ filter: 'brightness(0.6)' }}
+              allow="autoplay; encrypted-media"
+              title="Background trailer"
+              onError={() => setBgError(true)}
+            />
             <div className="absolute top-4 right-4 z-20 flex gap-2">
               <button
-                onClick={() => setBgMuted(!bgMuted)}
+                onClick={() => { setBgMuted(!bgMuted); setBgKey(k => k + 1); }}
                 className="flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-3 py-2 rounded-full transition-all text-sm"
                 title={bgMuted ? 'Unmute' : 'Mute'}
               >
