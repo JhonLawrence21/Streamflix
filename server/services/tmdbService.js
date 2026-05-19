@@ -5,35 +5,52 @@ const getApiKey = () => {
   return process.env.TMDB_API_KEY || '';
 };
 
-const fetchJson = (url) => new Promise((resolve, reject) => {
-  https.get(url, (res) => {
+const fetchJson = (url, timeoutMs = 8000) => new Promise((resolve, reject) => {
+  const req = https.get(url, (res) => {
     let data = '';
     res.on('data', chunk => data += chunk);
     res.on('end', () => {
+      if (res.statusCode >= 400) {
+        try {
+          const err = JSON.parse(data);
+          reject(new Error(err.status_message || `TMDB HTTP ${res.statusCode}`));
+        } catch {
+          reject(new Error(`TMDB HTTP ${res.statusCode}`));
+        }
+        return;
+      }
       try {
         resolve(JSON.parse(data));
       } catch (e) {
         reject(e);
       }
     });
-  }).on('error', reject);
+  });
+  req.on('error', reject);
+  req.setTimeout(timeoutMs, () => { req.destroy(); reject(new Error('TMDB timeout')); });
 });
 
 exports.searchMovie = async (title, type = 'movie') => {
   const apiKey = getApiKey();
   if (!apiKey) return null;
-  try {
-    const searchType = type === 'tv' ? 'tv' : 'movie';
-    const url = `https://api.themoviedb.org/3/search/${searchType}?api_key=${apiKey}&query=${encodeURIComponent(title)}&language=en-US`;
-    const data = await fetchJson(url);
-    if (data.results && data.results.length > 0) {
-      return data.results[0];
+  if (!title) return null;
+
+  const searchTypes = type === 'tv' ? ['tv', 'movie'] : ['movie', 'tv'];
+
+  for (const st of searchTypes) {
+    try {
+      const url = `https://api.themoviedb.org/3/search/${st}?api_key=${apiKey}&query=${encodeURIComponent(title)}&language=en-US`;
+      const data = await fetchJson(url);
+      if (data.results && data.results.length > 0) {
+        const best = data.results[0];
+        return { ...best, _searchType: st };
+      }
+    } catch (e) {
+      console.error(`[TMDB] Search error for "${title}" (${st}):`, e.message);
     }
-    return null;
-  } catch (e) {
-    console.error(`[TMDB] Search error for "${title}":`, e.message);
-    return null;
   }
+
+  return null;
 };
 
 exports.fetchMovieDetails = async (tmdbId, type = 'movie') => {
@@ -93,21 +110,24 @@ exports.syncMovieRating = async (movie) => {
   if (!apiKey) return null;
 
   let tmdbId = movie.tmdbId;
-  let searchResult = null;
 
   if (tmdbId) {
-    const details = await exports.fetchMovieDetails(tmdbId, movie.type || 'movie');
-    if (details && details.rating) {
-      return { rating: details.rating, tmdbId };
+    const types = movie.type === 'tv' ? ['tv', 'movie'] : ['movie', 'tv'];
+    for (const t of types) {
+      const details = await exports.fetchMovieDetails(tmdbId, t);
+      if (details && details.rating !== undefined && details.rating !== null) {
+        return { rating: details.rating, tmdbId };
+      }
     }
   }
 
-  searchResult = await exports.searchMovie(movie.title, movie.type || 'movie');
+  const searchResult = await exports.searchMovie(movie.title, movie.type || 'movie');
   if (searchResult) {
     tmdbId = searchResult.id;
-    const rating = searchResult.vote_average
-      ? parseFloat((searchResult.vote_average * 10 / 10).toFixed(1))
-      : 0;
+    const voteAvg = searchResult.vote_average;
+    const rating = voteAvg
+      ? parseFloat((voteAvg * 10 / 10).toFixed(1))
+      : (voteAvg === 0 ? 0 : 0);
     return { rating, tmdbId };
   }
 

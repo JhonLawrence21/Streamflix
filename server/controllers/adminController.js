@@ -64,7 +64,7 @@ exports.createMovie = async (req, res) => {
           if (!result) {
             result = await tmdbService.syncMovieRating(savedMovie);
           }
-          if (result && result.rating && result.rating > 0) {
+          if (result && result.rating !== undefined && result.rating !== null && result.rating !== false) {
             const now = new Date().toISOString();
             await sequelize.query(
               `UPDATE movies SET rating = ${result.rating}, "tmdbId" = ${result.tmdbId}, "updatedAt" = '${now}' WHERE id = ${savedMovie.id}`
@@ -620,8 +620,8 @@ exports.syncMovieRating = async (req, res) => {
     const movie = movies[0];
     const result = await tmdbService.syncMovieRating(movie);
 
-    if (!result || !result.rating) {
-      return res.status(404).json({ message: 'Could not find movie on TMDB' });
+    if (!result || result.rating === undefined || result.rating === null || result.rating === false) {
+      return res.status(404).json({ message: `Could not find "${movie.title}" on TMDB` });
     }
 
     const now = new Date().toISOString();
@@ -648,7 +648,7 @@ exports.bulkSyncRatings = async (req, res) => {
     for (const movie of movies) {
       try {
         const result = await tmdbService.syncMovieRating(movie);
-        if (result && result.rating && result.rating > 0) {
+        if (result && result.rating !== undefined && result.rating !== null && result.rating !== false) {
           const now = new Date().toISOString();
           await sequelize.query(
             `UPDATE movies SET rating = ${result.rating}, "tmdbId" = ${result.tmdbId}, "updatedAt" = '${now}' WHERE id = ${movie.id}`

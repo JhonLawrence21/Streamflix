@@ -514,7 +514,7 @@ connectDB()
           for (const movie of movies) {
             try {
               const result = await tmdbService.syncMovieRating(movie);
-              if (result && result.rating && result.rating > 0) {
+              if (result && result.rating !== undefined && result.rating !== null && result.rating !== false) {
                 const now = new Date().toISOString();
                 await sequelize.query(
                   `UPDATE movies SET rating = ${result.rating}, "tmdbId" = ${result.tmdbId}, "updatedAt" = '${now}' WHERE id = ${movie.id}`
