@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Play, Star, Calendar, Clock, Plus, Check, ExternalLink, X, CheckCircle, Flag, Volume2, VolumeX } from 'lucide-react';
 import ReactPlayer from 'react-player';
@@ -22,8 +22,6 @@ const MovieDetailsPage = () => {
   const [bgError, setBgError] = useState(false);
   const [watchlistRefresh, setWatchlistRefresh] = useState(0);
   const [bgMuted, setBgMuted] = useState(true);
-  const [bgPlaying, setBgPlaying] = useState(false);
-  const bgPlayerRef = useRef(null);
 
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportType, setReportType] = useState('broken_video');
@@ -126,18 +124,16 @@ const MovieDetailsPage = () => {
       {/* Header with trailer/thumbnail background */}
       <div className="relative">
         {trailerId && !bgError ? (
-          <>
-            <div className="absolute inset-0 w-full h-[40vh] md:h-[60vh] overflow-hidden">
+          <div className="absolute inset-0 w-full h-[40vh] md:h-[60vh] overflow-hidden bg-black" style={{ filter: 'brightness(0.6)' }}>
+            <div className="absolute inset-0" style={{ transform: 'scale(1.4)', transformOrigin: 'center center' }}>
               <ReactPlayer
-                ref={bgPlayerRef}
                 url={`https://www.youtube.com/watch?v=${trailerId}`}
                 width="100%"
                 height="100%"
-                playing={bgPlaying}
+                playing
                 muted={bgMuted}
                 loop
                 playsinline
-                onReady={() => setBgPlaying(true)}
                 onError={() => setBgError(true)}
                 config={{
                   youtube: {
@@ -153,8 +149,6 @@ const MovieDetailsPage = () => {
                     }
                   }
                 }}
-                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
-                style={{ filter: 'brightness(0.7)', width: '100%', height: '56.25vw', minHeight: '100%', minWidth: '177.77vh' }}
               />
             </div>
             <div className="absolute top-4 right-4 z-20 flex gap-2">
@@ -173,13 +167,13 @@ const MovieDetailsPage = () => {
                 <span className="text-sm font-medium">Trailer</span>
               </button>
             </div>
-          </>
+          </div>
         ) : (
-          <>
+          <div className="absolute inset-0 w-full h-[40vh] md:h-[60vh] overflow-hidden bg-black">
             <img
               src={getThumbnailUrl(movie.thumbnail, 'hero', movie.title)}
               alt={movie.title}
-              className="absolute inset-0 w-full h-[40vh] md:h-[60vh] object-cover"
+              className="absolute inset-0 w-full h-full object-cover"
               referrerPolicy="no-referrer"
               onError={() => setBgError(true)}
             />
@@ -192,7 +186,7 @@ const MovieDetailsPage = () => {
                 <span className="text-sm font-medium">Trailer</span>
               </button>
             )}
-          </>
+          </div>
         )}
         <div className="absolute inset-0 h-[40vh] md:h-[60vh] bg-gradient-to-r from-netflix-bg via-netflix-bg/80 to-transparent"></div>
         <div className="absolute inset-0 h-[40vh] md:h-[60vh] bg-gradient-to-t from-netflix-bg via-transparent to-netflix-bg"></div>
