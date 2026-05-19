@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Play, Star, Calendar, Clock, Plus, Check, ExternalLink, X, CheckCircle, Flag } from 'lucide-react';
+import { ArrowLeft, Play, Star, Calendar, Clock, Plus, Check, ExternalLink, X, CheckCircle, Flag, Volume2, VolumeX } from 'lucide-react';
+import ReactPlayer from 'react-player';
 import Navbar from '../components/layout/Navbar';
 import MovieCard from '../components/movie/MovieCard';
 import { movieService, watchlistService, adminService } from '../services/api';
@@ -20,6 +21,9 @@ const MovieDetailsPage = () => {
 
   const [bgError, setBgError] = useState(false);
   const [watchlistRefresh, setWatchlistRefresh] = useState(0);
+  const [bgMuted, setBgMuted] = useState(true);
+  const [bgPlaying, setBgPlaying] = useState(false);
+  const bgPlayerRef = useRef(null);
 
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportType, setReportType] = useState('broken_video');
@@ -121,21 +125,74 @@ const MovieDetailsPage = () => {
       
       {/* Header with trailer/thumbnail background */}
       <div className="relative">
-        <img
-          src={bgError ? getThumbnailUrl(null, 'hero', movie.title) : getThumbnailUrl(movie.thumbnail, 'hero', movie.title)}
-          alt={movie.title}
-          className="absolute inset-0 w-full h-[40vh] md:h-[60vh] object-cover"
-          referrerPolicy="no-referrer"
-          onError={() => setBgError(true)}
-        />
-        {trailerId && (
-          <button
-            onClick={() => setShowTrailer(true)}
-            className="absolute top-4 right-4 z-20 flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-4 py-2 rounded-full transition-all"
-          >
-            <Play size={16} fill="white" />
-            <span className="text-sm font-medium">Trailer</span>
-          </button>
+        {trailerId && !bgError ? (
+          <>
+            <div className="absolute inset-0 w-full h-[40vh] md:h-[60vh] overflow-hidden">
+              <ReactPlayer
+                ref={bgPlayerRef}
+                url={`https://www.youtube.com/watch?v=${trailerId}`}
+                width="100%"
+                height="100%"
+                playing={bgPlaying}
+                muted={bgMuted}
+                loop
+                playsinline
+                onReady={() => setBgPlaying(true)}
+                onError={() => setBgError(true)}
+                config={{
+                  youtube: {
+                    playerVars: {
+                      controls: 0,
+                      disablekb: 1,
+                      fs: 0,
+                      modestbranding: 1,
+                      rel: 0,
+                      iv_load_policy: 3,
+                      loop: 1,
+                      playlist: trailerId
+                    }
+                  }
+                }}
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                style={{ filter: 'brightness(0.7)', width: '100%', height: '56.25vw', minHeight: '100%', minWidth: '177.77vh' }}
+              />
+            </div>
+            <div className="absolute top-4 right-4 z-20 flex gap-2">
+              <button
+                onClick={() => setBgMuted(!bgMuted)}
+                className="flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-3 py-2 rounded-full transition-all text-sm"
+                title={bgMuted ? 'Unmute' : 'Mute'}
+              >
+                {bgMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+              </button>
+              <button
+                onClick={() => setShowTrailer(true)}
+                className="flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-4 py-2 rounded-full transition-all"
+              >
+                <Play size={16} fill="white" />
+                <span className="text-sm font-medium">Trailer</span>
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <img
+              src={getThumbnailUrl(movie.thumbnail, 'hero', movie.title)}
+              alt={movie.title}
+              className="absolute inset-0 w-full h-[40vh] md:h-[60vh] object-cover"
+              referrerPolicy="no-referrer"
+              onError={() => setBgError(true)}
+            />
+            {trailerId && (
+              <button
+                onClick={() => setShowTrailer(true)}
+                className="absolute top-4 right-4 z-20 flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-4 py-2 rounded-full transition-all"
+              >
+                <Play size={16} fill="white" />
+                <span className="text-sm font-medium">Trailer</span>
+              </button>
+            )}
+          </>
         )}
         <div className="absolute inset-0 h-[40vh] md:h-[60vh] bg-gradient-to-r from-netflix-bg via-netflix-bg/80 to-transparent"></div>
         <div className="absolute inset-0 h-[40vh] md:h-[60vh] bg-gradient-to-t from-netflix-bg via-transparent to-netflix-bg"></div>
