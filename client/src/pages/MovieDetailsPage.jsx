@@ -19,7 +19,6 @@ const MovieDetailsPage = () => {
   const [showTrailer, setShowTrailer] = useState(false);
   const [watchlistIds, setWatchlistIds] = useState([]);
 
-  const [bgError, setBgError] = useState(false);
   const [watchlistRefresh, setWatchlistRefresh] = useState(0);
   const [bgMuted, setBgMuted] = useState(true);
   const [bgKey, setBgKey] = useState(0);
@@ -124,17 +123,18 @@ const MovieDetailsPage = () => {
       
       {/* Header with trailer/thumbnail background */}
       <div className="relative">
-        {trailerId && !bgError ? (
+        {trailerId ? (
           <div className="absolute inset-0 w-full h-[40vh] md:h-[60vh] overflow-hidden bg-black">
-            <iframe
-              key={bgKey}
-              src={`https://www.youtube.com/embed/${trailerId}?autoplay=1&mute=${bgMuted ? 1 : 0}&loop=1&playlist=${trailerId}&controls=0&disablekb=1&modestbranding=1&rel=0&iv_load_policy=3&playsinline=1`}
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200%] h-[200%] pointer-events-none"
-              style={{ filter: 'brightness(0.6)' }}
-              allow="autoplay; encrypted-media"
-              title="Background trailer"
-              onError={() => setBgError(true)}
-            />
+            <div className="absolute inset-0 w-full h-full" style={{ filter: 'brightness(0.5)' }}>
+              <iframe
+                key={bgKey}
+                src={`https://www.youtube.com/embed/${trailerId}?autoplay=1&mute=1&loop=1&playlist=${trailerId}&controls=0&modestbranding=1&rel=0&playsinline=1`}
+                className="w-full h-full pointer-events-none"
+                allow="autoplay; encrypted-media"
+                title="Background trailer"
+                referrerPolicy="no-referrer"
+              />
+            </div>
             <div className="absolute top-4 right-4 z-20 flex gap-2">
               <button
                 onClick={() => { setBgMuted(!bgMuted); setBgKey(k => k + 1); }}
@@ -159,17 +159,7 @@ const MovieDetailsPage = () => {
               alt={movie.title}
               className="absolute inset-0 w-full h-full object-cover"
               referrerPolicy="no-referrer"
-              onError={() => setBgError(true)}
             />
-            {trailerId && (
-              <button
-                onClick={() => setShowTrailer(true)}
-                className="absolute top-4 right-4 z-20 flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-4 py-2 rounded-full transition-all"
-              >
-                <Play size={16} fill="white" />
-                <span className="text-sm font-medium">Trailer</span>
-              </button>
-            )}
           </div>
         )}
         <div className="absolute inset-0 h-[40vh] md:h-[60vh] bg-gradient-to-r from-netflix-bg via-netflix-bg/80 to-transparent"></div>
