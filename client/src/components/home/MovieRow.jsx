@@ -1,13 +1,11 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Play, Plus, Check, Volume2, VolumeX, Info } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Play, Plus, Check, Info } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { watchlistService } from '../../services/api';
 import { getThumbnailUrl, handleImageError, getYouTubeVideoId } from '../../utils/imageUtils';
 
 const VideoPreview = ({ movie, position, onClose }) => {
-  const [isMuted, setIsMuted] = useState(true);
-  const [showInfo, setShowInfo] = useState(false);
   const previewRef = useRef(null);
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -57,29 +55,17 @@ const VideoPreview = ({ movie, position, onClose }) => {
       <div className="relative">
         <div className="relative aspect-video bg-black flex items-center justify-center overflow-hidden">
           {trailerId ? (
-            <iframe
-              src={`https://www.youtube.com/embed/${trailerId}?autoplay=1&mute=${isMuted ? 1 : 0}&loop=1&playlist=${trailerId}&rel=0&modestbranding=1&controls=0&playsinline=1`}
-              className="absolute inset-0 w-full h-full"
-              style={{ border: 'none' }}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              title={`${movie.title} preview`}
+            <img
+              src={`https://img.youtube.com/vi/${trailerId}/mqdefault.jpg`}
+              alt={`${movie.title} preview`}
+              className="absolute inset-0 w-full h-full object-cover"
+              onError={(e) => { e.target.style.display = 'none'; }}
             />
           ) : (
             <div className="text-center">
               <Play className="w-16 h-16 text-white/50 mx-auto mb-2" />
               <p className="text-white/70 text-sm">Preview</p>
             </div>
-          )}
-        </div>
-
-        <div className="absolute top-2 right-2 flex gap-2">
-          {trailerId && (
-            <button
-              onClick={() => setIsMuted(!isMuted)}
-              className="w-8 h-8 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 transition-colors"
-            >
-              {isMuted ? <VolumeX size={16} className="text-white" /> : <Volume2 size={16} className="text-white" />}
-            </button>
           )}
         </div>
 

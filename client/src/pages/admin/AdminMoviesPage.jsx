@@ -779,13 +779,17 @@ const AdminMoviesPage = () => {
                     const tid = getYouTubeVideoId(formData.trailerUrl);
                     return tid ? (
                       <div className="mt-2 relative aspect-video bg-black rounded overflow-hidden">
-                        <iframe
-                          src={`https://www.youtube.com/embed/${tid}?autoplay=0&rel=0&modestbranding=1&controls=1`}
-                          className="absolute inset-0 w-full h-full"
-                          style={{ border: 'none' }}
-                          allow="encrypted-media"
-                          title="Trailer preview"
+                        <img
+                          src={`https://img.youtube.com/vi/${tid}/mqdefault.jpg`}
+                          alt="Trailer thumbnail"
+                          className="absolute inset-0 w-full h-full object-cover"
+                          onError={(e) => { e.target.style.display = 'none'; }}
                         />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="w-12 h-12 rounded-full bg-black/60 flex items-center justify-center">
+                            <Play size={24} className="text-white ml-0.5" />
+                          </div>
+                        </div>
                       </div>
                     ) : formData.trailerUrl ? (
                       <p className="text-xs text-netflix-warning mt-1">Not a valid YouTube URL</p>
