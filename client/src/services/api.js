@@ -314,6 +314,21 @@ export const adminService = {
   deleteReport: async (id) => {
     const response = await api.delete(`/admin/reports/${id}`);
     return response.data;
+  },
+
+  syncMovieRating: async (id) => {
+    const response = await api.post(`/admin/movies/${id}/sync-rating`);
+    return response.data;
+  },
+
+  bulkSyncRatings: async () => {
+    const response = await api.post('/admin/movies/sync-ratings');
+    return response.data;
+  },
+
+  getSyncStatus: async () => {
+    const response = await api.get('/admin/movies/sync-status');
+    return response.data;
   }
 };
 

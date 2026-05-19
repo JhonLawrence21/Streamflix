@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Film, X, Search, Filter, CheckSquare, Square, Trash, RotateCcw, AlertTriangle, Clock, Play } from 'lucide-react';
+import { Plus, Edit, Trash2, Film, X, Search, Filter, CheckSquare, Square, Trash, RotateCcw, AlertTriangle, Clock, Play, RefreshCw, Star } from 'lucide-react';
 import { adminService } from '../../services/api';
 import { getThumbnailUrl, handleImageError, getYouTubeVideoId } from '../../utils/imageUtils';
 import { COUNTRIES } from '../../utils/filterOptions';
@@ -19,6 +19,50 @@ const AdminMoviesPage = () => {
   const [categories, setCategories] = useState([]);
   const [activeTab, setActiveTab] = useState('all');
   const [trashedMovies, setTrashedMovies] = useState([]);
+  const [syncStatus, setSyncStatus] = useState(null);
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState(null);
+
+  useEffect(() => {
+    fetchSyncStatus();
+  }, []);
+
+  const fetchSyncStatus = async () => {
+    try {
+      const status = await adminService.getSyncStatus();
+      setSyncStatus(status);
+    } catch (e) {
+      // ignore
+    }
+  };
+
+  const handleSingleSync = async (id) => {
+    try {
+      await adminService.syncMovieRating(id);
+      fetchMovies();
+    } catch (error) {
+      console.error('Error syncing movie rating:', error);
+      alert(error.response?.data?.message || 'Failed to sync rating');
+    }
+  };
+
+  const handleBulkSync = async () => {
+    if (!window.confirm('Sync all movie ratings from TMDB? This may take a while.')) return;
+    setSyncing(true);
+    setSyncResult(null);
+    try {
+      const result = await adminService.bulkSyncRatings();
+      setSyncResult(result);
+      fetchMovies();
+      fetchSyncStatus();
+    } catch (error) {
+      console.error('Error bulk syncing:', error);
+      alert(error.response?.data?.message || 'Failed to bulk sync');
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -38,7 +82,8 @@ const AdminMoviesPage = () => {
     featured: false,
     trending: false,
     type: 'movie',
-    country: ''
+    country: '',
+    tmdbId: ''
   });
 
   useEffect(() => {
@@ -224,7 +269,8 @@ const AdminMoviesPage = () => {
       releaseDate: formData.releaseDate || null,
       status: formData.status || 'released',
       featured: formData.featured,
-      trending: formData.trending
+      trending: formData.trending,
+      tmdbId: formData.tmdbId ? parseInt(formData.tmdbId) : null
     };
 
     try {
@@ -279,7 +325,8 @@ const AdminMoviesPage = () => {
       director: movie.director || '',
       status: movie.status || 'released',
       featured: movie.featured === true || movie.featured === 1 || movie.featured === '1' || movie.featured === 'true',
-      trending: movie.trending === true || movie.trending === 1 || movie.trending === '1' || movie.trending === 'true'
+      trending: movie.trending === true || movie.trending === 1 || movie.trending === '1' || movie.trending === 'true',
+      tmdbId: movie.tmdbId?.toString() || ''
     });
     setFormError('');
     setShowModal(true);
@@ -316,7 +363,8 @@ const AdminMoviesPage = () => {
       featured: false,
       trending: false,
       type: 'movie',
-      country: ''
+      country: '',
+      tmdbId: ''
     });
     setFormError('');
   };
@@ -334,26 +382,61 @@ const AdminMoviesPage = () => {
   return (
     <div className="p-8">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-white">Movies</h1>
-        {activeTab !== 'trash' && (
-          <button
-            onClick={() => { resetForm(); setEditingMovie(null); setShowModal(true); }}
-            className="flex items-center gap-2 btn-primary"
-          >
-            <Plus size={20} />
-            Add Movie
-          </button>
-        )}
-        {activeTab === 'trash' && trashedMovies.length > 0 && (
-          <button
-            onClick={handleEmptyTrash}
-            className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors text-sm"
-          >
-            <Trash size={16} />
-            Empty Trash
-          </button>
-        )}
+        <div className="flex items-center gap-4">
+          <h1 className="text-2xl font-bold text-white">Movies</h1>
+          {activeTab !== 'trash' && syncStatus && (
+            <div className="flex items-center gap-2 text-xs text-netflix-text-muted bg-netflix-bg-tertiary px-3 py-1.5 rounded-full">
+              <Star size={14} className="text-netflix-warning" />
+              <span>TMDB: {syncStatus.synced}/{syncStatus.total} synced</span>
+            </div>
+          )}
+        </div>
+        <div className="flex items-center gap-3">
+          {activeTab !== 'trash' && syncStatus?.hasApiKey && (
+            <button
+              onClick={handleBulkSync}
+              disabled={syncing}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors text-sm"
+            >
+              <RefreshCw size={16} className={syncing ? 'animate-spin' : ''} />
+              {syncing ? 'Syncing...' : 'Sync TMDB Ratings'}
+            </button>
+          )}
+          {activeTab !== 'trash' && (
+            <button
+              onClick={() => { resetForm(); setEditingMovie(null); setShowModal(true); }}
+              className="flex items-center gap-2 btn-primary"
+            >
+              <Plus size={20} />
+              Add Movie
+            </button>
+          )}
+          {activeTab === 'trash' && trashedMovies.length > 0 && (
+            <button
+              onClick={handleEmptyTrash}
+              className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors text-sm"
+            >
+              <Trash size={16} />
+              Empty Trash
+            </button>
+          )}
+        </div>
       </div>
+      {syncResult && (
+        <div className="mb-4 p-4 bg-blue-900/30 border border-blue-700 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-blue-200 font-medium">TMDB Sync Complete</p>
+              <p className="text-blue-300 text-sm mt-1">
+                {syncResult.synced} movies updated, {syncResult.failed} failed (out of {syncResult.total})
+              </p>
+            </div>
+            <button onClick={() => setSyncResult(null)} className="text-blue-300 hover:text-blue-100">
+              <X size={18} />
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
         {[
@@ -574,7 +657,12 @@ const AdminMoviesPage = () => {
                         {movie.releaseDate ? new Date(movie.releaseDate).toLocaleDateString() : 'N/A'}
                       </td>
                     )}
-                    <td className="px-6 py-4 text-netflix-success">{movie.rating?.toFixed(1) || 'N/A'}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-netflix-success">{movie.rating?.toFixed(1) || 'N/A'}</span>
+                        {movie.tmdbId && <Star size={12} className="text-netflix-warning" title="Synced from TMDB" />}
+                      </div>
+                    </td>
                     <td className="px-6 py-4 text-netflix-text-secondary">{movie.views || 0}</td>
                     <td className="px-6 py-4 text-right">
                       {activeTab === 'trash' ? (
@@ -596,6 +684,13 @@ const AdminMoviesPage = () => {
                         </>
                       ) : (
                         <>
+                          <button
+                            onClick={() => handleSingleSync(movie.id)}
+                            className="text-netflix-warning hover:text-amber-300 p-2"
+                            title="Sync rating from TMDB"
+                          >
+                            <RefreshCw size={16} />
+                          </button>
                           <button
                             onClick={() => handleEdit(movie)}
                             className="text-netflix-text-secondary hover:text-white p-2"
@@ -687,7 +782,8 @@ const AdminMoviesPage = () => {
                             genre: data.genre || prev.genre,
                             cast: data.cast || prev.cast,
                             director: data.director || prev.director,
-                            country: data.country || prev.country
+                            country: data.country || prev.country,
+                            tmdbId: tmdbId
                           }));
                         } catch (e) {
                           alert('Failed to connect to TMDB');

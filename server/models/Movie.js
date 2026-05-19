@@ -122,6 +122,11 @@ const Movie = sequelize.define('Movie', {
     type: DataTypes.ENUM('G', 'PG', 'PG-13', 'R', 'NC-17', 'TV-Y', 'TV-G', 'TV-PG', 'TV-14', 'TV-MA'),
     defaultValue: 'PG-13'
   },
+  tmdbId: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    defaultValue: null
+  },
   deletedAt: {
     type: DataTypes.DATE,
     allowNull: true

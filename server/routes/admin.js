@@ -15,7 +15,10 @@ const {
   getAnalytics,
   restoreMovie,
   getTrashedMovies,
-  permanentDelete
+  permanentDelete,
+  syncMovieRating,
+  bulkSyncRatings,
+  getSyncStatus
 } = require('../controllers/adminController');
 const { protect, admin } = require('../middleware/auth');
 const User = require('../models/User');
@@ -33,6 +36,9 @@ router.put('/movies/:id', updateMovie);
 router.delete('/movies/:id', deleteMovie);
 router.post('/movies/:id/restore', restoreMovie);
 router.delete('/movies/:id/permanent', permanentDelete);
+router.post('/movies/sync-ratings', bulkSyncRatings);
+router.get('/movies/sync-status', getSyncStatus);
+router.post('/movies/:id/sync-rating', syncMovieRating);
 
 router.get('/categories', getCategories);
 router.post('/categories', createCategory);

@@ -58,6 +58,7 @@ const createDefaultAdmin = async () => {
     await sequelize.query('ALTER TABLE movies ADD COLUMN IF NOT EXISTS "ageRating" VARCHAR(20) DEFAULT \'PG-13\'');
     await sequelize.query('ALTER TABLE movies ADD COLUMN IF NOT EXISTS "cast" JSONB DEFAULT \'[]\'');
     await sequelize.query('ALTER TABLE movies ADD COLUMN IF NOT EXISTS "deletedAt" TIMESTAMP DEFAULT NULL');
+    await sequelize.query('ALTER TABLE movies ADD COLUMN IF NOT EXISTS "tmdbId" INTEGER DEFAULT NULL');
     
     await sequelize.query(`CREATE TABLE IF NOT EXISTS categories (
       id SERIAL PRIMARY KEY,
@@ -501,6 +502,40 @@ connectDB()
     };
     checkScheduledPublishing();
     setInterval(checkScheduledPublishing, 60000); // check every minute
+
+    // Periodic TMDB rating sync (every 24 hours)
+    if (process.env.TMDB_API_KEY) {
+      const syncTmdbRatings = async () => {
+        try {
+          const tmdbService = require('./services/tmdbService');
+          const { sequelize } = require('./config/db');
+          const [movies] = await sequelize.query('SELECT * FROM movies WHERE "deletedAt" IS NULL ORDER BY id ASC');
+          let synced = 0;
+          for (const movie of movies) {
+            try {
+              const result = await tmdbService.syncMovieRating(movie);
+              if (result && result.rating && result.rating > 0) {
+                const now = new Date().toISOString();
+                await sequelize.query(
+                  `UPDATE movies SET rating = ${result.rating}, "tmdbId" = ${result.tmdbId}, "updatedAt" = '${now}' WHERE id = ${movie.id}`
+                );
+                synced++;
+              }
+            } catch (e) {
+              // skip individual failures
+            }
+          }
+          if (synced > 0) {
+            console.log(`[TMDB Scheduler] Synced ${synced}/${movies.length} movie ratings`);
+          }
+        } catch (e) {
+          console.error('[TMDB Scheduler] Error:', e.message);
+        }
+      };
+      syncTmdbRatings();
+      setInterval(syncTmdbRatings, 86400000);
+      console.log('[TMDB Scheduler] Periodic rating sync enabled (every 24h)');
+    }
   })
   .catch(err => {
     console.error('✗ Database connection failed:', err.message);

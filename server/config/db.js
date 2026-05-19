@@ -205,6 +205,19 @@ const connectDB = async (retries = 3, delay = 2000) => {
             console.log('[DB] Migration check: country column already exists');
           }
 
+          // Auto-migrate: add tmdbId column if missing
+          if (!tableInfo.tmdbId) {
+            console.log('[DB] Migrating: adding tmdbId column to movies...');
+            await queryInterface.addColumn('movies', 'tmdbId', {
+              type: Sequelize.INTEGER,
+              allowNull: true,
+              defaultValue: null
+            });
+            console.log('[DB] Migration complete: tmdbId column added');
+          } else {
+            console.log('[DB] Migration check: tmdbId column already exists');
+          }
+
           // Set type='tv' for existing movies in TV Shows categories
           try {
             const [tvMovies] = await sequelize.query(`SELECT COUNT(*) as cnt FROM movies WHERE LOWER(category) IN ('tv shows', 'tv show', 'tv series') AND (type IS NULL OR type = '' OR type = 'movie')`);

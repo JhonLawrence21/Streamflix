@@ -4,6 +4,7 @@ const Category = require('../models/Category');
 const User = require('../models/User');
 const db = require('../config/db');
 const { sequelize: sharedSequelize } = db;
+const tmdbService = require('../services/tmdbService');
 
 exports.createMovie = async (req, res) => {
   try {
@@ -36,15 +37,47 @@ exports.createMovie = async (req, res) => {
     const { sequelize } = require('../config/db');
     const now = new Date().toISOString();
     
+    const tmdbIdVal = parseInt(otherData.tmdbId) || 'NULL';
+
     await sequelize.query(`
-      INSERT INTO movies (title, description, "videoUrl", "externalUrl", "trailerUrl", thumbnail, category, director, duration, genre, "cast", rating, "releaseYear", views, featured, "ageRating", status, "releaseDate", trending, type, country, "createdAt", "updatedAt")
-      VALUES (${title ? `'${title.replace(/'/g, "''")}'` : null}, ${description ? `'${description.replace(/'/g, "''")}'` : null}, ${videoUrl ? `'${videoUrl.replace(/'/g, "''")}'` : null}, ${externalUrl ? `'${externalUrl.replace(/'/g, "''")}'` : null}, ${trailerUrl ? `'${trailerUrl.replace(/'/g, "''")}'` : null}, ${thumbnail ? `'${thumbnail.replace(/'/g, "''")}'` : null}, ${category ? `'${category}'` : null}, ${director ? `'${director.replace(/'/g, "''")}'` : null}, ${duration ? `'${duration}'` : null}, '${genreStr.replace(/'/g, "''")}', '${castStr.replace(/'/g, "''")}', ${rating}, ${releaseYear}, ${views}, ${featured}, ${ageRatingVal ? `'${ageRatingVal}'` : 'PG-13'}, ${statusVal ? `'${statusVal}'` : 'released'}, ${releaseDateVal !== 'NULL' ? `'${releaseDateVal}'` : 'NULL'}, ${trendingVal}, '${typeVal}', '${countryVal.replace(/'/g, "''")}', '${now}', '${now}')
+      INSERT INTO movies (title, description, "videoUrl", "externalUrl", "trailerUrl", thumbnail, category, director, duration, genre, "cast", rating, "releaseYear", views, featured, "ageRating", status, "releaseDate", trending, type, country, "tmdbId", "createdAt", "updatedAt")
+      VALUES (${title ? `'${title.replace(/'/g, "''")}'` : null}, ${description ? `'${description.replace(/'/g, "''")}'` : null}, ${videoUrl ? `'${videoUrl.replace(/'/g, "''")}'` : null}, ${externalUrl ? `'${externalUrl.replace(/'/g, "''")}'` : null}, ${trailerUrl ? `'${trailerUrl.replace(/'/g, "''")}'` : null}, ${thumbnail ? `'${thumbnail.replace(/'/g, "''")}'` : null}, ${category ? `'${category}'` : null}, ${director ? `'${director.replace(/'/g, "''")}'` : null}, ${duration ? `'${duration}'` : null}, '${genreStr.replace(/'/g, "''")}', '${castStr.replace(/'/g, "''")}', ${rating}, ${releaseYear}, ${views}, ${featured}, ${ageRatingVal ? `'${ageRatingVal}'` : 'PG-13'}, ${statusVal ? `'${statusVal}'` : 'released'}, ${releaseDateVal !== 'NULL' ? `'${releaseDateVal}'` : 'NULL'}, ${trendingVal}, '${typeVal}', '${countryVal.replace(/'/g, "''")}', ${tmdbIdVal}, '${now}', '${now}')
     `);
     
     const [movies] = await sequelize.query('SELECT * FROM movies ORDER BY id DESC LIMIT 1');
     
     console.log('[createMovie] Saved movie:', JSON.stringify(movies[0]));
-    res.status(201).json(movies[0]);
+
+    const savedMovie = movies[0];
+
+    if (process.env.TMDB_API_KEY && (!otherData.rating || parseFloat(otherData.rating) === 0)) {
+      const tmdbIdInput = parseInt(otherData.tmdbId) || null;
+      (async () => {
+        try {
+          let result;
+          if (tmdbIdInput) {
+            const details = await tmdbService.fetchMovieDetails(tmdbIdInput, typeVal);
+            if (details && details.rating) {
+              result = { rating: details.rating, tmdbId: tmdbIdInput };
+            }
+          }
+          if (!result) {
+            result = await tmdbService.syncMovieRating(savedMovie);
+          }
+          if (result && result.rating && result.rating > 0) {
+            const now = new Date().toISOString();
+            await sequelize.query(
+              `UPDATE movies SET rating = ${result.rating}, "tmdbId" = ${result.tmdbId}, "updatedAt" = '${now}' WHERE id = ${savedMovie.id}`
+            );
+            console.log(`[TMDB] Auto-rated "${savedMovie.title}" → ${result.rating}`);
+          }
+        } catch (e) {
+          console.error(`[TMDB] Auto-rate error for "${savedMovie.title}":`, e.message);
+        }
+      })();
+    }
+
+    res.status(201).json(savedMovie);
   } catch (error) {
     console.error('[createMovie] Error:', error);
     res.status(500).json({ message: error.message });
@@ -73,6 +106,7 @@ exports.updateMovie = async (req, res) => {
     if (otherData.externalUrl !== undefined) updates.push(`"externalUrl" = '${(otherData.externalUrl || '').replace(/'/g, "''")}'`);
     if (otherData.trailerUrl !== undefined) updates.push(`"trailerUrl" = '${(otherData.trailerUrl || '').replace(/'/g, "''")}'`);
     if (otherData.thumbnail !== undefined) updates.push(`thumbnail = '${(otherData.thumbnail || '').replace(/'/g, "''")}'`);
+    if (otherData.tmdbId !== undefined) updates.push(`"tmdbId" = ${parseInt(otherData.tmdbId) || null}`);
     if (otherData.type !== undefined) updates.push(`type = '${otherData.type}'`);
     if (otherData.country !== undefined) updates.push(`country = '${(otherData.country || '').replace(/'/g, "''")}'`);
     if (otherData.category !== undefined) updates.push(`category = '${otherData.category}'`);
@@ -568,6 +602,93 @@ exports.deleteUser = async (req, res) => {
 
     await user.destroy();
     res.json({ message: 'User deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.syncMovieRating = async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const { sequelize } = require('../config/db');
+    const [movies] = await sequelize.query(`SELECT * FROM movies WHERE id = ${id} AND "deletedAt" IS NULL LIMIT 1`);
+
+    if (movies.length === 0) {
+      return res.status(404).json({ message: 'Movie not found' });
+    }
+
+    const movie = movies[0];
+    const result = await tmdbService.syncMovieRating(movie);
+
+    if (!result || !result.rating) {
+      return res.status(404).json({ message: 'Could not find movie on TMDB' });
+    }
+
+    const now = new Date().toISOString();
+    await sequelize.query(
+      `UPDATE movies SET rating = ${result.rating}, "tmdbId" = ${result.tmdbId}, "updatedAt" = '${now}' WHERE id = ${id}`
+    );
+
+    const [updated] = await sequelize.query(`SELECT * FROM movies WHERE id = ${id} LIMIT 1`);
+    res.json({ message: 'Rating synced from TMDB', movie: updated[0], tmdbRating: result.rating });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.bulkSyncRatings = async (req, res) => {
+  try {
+    const { sequelize } = require('../config/db');
+    const [movies] = await sequelize.query('SELECT * FROM movies WHERE "deletedAt" IS NULL ORDER BY id ASC');
+
+    let synced = 0;
+    let failed = 0;
+    const results = [];
+
+    for (const movie of movies) {
+      try {
+        const result = await tmdbService.syncMovieRating(movie);
+        if (result && result.rating && result.rating > 0) {
+          const now = new Date().toISOString();
+          await sequelize.query(
+            `UPDATE movies SET rating = ${result.rating}, "tmdbId" = ${result.tmdbId}, "updatedAt" = '${now}' WHERE id = ${movie.id}`
+          );
+          synced++;
+          results.push({ id: movie.id, title: movie.title, rating: result.rating });
+        } else {
+          failed++;
+        }
+      } catch (e) {
+        failed++;
+        console.error(`[TMDB Bulk] Error syncing "${movie.title}":`, e.message);
+      }
+    }
+
+    res.json({
+      message: `Synced ${synced} movies, ${failed} failed`,
+      total: movies.length,
+      synced,
+      failed,
+      results
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getSyncStatus = async (req, res) => {
+  try {
+    const { sequelize } = require('../config/db');
+    const [total] = await sequelize.query('SELECT COUNT(*) as cnt FROM movies WHERE "deletedAt" IS NULL');
+    const [withTmdb] = await sequelize.query('SELECT COUNT(*) as cnt FROM movies WHERE "deletedAt" IS NULL AND "tmdbId" IS NOT NULL');
+    const [withoutTmdb] = await sequelize.query('SELECT COUNT(*) as cnt FROM movies WHERE "deletedAt" IS NULL AND ("tmdbId" IS NULL OR "tmdbId" = 0)');
+
+    res.json({
+      total: total[0]?.cnt || 0,
+      synced: withTmdb[0]?.cnt || 0,
+      unsynced: withoutTmdb[0]?.cnt || 0,
+      hasApiKey: !!process.env.TMDB_API_KEY
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

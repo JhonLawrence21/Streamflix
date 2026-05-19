@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, Film, Eye, TrendingUp, Clock, Star, Activity } from 'lucide-react';
+import { Users, Film, Eye, TrendingUp, Clock, Star, Activity, RefreshCw } from 'lucide-react';
 import { adminService } from '../../services/api';
 
 const StatCard = ({ label, value, icon: Icon, color, trend }) => (
@@ -120,16 +120,19 @@ const AdminDashboardPage = () => {
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activities, setActivities] = useState([]);
+  const [tmdbSyncStatus, setTmdbSyncStatus] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [data, activityData] = await Promise.all([
+        const [data, activityData, syncStatus] = await Promise.all([
           adminService.getAnalytics(),
-          adminService.getActivity(20)
+          adminService.getActivity(20),
+          adminService.getSyncStatus().catch(() => null)
         ]);
         setAnalytics(data);
         setActivities(activityData || []);
+        setTmdbSyncStatus(syncStatus);
       } catch (error) {
         console.error('Error fetching analytics:', error);
       } finally {
@@ -214,6 +217,36 @@ const AdminDashboardPage = () => {
           color="text-netflix-warning"
         />
       </div>
+
+      {tmdbSyncStatus?.hasApiKey && (
+        <div className="bg-netflix-bg-secondary p-6 rounded-lg mb-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <RefreshCw size={24} className="text-blue-400" />
+              <div>
+                <h3 className="text-lg font-semibold text-white">TMDB Rating Sync</h3>
+                <p className="text-netflix-text-secondary text-sm mt-1">
+                  {tmdbSyncStatus.synced} of {tmdbSyncStatus.total} movies synced
+                  {tmdbSyncStatus.unsynced > 0 && ` (${tmdbSyncStatus.unsynced} pending)`}
+                </p>
+              </div>
+            </div>
+            <a
+              href="/admin/movies"
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm"
+            >
+              <RefreshCw size={16} />
+              Manage Sync
+            </a>
+          </div>
+          <div className="mt-4 bg-netflix-bg-tertiary rounded-full h-2 overflow-hidden">
+            <div
+              className="h-full bg-blue-500 rounded-full transition-all duration-500"
+              style={{ width: `${tmdbSyncStatus.total > 0 ? (tmdbSyncStatus.synced / tmdbSyncStatus.total) * 100 : 0}%` }}
+            />
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <SimpleBarChart data={categoryData} title="Movies by Category" />
