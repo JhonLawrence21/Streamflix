@@ -75,12 +75,6 @@ const WatchPage = () => {
         sources.push({ quality: q, label: QUALITY_LABELS[q], url: videoSources[q].trim() });
       }
     }
-    if (movie.videoUrl && movie.videoUrl.trim()) {
-      const hasExisting = sources.some(s => s.url === movie.videoUrl.trim());
-      if (!hasExisting) {
-        sources.push({ quality: 'default', label: 'Default', url: movie.videoUrl.trim() });
-      }
-    }
     return sources;
   }, [movie]);
 

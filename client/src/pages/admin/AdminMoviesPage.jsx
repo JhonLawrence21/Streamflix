@@ -68,8 +68,6 @@ const AdminMoviesPage = () => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    videoUrl: '',
-    externalUrl: '',
     trailerUrl: '',
     thumbnail: '',
     category: '',
@@ -257,8 +255,8 @@ const AdminMoviesPage = () => {
       title: formData.title,
       description: formData.description || '',
       thumbnail: formData.thumbnail || '',
-      videoUrl: formData.videoUrl || '',
-      externalUrl: formData.externalUrl || '',
+      videoUrl: '',
+      externalUrl: '',
       trailerUrl: formData.trailerUrl || '',
       category: formData.category || '',
       type: formData.type || 'movie',
@@ -363,8 +361,6 @@ const AdminMoviesPage = () => {
     setFormData({
       title: movie.title || '',
       description: movie.description || '',
-      videoUrl: movie.videoUrl || '',
-      externalUrl: movie.externalUrl || '',
       trailerUrl: movie.trailerUrl || '',
       thumbnail: movie.thumbnail || '',
       category: movie.category || '',
@@ -402,8 +398,6 @@ const AdminMoviesPage = () => {
     setFormData({
       title: '',
       description: '',
-      videoUrl: '',
-      externalUrl: '',
       trailerUrl: '',
       thumbnail: '',
       category: '',
@@ -686,7 +680,7 @@ const AdminMoviesPage = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      {getYouTubeVideoId(movie.trailerUrl) || getYouTubeVideoId(movie.videoUrl) ? (
+                      {getYouTubeVideoId(movie.trailerUrl) ? (
                         <Play size={16} className="text-green-400" />
                       ) : (
                         <span className="text-netflix-text-muted text-sm">—</span>
@@ -897,62 +891,9 @@ const AdminMoviesPage = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-netflix-text-secondary text-sm mb-2">Video URL (fallback)</label>
-                  <input
-                    type="url"
-                    value={formData.videoUrl}
-                    onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
-                    className="input-field"
-                    placeholder="https://... (direct .mp4/.webm URL)"
-                  />
-                </div>
-                <div>
-                  <label className="block text-netflix-text-secondary text-sm mb-2">External URL</label>
-                  <input
-                    type="url"
-                    value={formData.externalUrl}
-                    onChange={(e) => setFormData({ ...formData, externalUrl: e.target.value })}
-                    className="input-field"
-                    placeholder="https://..."
-                  />
-                </div>
-                <div>
-                  <label className="block text-netflix-text-secondary text-sm mb-2">Trailer URL (for hover preview &amp; details page background)</label>
-                  <input
-                    type="url"
-                    value={formData.trailerUrl}
-                    onChange={(e) => setFormData({ ...formData, trailerUrl: e.target.value })}
-                    className="input-field"
-                    placeholder="https://www.youtube.com/watch?v=..."
-                  />
-                  {(() => {
-                    const tid = getYouTubeVideoId(formData.trailerUrl);
-                    return tid ? (
-                      <div className="mt-2 relative aspect-video bg-black rounded overflow-hidden">
-                        <img
-                          src={`https://img.youtube.com/vi/${tid}/mqdefault.jpg`}
-                          alt="Trailer thumbnail"
-                          className="absolute inset-0 w-full h-full object-cover"
-                          onError={(e) => { e.target.style.display = 'none'; }}
-                        />
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="w-12 h-12 rounded-full bg-black/60 flex items-center justify-center">
-                            <Play size={24} className="text-white ml-0.5" />
-                          </div>
-                        </div>
-                      </div>
-                    ) : formData.trailerUrl ? (
-                      <p className="text-xs text-netflix-warning mt-1">Not a valid YouTube URL</p>
-                    ) : null;
-                  })()}
-                </div>
-              </div>
-
               <div className="bg-netflix-bg-tertiary rounded-lg p-4">
-                <label className="block text-white text-sm font-medium mb-3">Video Quality Sources</label>
-                <p className="text-netflix-text-muted text-xs mb-3">Upload video files or paste URLs for each resolution. These appear in the player quality selector.</p>
+                <label className="block text-white text-sm font-medium mb-3">Upload Full Movie</label>
+                <p className="text-netflix-text-muted text-xs mb-3">Upload your movie files for each resolution. These will appear in the player quality selector.</p>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {['480', '720', '1080'].map(q => (
                     <div key={q}>
@@ -966,13 +907,17 @@ const AdminMoviesPage = () => {
                             videoSources: { ...formData.videoSources, [q]: e.target.value }
                           })}
                           className="input-field text-sm flex-1"
-                          placeholder={formData.videoSources[q] ? formData.videoSources[q] : `URL or upload ${q}p`}
+                          placeholder={formData.videoSources[q] ? formData.videoSources[q] : `Upload ${q}p video`}
+                          readOnly
                         />
-                        <label className="flex items-center justify-center px-2 bg-netflix-bg-secondary hover:bg-netflix-red/20 rounded cursor-pointer transition-colors border border-netflix-text-muted hover:border-netflix-red flex-shrink-0" title={`Upload ${q}p video`}>
+                        <label className="flex items-center justify-center px-3 bg-netflix-bg-secondary hover:bg-netflix-red/20 rounded cursor-pointer transition-colors border border-netflix-text-muted hover:border-netflix-red flex-shrink-0 gap-1" title={`Upload ${q}p video`}>
                           {uploading === q ? (
                             <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-netflix-red"></div>
                           ) : (
-                            <Upload size={14} className="text-netflix-text-secondary" />
+                            <>
+                              <Upload size={14} className="text-netflix-text-secondary" />
+                              <span className="text-xs text-netflix-text-secondary hidden md:inline">Choose</span>
+                            </>
                           )}
                           <input
                             type="file"
@@ -983,14 +928,47 @@ const AdminMoviesPage = () => {
                           />
                         </label>
                       </div>
-                      {formData.videoSources[q] && (
+                      {formData.videoSources[q] ? (
                         <p className="text-green-400 text-[10px] mt-1 truncate" title={formData.videoSources[q]}>
-                          {formData.videoSources[q].includes('/uploads/') ? 'Uploaded' : 'URL set'}
+                          {formData.videoSources[q].includes('/uploads/') ? 'Uploaded ✓' : 'URL set'}
                         </p>
+                      ) : (
+                        <p className="text-netflix-text-muted text-[10px] mt-1">No {q}p file uploaded</p>
                       )}
                     </div>
                   ))}
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-netflix-text-secondary text-sm mb-2">Trailer URL (for hover preview &amp; details page background)</label>
+                <input
+                  type="url"
+                  value={formData.trailerUrl}
+                  onChange={(e) => setFormData({ ...formData, trailerUrl: e.target.value })}
+                  className="input-field"
+                  placeholder="https://www.youtube.com/watch?v=..."
+                />
+                {(() => {
+                  const tid = getYouTubeVideoId(formData.trailerUrl);
+                  return tid ? (
+                    <div className="mt-2 relative aspect-video bg-black rounded overflow-hidden">
+                      <img
+                        src={`https://img.youtube.com/vi/${tid}/mqdefault.jpg`}
+                        alt="Trailer thumbnail"
+                        className="absolute inset-0 w-full h-full object-cover"
+                        onError={(e) => { e.target.style.display = 'none'; }}
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-12 h-12 rounded-full bg-black/60 flex items-center justify-center">
+                          <Play size={24} className="text-white ml-0.5" />
+                        </div>
+                      </div>
+                    </div>
+                  ) : formData.trailerUrl ? (
+                    <p className="text-xs text-netflix-warning mt-1">Not a valid YouTube URL</p>
+                  ) : null;
+                })()}
               </div>
 
               <div>

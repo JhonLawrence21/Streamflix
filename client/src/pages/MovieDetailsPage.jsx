@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Play, Star, Calendar, Clock, Plus, Check, ExternalLink, X, CheckCircle, Flag, Volume2, VolumeX } from 'lucide-react';
+import { ArrowLeft, Play, Star, Calendar, Clock, Plus, Check, X, CheckCircle, Flag, Volume2, VolumeX } from 'lucide-react';
 
 import Navbar from '../components/layout/Navbar';
 import MovieCard from '../components/movie/MovieCard';
 import { movieService, watchlistService, adminService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { getYouTubeVideoId, getYouTubeWatchUrl, getThumbnailUrl, handleImageError, isYouTubeUrl } from '../utils/imageUtils';
+import { getYouTubeVideoId, getThumbnailUrl, handleImageError } from '../utils/imageUtils';
 
 const MovieDetailsPage = () => {
   const { id } = useParams();
@@ -84,13 +84,7 @@ const MovieDetailsPage = () => {
     }
   };
 
-  const trailerId = getYouTubeVideoId(movie?.trailerUrl) || getYouTubeVideoId(movie?.videoUrl);
-  const externalUrl = movie?.externalUrl?.trim() || '';
-  const externalIsYouTube = isYouTubeUrl(externalUrl);
-  const externalYouTubeId = externalIsYouTube ? getYouTubeVideoId(externalUrl) : null;
-  const externalHref = externalYouTubeId 
-    ? getYouTubeWatchUrl(externalYouTubeId) 
-    : externalUrl;
+  const trailerId = getYouTubeVideoId(movie?.trailerUrl);
 
   if (loading) {
     return (
@@ -227,19 +221,6 @@ const MovieDetailsPage = () => {
                   <Play size={24} />
                   Watch Online
                 </Link>
-
-                {/* Watch Full Movie (External) */}
-                {externalUrl && (
-                  <a
-                    href={externalHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 bg-blue-600 text-white px-6 md:px-8 py-3 rounded font-semibold hover:bg-blue-700 transition-colors text-lg"
-                  >
-                    <ExternalLink size={24} />
-                    Watch Full Movie
-                  </a>
-                )}
 
                 {/* Watch Trailer */}
                  {trailerId && (
