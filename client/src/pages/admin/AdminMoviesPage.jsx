@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Film, X, Search, Filter, CheckSquare, Square, Trash, RotateCcw, AlertTriangle, Clock, Play, RefreshCw, Star, Upload } from 'lucide-react';
-import { adminService, api } from '../../services/api';
+import api from '../../services/api';
+import { adminService } from '../../services/api';
 import { getThumbnailUrl, handleImageError, getYouTubeVideoId } from '../../utils/imageUtils';
 import { COUNTRIES } from '../../utils/filterOptions';
 
