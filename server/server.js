@@ -59,6 +59,7 @@ const createDefaultAdmin = async () => {
     await sequelize.query('ALTER TABLE movies ADD COLUMN IF NOT EXISTS "cast" JSONB DEFAULT \'[]\'');
     await sequelize.query('ALTER TABLE movies ADD COLUMN IF NOT EXISTS "deletedAt" TIMESTAMP DEFAULT NULL');
     await sequelize.query('ALTER TABLE movies ADD COLUMN IF NOT EXISTS "tmdbId" INTEGER DEFAULT NULL');
+    await sequelize.query('ALTER TABLE movies ADD COLUMN IF NOT EXISTS "videoSources" TEXT DEFAULT \'{}\'');
     
     await sequelize.query(`CREATE TABLE IF NOT EXISTS categories (
       id SERIAL PRIMARY KEY,

@@ -83,7 +83,8 @@ const AdminMoviesPage = () => {
     trending: false,
     type: 'movie',
     country: '',
-    tmdbId: ''
+    tmdbId: '',
+    videoSources: { '480': '', '720': '', '1080': '' }
   });
 
   useEffect(() => {
@@ -270,7 +271,10 @@ const AdminMoviesPage = () => {
       status: formData.status || 'released',
       featured: formData.featured,
       trending: formData.trending,
-      tmdbId: formData.tmdbId ? parseInt(formData.tmdbId) : null
+      tmdbId: formData.tmdbId ? parseInt(formData.tmdbId) : null,
+      videoSources: Object.fromEntries(
+        Object.entries(formData.videoSources || {}).filter(([, v]) => v && v.trim())
+      )
     };
 
     try {
@@ -306,6 +310,13 @@ const AdminMoviesPage = () => {
 
   const handleEdit = (movie) => {
     setEditingMovie(movie);
+    let videoSources = { '480': '', '720': '', '1080': '' };
+    if (movie.videoSources) {
+      try {
+        const parsed = typeof movie.videoSources === 'string' ? JSON.parse(movie.videoSources) : movie.videoSources;
+        videoSources = { ...videoSources, ...parsed };
+      } catch {}
+    }
     setFormData({
       title: movie.title || '',
       description: movie.description || '',
@@ -326,7 +337,8 @@ const AdminMoviesPage = () => {
       status: movie.status || 'released',
       featured: movie.featured === true || movie.featured === 1 || movie.featured === '1' || movie.featured === 'true',
       trending: movie.trending === true || movie.trending === 1 || movie.trending === '1' || movie.trending === 'true',
-      tmdbId: movie.tmdbId?.toString() || ''
+      tmdbId: movie.tmdbId?.toString() || '',
+      videoSources
     });
     setFormError('');
     setShowModal(true);
@@ -364,7 +376,8 @@ const AdminMoviesPage = () => {
       trending: false,
       type: 'movie',
       country: '',
-      tmdbId: ''
+      tmdbId: '',
+      videoSources: { '480': '', '720': '', '1080': '' }
     });
     setFormError('');
   };
@@ -843,13 +856,13 @@ const AdminMoviesPage = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-netflix-text-secondary text-sm mb-2">Video URL</label>
+                  <label className="block text-netflix-text-secondary text-sm mb-2">Video URL (fallback)</label>
                   <input
                     type="url"
                     value={formData.videoUrl}
                     onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
                     className="input-field"
-                    placeholder="https://www.youtube.com/embed/..."
+                    placeholder="https://... (direct .mp4/.webm URL)"
                   />
                 </div>
                 <div>
@@ -891,6 +904,28 @@ const AdminMoviesPage = () => {
                       <p className="text-xs text-netflix-warning mt-1">Not a valid YouTube URL</p>
                     ) : null;
                   })()}
+                </div>
+              </div>
+
+              <div className="bg-netflix-bg-tertiary rounded-lg p-4">
+                <label className="block text-white text-sm font-medium mb-3">Video Quality Sources (Upload full movie at each resolution)</label>
+                <p className="text-netflix-text-muted text-xs mb-3">Paste direct video URLs (.mp4, .webm) for each resolution. These will appear in the player quality selector.</p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {['480', '720', '1080'].map(q => (
+                    <div key={q}>
+                      <label className="block text-netflix-text-secondary text-xs mb-1">{q}p</label>
+                      <input
+                        type="url"
+                        value={formData.videoSources[q] || ''}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          videoSources: { ...formData.videoSources, [q]: e.target.value }
+                        })}
+                        className="input-field text-sm"
+                        placeholder={`https://... ${q}p .mp4 URL`}
+                      />
+                    </div>
+                  ))}
                 </div>
               </div>
 

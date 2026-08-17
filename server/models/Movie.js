@@ -122,6 +122,22 @@ const Movie = sequelize.define('Movie', {
     type: DataTypes.ENUM('G', 'PG', 'PG-13', 'R', 'NC-17', 'TV-Y', 'TV-G', 'TV-PG', 'TV-14', 'TV-MA'),
     defaultValue: 'PG-13'
   },
+  videoSources: {
+    type: DataTypes.TEXT,
+    defaultValue: '{}',
+    get() {
+      const val = this.getDataValue('videoSources');
+      if (!val) return {};
+      try {
+        return JSON.parse(val);
+      } catch {
+        return {};
+      }
+    },
+    set(val) {
+      this.setDataValue('videoSources', JSON.stringify(val || {}));
+    }
+  },
   tmdbId: {
     type: DataTypes.INTEGER,
     allowNull: true,

@@ -157,3 +157,42 @@ input, select, textarea, button {
     transparent 50%
   );
 }
+
+/* Video player volume slider */
+input[type="range"].accent-white {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+}
+
+input[type="range"].accent-white::-webkit-slider-runnable-track {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+}
+
+input[type="range"].accent-white::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 12px;
+  width: 12px;
+  border-radius: 50%;
+  background: #E50914;
+  margin-top: -4px;
+  cursor: pointer;
+}
+
+input[type="range"].accent-white::-moz-range-track {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+  border: none;
+}
+
+input[type="range"].accent-white::-moz-range-thumb {
+  height: 12px;
+  width: 12px;
+  border-radius: 50%;
+  background: #E50914;
+  border: none;
+  cursor: pointer;
+}
