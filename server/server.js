@@ -28,6 +28,7 @@ const db = require('./config/db');
 const recommendationRoutes = require('./routes/recommendations');
 
 const app = express();
+app.set('trust proxy', 1);
 
 // Default to Render URL if CLIENT_URL not set
 const renderUrl = 'https://streamflix-1-4gr5.onrender.com';
