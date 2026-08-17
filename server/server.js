@@ -128,6 +128,16 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '10mb' }));
 
+// Serve uploaded files
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
+  maxAge: '1d',
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.mp4') || filePath.endsWith('.webm') || filePath.endsWith('.mkv')) {
+      res.setHeader('Accept-Ranges', 'bytes');
+    }
+  }
+}));
+
 // API Routes
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/movies', generalLimiter, movieRoutes);

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Film, X, Search, Filter, CheckSquare, Square, Trash, RotateCcw, AlertTriangle, Clock, Play, RefreshCw, Star } from 'lucide-react';
-import { adminService } from '../../services/api';
+import { Plus, Edit, Trash2, Film, X, Search, Filter, CheckSquare, Square, Trash, RotateCcw, AlertTriangle, Clock, Play, RefreshCw, Star, Upload } from 'lucide-react';
+import { adminService, api } from '../../services/api';
 import { getThumbnailUrl, handleImageError, getYouTubeVideoId } from '../../utils/imageUtils';
 import { COUNTRIES } from '../../utils/filterOptions';
 
@@ -22,6 +22,7 @@ const AdminMoviesPage = () => {
   const [syncStatus, setSyncStatus] = useState(null);
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState(null);
+  const [uploading, setUploading] = useState(null);
 
   useEffect(() => {
     fetchSyncStatus();
@@ -306,6 +307,47 @@ const AdminMoviesPage = () => {
       return value;
     }
     return '';
+  };
+
+  const handleFileUpload = async (e, quality) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(quality);
+    try {
+      const formDataUpload = new FormData();
+      formDataUpload.append('video', file);
+      const res = await api.post('/admin/upload/video', formDataUpload, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setFormData(prev => ({
+        ...prev,
+        videoSources: { ...prev.videoSources, [quality]: res.data.url }
+      }));
+    } catch (err) {
+      alert('Upload failed: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setUploading(null);
+      e.target.value = '';
+    }
+  };
+
+  const handleThumbUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading('thumb');
+    try {
+      const formDataUpload = new FormData();
+      formDataUpload.append('thumbnail', file);
+      const res = await api.post('/admin/upload/thumbnail', formDataUpload, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setFormData(prev => ({ ...prev, thumbnail: res.data.url }));
+    } catch (err) {
+      alert('Upload failed: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setUploading(null);
+      e.target.value = '';
+    }
   };
 
   const handleEdit = (movie) => {
@@ -908,22 +950,43 @@ const AdminMoviesPage = () => {
               </div>
 
               <div className="bg-netflix-bg-tertiary rounded-lg p-4">
-                <label className="block text-white text-sm font-medium mb-3">Video Quality Sources (Upload full movie at each resolution)</label>
-                <p className="text-netflix-text-muted text-xs mb-3">Paste direct video URLs (.mp4, .webm) for each resolution. These will appear in the player quality selector.</p>
+                <label className="block text-white text-sm font-medium mb-3">Video Quality Sources</label>
+                <p className="text-netflix-text-muted text-xs mb-3">Upload video files or paste URLs for each resolution. These appear in the player quality selector.</p>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {['480', '720', '1080'].map(q => (
                     <div key={q}>
                       <label className="block text-netflix-text-secondary text-xs mb-1">{q}p</label>
-                      <input
-                        type="url"
-                        value={formData.videoSources[q] || ''}
-                        onChange={(e) => setFormData({
-                          ...formData,
-                          videoSources: { ...formData.videoSources, [q]: e.target.value }
-                        })}
-                        className="input-field text-sm"
-                        placeholder={`https://... ${q}p .mp4 URL`}
-                      />
+                      <div className="flex gap-1">
+                        <input
+                          type="url"
+                          value={formData.videoSources[q] || ''}
+                          onChange={(e) => setFormData({
+                            ...formData,
+                            videoSources: { ...formData.videoSources, [q]: e.target.value }
+                          })}
+                          className="input-field text-sm flex-1"
+                          placeholder={formData.videoSources[q] ? formData.videoSources[q] : `URL or upload ${q}p`}
+                        />
+                        <label className="flex items-center justify-center px-2 bg-netflix-bg-secondary hover:bg-netflix-red/20 rounded cursor-pointer transition-colors border border-netflix-text-muted hover:border-netflix-red flex-shrink-0" title={`Upload ${q}p video`}>
+                          {uploading === q ? (
+                            <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-netflix-red"></div>
+                          ) : (
+                            <Upload size={14} className="text-netflix-text-secondary" />
+                          )}
+                          <input
+                            type="file"
+                            accept=".mp4,.webm,.mkv,.mov,.avi"
+                            className="hidden"
+                            onChange={(e) => handleFileUpload(e, q)}
+                            disabled={!!uploading}
+                          />
+                        </label>
+                      </div>
+                      {formData.videoSources[q] && (
+                        <p className="text-green-400 text-[10px] mt-1 truncate" title={formData.videoSources[q]}>
+                          {formData.videoSources[q].includes('/uploads/') ? 'Uploaded' : 'URL set'}
+                        </p>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -931,13 +994,29 @@ const AdminMoviesPage = () => {
 
               <div>
                 <label className="block text-netflix-text-secondary text-sm mb-2">Thumbnail URL</label>
-                <input
-                  type="text"
-                  value={formData.thumbnail}
-                  onChange={(e) => setFormData({ ...formData, thumbnail: e.target.value })}
-                  className="input-field"
-                  placeholder="https://..."
-                />
+                <div className="flex gap-1">
+                  <input
+                    type="text"
+                    value={formData.thumbnail}
+                    onChange={(e) => setFormData({ ...formData, thumbnail: e.target.value })}
+                    className="input-field flex-1"
+                    placeholder="https://... or upload below"
+                  />
+                  <label className="flex items-center justify-center px-3 bg-netflix-bg-secondary hover:bg-netflix-red/20 rounded cursor-pointer transition-colors border border-netflix-text-muted hover:border-netflix-red flex-shrink-0" title="Upload thumbnail image">
+                    {uploading === 'thumb' ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-netflix-red"></div>
+                    ) : (
+                      <Upload size={14} className="text-netflix-text-secondary" />
+                    )}
+                    <input
+                      type="file"
+                      accept=".jpg,.jpeg,.png,.gif,.webp,.svg"
+                      className="hidden"
+                      onChange={handleThumbUpload}
+                      disabled={!!uploading}
+                    />
+                  </label>
+                </div>
                 {formData.thumbnail && (
                   <div className="mt-2">
 <img

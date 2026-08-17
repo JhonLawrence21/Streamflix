@@ -25,6 +25,7 @@ const User = require('../models/User');
 const Movie = require('../models/Movie');
 const { getRecentActivity } = require('../services/activityLogger');
 const db = require('../config/db');
+const { uploadVideo, uploadThumb } = require('../utils/upload');
 
 router.use(protect);
 router.use(admin);
@@ -39,6 +40,18 @@ router.delete('/movies/:id/permanent', permanentDelete);
 router.post('/movies/sync-ratings', bulkSyncRatings);
 router.get('/movies/sync-status', getSyncStatus);
 router.post('/movies/:id/sync-rating', syncMovieRating);
+
+router.post('/upload/video', uploadVideo.single('video'), (req, res) => {
+  if (!req.file) return res.status(400).json({ message: 'No video file uploaded' });
+  const url = `/uploads/videos/${req.file.filename}`;
+  res.json({ url, filename: req.file.filename, size: req.file.size });
+});
+
+router.post('/upload/thumbnail', uploadThumb.single('thumbnail'), (req, res) => {
+  if (!req.file) return res.status(400).json({ message: 'No image file uploaded' });
+  const url = `/uploads/thumbnails/${req.file.filename}`;
+  res.json({ url, filename: req.file.filename });
+});
 
 router.get('/categories', getCategories);
 router.post('/categories', createCategory);
